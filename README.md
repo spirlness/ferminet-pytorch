@@ -12,6 +12,10 @@
 > *David Pfau, James S. Spencer, Alexander G. de G. Matthews, W. M. C. Foulkes*  
 > *Physical Review Research* 2, 033429 (2020) · [DOI: 10.1103/PhysRevResearch.2.033429](https://doi.org/10.1103/PhysRevResearch.2.033429)
 
+<p align="center">
+  <img src="assets/ferminet_nature_architecture.png" alt="FermiNet 3D Scientific Architecture Illustration" width="100%">
+</p>
+
 ---
 
 ## 🔰 初学者导航与入门必读 (Beginner's Guide)

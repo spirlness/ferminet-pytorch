@@ -166,6 +166,10 @@ $$\phi_j(r_i; \{r_{\setminus i}\})$$
 
 ## 3. 🧠 第二章：FermiNet 神经网络核心架构超清晰拆解
 
+<p align="center">
+  <img src="assets/ferminet_nature_architecture.png" alt="FermiNet 3D Scientific Architecture Illustration" width="100%">
+</p>
+
 ### 3.1 整体架构全景数据流 (高清矢量架构图 & 流程流向)
 
 <p align="center">
