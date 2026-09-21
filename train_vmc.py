@@ -111,6 +111,15 @@ def evaluate_trained_model(
     laplacian_method: str = "exact",
 ) -> Dict[str, Any]:
     """在冻结模型参数和采样步长后采集链时间序列并计算相关性统计。"""
+    if laplacian_method == "hutchinson":
+        # 守卫: Hutchinson 单探针随机迹估计的重复间标准差约为信号本身的 1.5 倍，
+        # 仅供训练期方差缩减，绝不能用于对外报告的能量。
+        raise ValueError(
+            "evaluation laplacian_method must not be 'hutchinson': single-probe "
+            "Hutchinson trace estimates carry inter-replicate noise about 1.5x the "
+            "signal and are only valid for training-time variance reduction; "
+            "use 'exact', 'exact_jvp' or 'jvp' for reported energies"
+        )
     if evaluation_steps < 2:
         raise ValueError(f"evaluation_steps must be >= 2, got {evaluation_steps}")
     if evaluation_mcmc_steps < 1:
@@ -201,6 +210,7 @@ def train_vmc(
         evaluation_mcmc_steps (int): 相邻复评样本之间的 MCMC 步数。
         evaluation_burn_in_steps (int): 最终参数下重新平衡的步数。
         evaluation_laplacian_method (str): 独立复评使用的 Laplacian 方法，默认精确反向模式。
+            仅接受确定性方法 ('exact', 'exact_jvp', 'jvp')；'hutchinson' 会抛出 ValueError。
         device (Optional[str]): 运行设备 ('cuda' 或 'cpu'，若为 None 自动检测)。
         dtype (torch.dtype): 浮点运算精度。
         seed (int): 随机数种子。
@@ -350,10 +360,18 @@ def train_vmc(
         evaluation_burn_in_steps=evaluation_burn_in_steps,
         laplacian_method=evaluation_laplacian_method,
     )
+    # 守卫: 对外报告的能量不得来自 Hutchinson 随机估计器 (纵深防御;
+    # evaluate_trained_model 入口处已拒绝该方法，此处拦截任何绕过路径)。
+    if evaluation["laplacian_method"] == "hutchinson":
+        raise ValueError(
+            "reported energy must not come from the 'hutchinson' Laplacian method: "
+            "it is only valid for training-time variance reduction"
+        )
+    final_energy = evaluation["energy_mean"]
+
     if verbose:
         print("-" * 75)
         print(f"[*] 训练顺利完成! 总耗时: {total_train_time:.2f}s ({total_train_time / num_epochs:.3f}s/epoch)")
-        final_energy = evaluation["energy_mean"]
         final_var = evaluation["energy_variance"]
         ref_energy_str = ""
         try:
@@ -388,7 +406,7 @@ def train_vmc(
         "sampler": sampler,
         "history": history,
         "evaluation": evaluation,
-        "final_energy": evaluation["energy_mean"],
+        "final_energy": final_energy,
         "final_variance": evaluation["energy_variance"],
         "training_last_batch_energy": training_last_batch_energy,
         "training_last_batch_variance": training_last_batch_variance,
@@ -398,8 +416,8 @@ def train_vmc(
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="FermiNet 变分量子蒙特卡洛 (VMC) 训练")
     parser.add_argument("--system", type=str, default="h2", choices=["h2", "lih"], help="目标体系 (h2 或 lih，默认 h2)")
-    parser.add_argument("--laplacian_method", type=str, default="exact", choices=["exact", "hutchinson", "exact_jvp", "jvp"], help="局域动能拉普拉斯求解策略")
-    parser.add_argument("--hutch_samples", type=int, default=1, help="Hutchinson 采样次数 (默认 1)")
+    parser.add_argument("--laplacian_method", type=str, default="exact", choices=["exact", "hutchinson", "exact_jvp", "jvp"], help="局域动能拉普拉斯求解策略 (hutchinson 仅供训练期方差缩减，不用于对外报告能量)")
+    parser.add_argument("--hutch_samples", type=int, default=1, help="Hutchinson 采样次数 (默认 1，仅供训练期方差缩减，不用于对外报告能量)")
     parser.add_argument("--hutch_dist", type=str, default="rademacher", choices=["rademacher", "gaussian"], help="Hutchinson 随机向量分布")
     parser.add_argument("--epochs", type=int, default=50, help="训练迭代步数 (默认: 50)")
     parser.add_argument("--walkers", type=int, default=1024, help="MCMC Walker 数量 (默认: 1024)")
@@ -413,7 +431,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--evaluation_steps", type=int, default=32, help="冻结参数后的独立复评时间步数")
     parser.add_argument("--evaluation_mcmc_steps", type=int, default=5, help="相邻复评样本之间的 MCMC 步数")
     parser.add_argument("--evaluation_burn_in", type=int, default=20, help="最终参数下的复评预热步数")
-    parser.add_argument("--evaluation_laplacian_method", type=str, default="exact", choices=["exact", "exact_jvp", "jvp", "hutchinson"], help="独立复评的 Laplacian 方法")
+    parser.add_argument("--evaluation_laplacian_method", type=str, default="exact", choices=["exact", "exact_jvp", "jvp"], help="独立复评的 Laplacian 方法 (仅确定性方法；hutchinson 因随机噪声不适用于对外报告能量)")
     parser.add_argument("--grad_clip", type=float, default=1.0, help="梯度范数裁剪阈值 (默认: 1.0)")
     parser.add_argument("--device", type=str, default=None, help="运行设备 (cuda 或 cpu)")
     parser.add_argument("--seed", type=int, default=42, help="随机数种子 (默认: 42)")

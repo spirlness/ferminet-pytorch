@@ -471,7 +471,10 @@ class TestPhase2Features(unittest.TestCase):
         self.assertTrue(torch.allclose(psi_swap, -psi, atol=1e-4, rtol=1e-4))
 
     def test_lih_vmc_training_loop(self) -> None:
-        """验证 LiH 体系端到端 VMC 闭环优化 (微型 2 步迭代，结合 Hutchinson 求解器)."""
+        """验证 LiH 体系端到端 VMC 闭环优化 (微型 2 步迭代，训练期用 Hutchinson 求解器).
+
+        对外报告能量必须来自确定性 Laplacian 方法 (Hutchinson 单探针随机估计
+        仅限训练期方差缩减)，故复评使用 exact。"""
         lih = build_lih_system()
         model = FermiNet(
             nuclear_coords=lih.nuclear_coords,
@@ -496,11 +499,13 @@ class TestPhase2Features(unittest.TestCase):
             evaluation_steps=4,
             evaluation_mcmc_steps=1,
             evaluation_burn_in_steps=2,
-            evaluation_laplacian_method="hutchinson",
+            evaluation_laplacian_method="exact",
             verbose=False,
         )
         self.assertEqual(len(res["history"]["energy_raw"]), 2)
         self.assertTrue(torch.isfinite(torch.tensor(res["final_energy"])))
+        # 对外报告能量不得来自 Hutchinson 随机估计器
+        self.assertEqual(res["evaluation"]["laplacian_method"], "exact")
 
     # -------------------------------------------------------------------------
     # 5. 100 原子超大规模体系下 Hutchinson 极速求解

@@ -111,11 +111,20 @@ class TestWavefunctionSymmetry(unittest.TestCase):
         self.assertGreater(float((base - turned).abs().max()), 0.1)
 
     def test_nuclear_permutation_invariance_is_absent_known_limitation(self) -> None:
-        """D5 已知限制：同核体系的核序置换会改变 log|Psi|。
+        """D5 部分修复后仍存在的限制：完整波函数不具备核置换不变性。
 
-        原因：NuclearEnvelope 的 weights / decay_rates_raw 按核索引参数化。
-        物理上完全相同的输入（两个质子互换）给出不同的波函数值。
-        变分上界仍成立，但有效对称群小于哈密顿量的对称群。
+        已修复的部分：`NuclearEnvelope` 按电荷组共享 `weights` / `decay_rates_raw`，
+        包络本身在同核置换下严格不变 (见 test_geometry_invariants.py)。
+
+        仍存在的部分：单电子特征按**原子核顺序**拼接成 5*M 维后送入普通密集层，
+        而密集层对核块不对称，故交换同种核仍改变 log|Psi|。
+
+        注：曾尝试"按距离排序规范化核轴"来补上这一项，但**该方案被否决**——
+        排序在电子穿越两同核的垂直平分面时翻转核块顺序，而两块在该面上并不相等
+        (r_{iI} 方向不同)，导致波函数在余维 1 曲面上出现不连续跳变 (实测约 0.044)，
+        ∇²ln|Psi| 失去意义、局域动能被污染，训练能量从 -1.174 退化到 -1.162 并
+        一度跌破变分下界。要做到既不变又连续必须改为对核做对称聚合 (架构改写)。
+        连续性回归见 test_wavefunction_is_continuous_across_nuclear_bisector。
         """
         permuted = _clone_with_geometry(
             self.model,
@@ -126,6 +135,30 @@ class TestWavefunctionSymmetry(unittest.TestCase):
             base, _ = self.model.forward_log_psi(self.r)
             swapped, _ = permuted.forward_log_psi(self.r)
         self.assertGreater(float((base - swapped).abs().max()), 0.1)
+
+    def test_wavefunction_is_continuous_across_nuclear_bisector(self) -> None:
+        """波函数必须在同核垂直平分面上连续 (禁止以排序实现核序规范化)。
+
+        让一个电子沿两核连线穿过垂直平分面：若实现用排序重排核块，log|Psi| 会在
+        面两侧发生 O(1) 跳变；正确实现 (固定核块顺序) 只应有光滑的一阶变化。
+        """
+        model = _build_model(seed=0)
+        xs = torch.tensor([-1e-2, -1e-3, -1e-6, 0.0, 1e-6, 1e-3, 1e-2], dtype=torch.float64)
+        r = torch.zeros(len(xs), 2, 3, dtype=torch.float64)
+        r[:, 0, 0] = xs
+        r[:, 1, :] = torch.tensor([0.3, 0.9, -0.4], dtype=torch.float64)
+        with torch.no_grad():
+            log_psi, _ = model.forward_log_psi(r)
+
+        # 跨越面 (x=-1e-6 -> +1e-6, 步长 2e-6) 的一阶差分
+        across = float((log_psi[4] - log_psi[2]).abs())
+        # 远离面 (x=-1e-2 -> -1e-3, 步长 9e-3, 是跨越步长的 4500 倍) 的一阶差分
+        away = float((log_psi[1] - log_psi[0]).abs())
+        self.assertLess(
+            across, 5.0 * away,
+            f"跨越垂直平分面的一阶差分 ({across:.6f}) 远大于远离面的一阶差分 "
+            f"({away:.6f})，波函数在该面上不连续",
+        )
 
     def test_same_spin_exchange_flips_sign_exactly(self) -> None:
         """同自旋电子交换必须保持 log|Psi| 不变并精确翻转符号（Slater 反对称性）。"""
@@ -142,25 +175,10 @@ class TestKatoCuspAndSoftening(unittest.TestCase):
     """核尖点条件与距离软化的定量影响。"""
 
     def test_envelope_radial_slope_matches_kato_far_from_nucleus(self) -> None:
-        """远离核处 (r >> sqrt(eps)) 径向对数斜率应趋于 -Z，尖点结构正确。"""
-        envelope = NuclearEnvelope(
-            num_determinants=1, num_orbitals=1, num_nuclei=1, init_decay_rate=1.0
-        ).double()
-        with torch.no_grad():
-            envelope.weights.fill_(1.0)
-        origin = torch.zeros(1, 3, dtype=torch.float64)
+        """远离核处 (r >> sqrt(eps)) 径向对数斜率应趋于 -alpha，尖点结构正确。
 
-        r = torch.tensor([[[1e-2, 0.0, 0.0]]], dtype=torch.float64, requires_grad=True)
-        value = envelope(r, origin).sum()
-        grad = torch.autograd.grad(value, r)[0]
-        slope = float(grad[0, 0, 0] / value.item())
-        self.assertAlmostEqual(slope, -1.0, delta=0.01)
-
-    def test_envelope_radial_slope_is_softened_near_nucleus_known_limitation(self) -> None:
-        """D6 已知限制：sqrt(r^2+eps) 使核处径向斜率趋于 0，破坏 Kato 尖点。
-
-        Kato 条件要求球平均波函数在核处的径向导数为 -Z。软化尺度为 sqrt(eps)=1e-4。
-        若将来改用不改变非重合点哈密顿量的稳定计算，本测试会失败，应改为断言斜率≈-1。
+        注：D6 尖点断言依赖 alpha == Z。init_decay_rate=1.0 恰好对 H (Z=1) 正确，
+        对 He/Li 不正确，故显式断言斜率 == -alpha，不隐式假设 Z。
         """
         envelope = NuclearEnvelope(
             num_determinants=1, num_orbitals=1, num_nuclei=1, init_decay_rate=1.0
@@ -168,15 +186,45 @@ class TestKatoCuspAndSoftening(unittest.TestCase):
         with torch.no_grad():
             envelope.weights.fill_(1.0)
         origin = torch.zeros(1, 3, dtype=torch.float64)
+        # alpha = softplus(decay_rates_raw)，由 init_decay_rate=1.0 经 softplus 反函数初始化
+        alpha = float(torch.nn.functional.softplus(envelope.decay_rates_raw.detach()).item())
+
+        r = torch.tensor([[[1e-2, 0.0, 0.0]]], dtype=torch.float64, requires_grad=True)
+        value = envelope(r, origin).sum()
+        grad = torch.autograd.grad(value, r)[0]
+        slope = float(grad[0, 0, 0] / value.item())
+        self.assertAlmostEqual(slope, -alpha, delta=0.01)
+
+    def test_envelope_radial_slope_satisfies_kato_at_nucleus(self) -> None:
+        """D6 修复：clamp 核不软化距离，核处径向对数斜率满足 Kato 条件 slope == -alpha。
+
+        eps 现为最小**平方**距离 (默认 1e-24，软化半径 sqrt(eps)=1e-12 Bohr)，
+        在 r^2 >= eps 处 clamp 是恒等变换，距离与未软化时逐位相同，偏置精确为零；
+        r=1e-6 处 r^2=1e-12 > eps，因此斜率精确等于 -alpha。
+        断言斜率 == -alpha (alpha = softplus(decay_rates_raw) 由 init_decay_rate=1.0
+        反解)，不隐式假设 alpha == Z (init_decay_rate=1.0 仅对 H 正确)。
+        """
+        envelope = NuclearEnvelope(
+            num_determinants=1, num_orbitals=1, num_nuclei=1, init_decay_rate=1.0
+        ).double()
+        with torch.no_grad():
+            envelope.weights.fill_(1.0)
+        origin = torch.zeros(1, 3, dtype=torch.float64)
+        alpha = float(torch.nn.functional.softplus(envelope.decay_rates_raw.detach()).item())
 
         r = torch.tensor([[[1e-6, 0.0, 0.0]]], dtype=torch.float64, requires_grad=True)
         value = envelope(r, origin).sum()
         grad = torch.autograd.grad(value, r)[0]
         slope = float(grad[0, 0, 0] / value.item())
-        self.assertGreater(slope, -0.1)
+        self.assertAlmostEqual(slope, -alpha, delta=1e-6)
 
-    def test_softened_potential_underestimates_nuclear_attraction(self) -> None:
-        """D6：势能的 sqrt(r^2+eps) 软化在核附近显著低估库仑吸引。"""
+    def test_potential_matches_exact_coulomb_away_from_nucleus(self) -> None:
+        """D6 修复后：非重合点势能必须精确等于库仑值 (clamp 核在 r^2 >= eps 处恒等)。
+
+        旧实现 `sqrt(r^2 + 1e-10)` 在 r=1e-6 Bohr 处给 V_en = -99,503.7 Ha，
+        而真实库仑值为 -1e6 Ha (偏差 9.0e5 Ha)。clamp 核在所有 r^2 >= eps 处
+        与未软化距离逐位相同，偏置精确为零。
+        """
         system = MolecularSystem(
             nuclear_coords=torch.zeros(1, 3, dtype=torch.float64),
             nuclear_charges=torch.tensor([1.0], dtype=torch.float64),
@@ -185,21 +233,44 @@ class TestKatoCuspAndSoftening(unittest.TestCase):
         )
         r = torch.tensor([[[1e-6, 0.0, 0.0]]], dtype=torch.float64)
         v_en = float(system.compute_potential_energy(r))
-        # 软化使吸引势比真实库仑值更浅（更接近 0），但仍是有限的大负数
-        self.assertGreater(v_en, -1.0 / 1e-6)
-        self.assertLess(v_en, -2.0e4)
-        self.assertAlmostEqual(v_en, -1.0 / (1e-12 + 1e-10) ** 0.5, delta=1.0)
+        # 体系为单核单电子，无 V_ee / V_nn，总势能即 V_en = -Z/r = -1e6 Ha
+        self.assertAlmostEqual(v_en, -1.0 / 1e-6, delta=1.0)
+
+    def test_potential_is_finite_and_nan_free_at_coalescence(self) -> None:
+        """D6: r=0 重合点处势能必须有限且无 NaN (clamp 核的下限保护)。
+
+        r=0 时距离被限制为 sqrt(eps)=1e-12 Bohr，V_en = -Z/sqrt(eps) = -1e12 Ha：
+        有限、无 NaN，且坐标梯度为零；eps 不能直接删除 (裸 sqrt 在 r=0 处
+        梯度为 inf*0=NaN)。
+        """
+        system = MolecularSystem(
+            nuclear_coords=torch.zeros(1, 3, dtype=torch.float64),
+            nuclear_charges=torch.tensor([1.0], dtype=torch.float64),
+            n_up=1,
+            n_down=0,
+        )
+        r = torch.zeros(1, 1, 3, dtype=torch.float64)
+        v = system.compute_potential_energy(r)
+        self.assertFalse(torch.isnan(v).any(), "重合点势能出现 NaN")
+        self.assertTrue(torch.isfinite(v).all(), "重合点势能出现 Inf")
+        self.assertLess(float(v.item()), -1.0e11)
+
+        # clamp 核在重合点梯度为零 (而非 NaN/Inf)
+        r_grad = torch.zeros(1, 1, 3, dtype=torch.float64, requires_grad=True)
+        v_g = system.compute_potential_energy(r_grad)
+        grad = torch.autograd.grad(v_g.sum(), r_grad)[0]
+        self.assertTrue(torch.isfinite(grad).all(), "重合点势能梯度非有限")
+        self.assertLess(float(grad.abs().max()), 1e-6)
 
 
 class TestParameterReachability(unittest.TestCase):
     """参数可达性：哪些参数实际参与训练。"""
 
-    def test_all_parameters_receive_gradient_except_final_layer_two_electron_stream(self) -> None:
-        """D3：末层双电子流更新网络不在计算图上；其余参数必须获得非零梯度。
+    def test_all_parameters_receive_gradient(self) -> None:
+        """D3：全部可训练参数都必须获得非零梯度。
 
-        末层 h2 输出无人消费，故 layers[-1].linear_two（以及末层为真实线性映射时的
-        res_proj_two）恒为空转参数。若将来裁剪该层或改变数据流，本测试会失败，
-        应同步更新死参数集合。
+        FermiNet 的末层不构造双电子流更新网络 (其 h2 输出不被消费)，因此
+        模型中不应存在任何恒收不到梯度的空转参数。
         """
         for num_layers in (1, 2, 3):
             with self.subTest(num_layers=num_layers):
@@ -212,25 +283,11 @@ class TestParameterReachability(unittest.TestCase):
                 )
                 loss.backward()
 
-                last = num_layers - 1
-                dead = {
-                    f"layers.{last}.linear_two.weight",
-                    f"layers.{last}.linear_two.bias",
-                }
-                if isinstance(model.layers[last].res_proj_two, torch.nn.Linear):
-                    dead.add(f"layers.{last}.res_proj_two.weight")
-
                 for name, param in model.named_parameters():
-                    if name in dead:
-                        self.assertTrue(
-                            param.grad is None or float(param.grad.abs().max()) == 0.0,
-                            f"{name} 预期为空转参数，却获得了梯度",
-                        )
-                    else:
-                        self.assertIsNotNone(param.grad, f"{name} 未获得梯度")
-                        self.assertGreater(
-                            float(param.grad.abs().max()), 0.0, f"{name} 梯度恒为零"
-                        )
+                    self.assertIsNotNone(param.grad, f"{name} 未获得梯度")
+                    self.assertGreater(
+                        float(param.grad.abs().max()), 0.0, f"{name} 梯度恒为零"
+                    )
 
 
 class TestHutchinsonEstimator(unittest.TestCase):

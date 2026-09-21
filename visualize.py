@@ -9,7 +9,7 @@ FermiNet 变分量子蒙特卡洛 (VMC) 综合可视化模块
    - 训练全景综合看板 (Training Dashboard)
 2. 训练结果与物理状态解析:
    - 电子空间几率构型分布 (3D 空间散点与 2D 投影图，区分自旋向上与自旋向下电子，标注核位置)
-   - 波函数截面与电子密度剖面 (沿核间轴 1D 对数波函数与几率密度、展示核处 Cusp 尖峰，以及 2D 成键截面热力图)
+   - 波函数截面与电子密度剖面 (沿核间轴 1D 对数波函数与几率密度、标注核位置标线，以及 2D 成键截面热力图)
    - 局域能量分布直方图与统计偏度 (Local Energy Histogram、核密度估计、中位数/偏度/峰度信息卡片)
    - 物理状态综合看板 (Physical Results Dashboard)
 3. 软件工程支持:
@@ -58,7 +58,7 @@ COLOR_PALETTE = {
     "nucleus": "#2c3e50",          # 原子核标记 (Dark Charcoal)
     "density_map": "viridis",      # 2D 密度热力图色卡
     "wavefunction": "#34495e",     # 波函数曲线 (Navy)
-    "cusp_marker": "#e67e22",      # 核 Cusp 尖峰标线 (Orange)
+    "cusp_marker": "#e67e22",      # 核位置标线 (Orange，保留历史键名)
 }
 
 # 常见分子体系的理论精确基态能量基准 (单位: Hartree / a.u.)
@@ -948,9 +948,10 @@ def plot_wavefunction_profile(
     save_path: Optional[str] = None,
 ) -> plt.Figure:
     """
-    沿核间轴探测波函数截面剖面 (1D Wavefunction Profile & Cusp Condition)。
+    沿核间轴探测波函数截面剖面 (1D Wavefunction Profile)。
     固定其它 N-1 个电子位置，将第 1 个电子沿着指定轴扫描，
-    绘制 log|Psi(r)| 与概率密度 |Psi(r)|^2，清晰展示在原子核处的尖峰 (Kato Cusp) 特征。
+    绘制 log|Psi(r)| 与概率密度 |Psi(r)|^2，竖直虚线仅标记原子核位置坐标，
+    不构成 Kato 尖点 (cusp) 条件的定量验证。
 
     Args:
         model (nn.Module): FermiNet 深度波函数网络。
@@ -1016,10 +1017,10 @@ def plot_wavefunction_profile(
             linestyle="--",
             linewidth=1.6,
             alpha=0.85,
-            label="Nucleus (Cusp)" if i == 0 else "",
+            label="Nucleus Position" if i == 0 else "",
         )
 
-    ax_log.set_title(f"Wavefunction Profile & Electron-Nuclear Cusp along {axis.upper()}-Axis")
+    ax_log.set_title(f"Wavefunction Profile along {axis.upper()}-Axis")
     ax_log.set_ylabel(r"$\ln|\Psi|$ (Log Amplitude)")
     ax_log.grid(True, linestyle="--", alpha=0.4)
     ax_log.legend(loc="upper right")
@@ -1360,7 +1361,7 @@ def plot_physical_results_dashboard(
                 color=COLOR_PALETTE["cusp_marker"],
                 linestyle="--",
                 linewidth=1.6,
-                label="Nucleus (Cusp)" if idx_nc == 0 else "",
+                label="Nucleus Position" if idx_nc == 0 else "",
             )
         ax2.set_title("Wavefunction Density along Nuclear Axis")
         ax2.set_xlabel("$z$ Coordinate (Bohr)")
@@ -1428,7 +1429,7 @@ def plot_all_visualizations(
     5. electron_density_3d.png — 3D 电子几率密度空间分布 (区分自旋向上/向下与核位置)
     6. electron_density_2d.png — 2D 投影密度与核轴一维分布直方图
     7. local_energy_dist.png   — 最终局域能量直方图分布与偏度统计卡片
-    8. wavefunction_1d.png     — 沿核轴 1D 对数波函数与核 Cusp 尖峰 (若 model 有效)
+    8. wavefunction_1d.png     — 沿核轴 1D 对数波函数与核位置标线 (若 model 有效)
     9. wavefunction_2d.png     — 2D 成键截面电子密度热力图 (若 model 有效)
     10. physical_dashboard.png — 物理状态全景综合看板
 

@@ -16,7 +16,7 @@ except (ImportError, ValueError):
 class FermiNet(nn.Module):
     """
     FermiNet (Fermi Neural Network) 深度波函数模型。
-    
+
     参考论文:
         Pfau et al., "Ab-Initio Solution of the Many-Electron Schrödinger Equation
         with Deep Neural Networks", Phys. Rev. Research 2, 033429 (2020).
@@ -24,10 +24,19 @@ class FermiNet(nn.Module):
     核心架构：
     1. 几何特征提取：全向量化计算电子-核、电子-电子差向量及欧几里得距离。
     2. 自旋等变前馈层：多层 FermiInteractionLayer，自旋向上与向下电子分别进行均值池化交互。
+       注意末层的双电子流输出不被消费 (分子轨道全部由单电子流 h1 构造)，
+       因此末层不构造双电子流更新网络 (`linear_two` / `res_proj_two` 被移除)，
+       仅保留单电子流更新路径；末层的 `forward` 返回 `(h1_next, None)`。
     3. 广义分子轨道构建：最高层单电子特征经线性投影为 Backflow 项，与原子核指数包络 (NuclearEnvelope) 相乘。
     4. 反对称波函数计算：根据泡利不相容原理，将自旋向上和向下电子分别构造成 Slater 行列式矩阵，
        计算对角块行列式乘积并在多行列式 (Multi-determinants) 间进行线性组合。
     5. 数值稳定性机制：提供基于 LogSumExp 技巧的稳定对数波函数 (log|Psi|, sign) 计算接口。
+
+    关于核几何：
+    - 本模型网络关于同自旋电子置换是严格等变的，但不具备旋转/平移波函数不变性以外的
+      哈密顿量全对称群：平移不变性成立 (特征为相对坐标)，旋转不变性与核置换对称性不在
+      本实现中强制 (核序置换对称性可通过 ``tie_nuclear_envelope=True`` 时向 NuclearEnvelope
+      注入核电荷向量部分恢复——同电荷核共享包络参数)。
     """
 
     def __init__(
@@ -40,9 +49,10 @@ class FermiNet(nn.Module):
         hidden_dim_one: int = 64,
         hidden_dim_two: int = 16,
         num_layers: int = 2,
-        eps: float = 1e-8,
+        eps: float = 1e-24,
         use_nuclear_charges: bool = True,
         anisotropic_envelope: bool = False,
+        tie_nuclear_envelope: bool = True,
         compile: bool = False,
         compile_mode: str = "default",
         compile_backend: str = "inductor",
@@ -61,9 +71,14 @@ class FermiNet(nn.Module):
             hidden_dim_one (int): 单电子流交互隐藏层特征维度。
             hidden_dim_two (int): 双电子流交互隐藏层特征维度。
             num_layers (int): 自旋等变相互作用层 (FermiInteractionLayer) 层数。
-            eps (float): 数值微小量，防止除零或 log(0)。
+                末层不构造双电子流更新网络 (其 h2 输出不被消费)。
+            eps (float): 数值微小量，防止除零或 log(0)。语义为距离平方的 clamp 下限
+                (最小平方距离)，软化半径为 sqrt(eps)；默认 1e-24 对应 1e-12 Bohr。
             use_nuclear_charges (bool): 是否在几何特征中注入核电荷 Z_I (默认 True，单核特征由 4 提升为 5 维，总特征为 5*M)。
             anisotropic_envelope (bool): 是否启用各向异性可学习三维主轴度规核包络 (默认 False)。
+            tie_nuclear_envelope (bool): 是否向 NuclearEnvelope 传入核电荷向量，使同电荷核
+                共享包络参数 (核置换等变)；默认 True。置为 False 时包络按核索引独立参数化
+                (旧行为)。
             compile (bool): 是否启用 PyTorch 2.0+ JIT 图编译优化 (默认为 False，按需显式启用)。
             compile_mode (str): 默认编译优化模式 (默认为 'default'，也可选 'reduce-overhead' 等)。
             compile_backend (str): 编译后端 (默认为 'inductor')。
@@ -82,6 +97,7 @@ class FermiNet(nn.Module):
         self.eps = eps
         self.use_nuclear_charges = use_nuclear_charges
         self.anisotropic_envelope = anisotropic_envelope
+        self.tie_nuclear_envelope = tie_nuclear_envelope
         self.use_compile = compile
         self.compile_mode = compile_mode
         self.compile_backend = compile_backend
@@ -118,6 +134,8 @@ class FermiNet(nn.Module):
         self.in_dim_two = in_dim_two
 
         # 2. 自旋等变相互作用层序列
+        # 末层的双电子流输出不被任何后续模块消费 (轨道仅由 h1 构造)，
+        # 故末层不构造双电子流更新网络，避免产生恒收不到梯度的空转参数。
         layers: List[FermiInteractionLayer] = []
         for l in range(num_layers):
             dim_in_1 = in_dim_one if l == 0 else hidden_dim_one
@@ -128,9 +146,16 @@ class FermiNet(nn.Module):
                     in_dim_two=dim_in_2,
                     out_dim_one=hidden_dim_one,
                     out_dim_two=hidden_dim_two,
+                    produce_two_electron_output=(l != num_layers - 1),
                 )
             )
         self.layers = nn.ModuleList(layers)
+
+        # D5: tie_nuclear_envelope=True 时向包络传入核电荷向量 (同电荷核共享包络参数)。
+        # detach().clone() 避免与模型 buffer 共享存储。
+        envelope_nuclear_charges: Optional[torch.Tensor] = (
+            self.nuclear_charges.detach().clone() if tie_nuclear_envelope else None
+        )
 
         # 3. 轨道投影层 (Backflow 变换) 与原子核指数包络 (Envelope)
         if self.n_up > 0:
@@ -142,6 +167,7 @@ class FermiNet(nn.Module):
                 num_nuclei=num_nuclei,
                 eps=eps,
                 anisotropic=anisotropic_envelope,
+                nuclear_charges=envelope_nuclear_charges,
             )
         else:
             self.linear_orb_up = None
@@ -156,6 +182,7 @@ class FermiNet(nn.Module):
                 num_nuclei=num_nuclei,
                 eps=eps,
                 anisotropic=anisotropic_envelope,
+                nuclear_charges=envelope_nuclear_charges,
             )
         else:
             self.linear_orb_down = None
@@ -208,6 +235,8 @@ class FermiNet(nn.Module):
             h1, h2 = self.embedding(r, self.nuclear_coords)
 
         # 2. 等变前馈交互传播
+        # 末层 produce_two_electron_output=False，循环结束时 h2 为 None (不再被引用，
+        # 后续轨道构造仅使用 h1)。
         for layer in self.layers:
             h1, h2 = layer(h1, h2, self.n_up, self.n_down)
 

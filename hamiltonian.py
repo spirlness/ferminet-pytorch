@@ -107,7 +107,7 @@ class MolecularSystem:
     def num_nuclei(self) -> int:
         return self.nuclear_coords.shape[0]
 
-    def compute_potential_energy(self, r: torch.Tensor, eps: float = 1e-10) -> torch.Tensor:
+    def compute_potential_energy(self, r: torch.Tensor, eps: float = 1e-24) -> torch.Tensor:
         """
         全矢量化计算分子的总库仑势能: V(r) = V_en(r) + V_ee(r) + V_nn。
         严格禁止 Python 循环遍历电子坐标。
@@ -117,7 +117,17 @@ class MolecularSystem:
             r (torch.Tensor): 电子三维空间坐标。
                 - Shape: `(B, N, 3)`。
                 - Dtype: `torch.float32` 或 `torch.float64`。
-            eps (float): 防止电子重合或电子撞核时的除零保护常数。
+            eps (float): 最小**平方**距离下限 (默认 1e-24，对应软化半径 sqrt(eps) = 1e-12 Bohr)。
+                距离核函数为 `sqrt(clamp(r^2, min=eps))`:
+                - 在所有 `r^2 >= eps` 处 clamp 为恒等变换，距离与未软化实现**逐位相同**，
+                  势能偏置精确为零 (对比: 旧的加性 `+eps` 核处处引入相对偏差 `eps/(2 r^2)`,
+                  在 r=1e-6 Bohr 处 V_en 偏差达 9.0e5 Ha，破坏 Kato 尖点条件)；
+                - 在 `r^2 < eps` (电子与核或电子彼此几乎重合) 处距离被限制为 `sqrt(eps)`，
+                  势能有限 (`Z/sqrt(eps)`) 且坐标梯度为零；
+                - **不可直接删除 eps**: 裸 `sqrt(r^2)` 在 r=0 处梯度为 `inf * 0 = NaN`，
+                  `1/sqrt(r^2)` 更是 `inf` 配 NaN 梯度；clamp 核无此问题。
+                  与 `_compute_v_nn_const` 的裸 `vector_norm` 先例一致: 在非重合点
+                  杜绝人造 eps 误差，仅在重合点保数值稳定。
 
         Returns:
             torch.Tensor: 各采样构型的总势能 V(r) (单位: Hartree)。
@@ -136,8 +146,9 @@ class MolecularSystem:
         # ---------------------------------------------------------------------
         # r: (B, N, 1, 3), R: (1, 1, M, 3)
         diff_en = r.unsqueeze(2) - nuclear_coords.unsqueeze(0).unsqueeze(0)
-        dist_en = torch.sqrt(torch.sum(diff_en ** 2, dim=-1) + eps)  # (B, N, M)
-        charges = nuclear_charges.unsqueeze(0).unsqueeze(0)          # (1, 1, M)
+        r2_en = torch.sum(diff_en ** 2, dim=-1)                       # (B, N, M)
+        dist_en = torch.sqrt(torch.clamp(r2_en, min=eps))             # (B, N, M)
+        charges = nuclear_charges.unsqueeze(0).unsqueeze(0)           # (1, 1, M)
 
         v_en = -torch.sum(charges / dist_en, dim=(-1, -2))  # (B,)
 
@@ -146,7 +157,8 @@ class MolecularSystem:
         # ---------------------------------------------------------------------
         if num_electrons > 1:
             diff_ee = r.unsqueeze(2) - r.unsqueeze(1)  # (B, N, N, 3)
-            dist_ee = torch.sqrt(torch.sum(diff_ee ** 2, dim=-1) + eps)  # (B, N, N)
+            r2_ee = torch.sum(diff_ee ** 2, dim=-1)                      # (B, N, N)
+            dist_ee = torch.sqrt(torch.clamp(r2_ee, min=eps))            # (B, N, N)
 
             # 构建严格上三角掩码矩阵 (i < j)
             mask_ee = torch.triu(
@@ -212,7 +224,15 @@ def _compute_laplacian_hutchinson(
     """
     基于 Rademacher 或 Gaussian 随机向量的 Hutchinson 随机迹估计器:
         Tr(nabla^2 ln|Psi|) = E_v [ v^T (nabla^2 ln|Psi|) v ]
-    单次采样仅需 1 次方向导数反向传播，将大体系二次导耗时从 O(3N) 压缩至 O(1)。
+
+    复杂度语义 (准确表述，勿夸大): 每个探针仅需 1 次方向导数反向传播，探针数
+    `num_samples` 不随体系规模 N 增长——即"反向次数与 N 解耦"。但探针循环本身是
+    Python 级串行循环，单步反向与总计算成本仍随体系规模 N 变化，并非 O(1)。
+
+    方差语义 (实测，D2): 单探针估计的重复间标准差与信号同量级 (固定构型上
+    exact T = -1.0183 Ha 时，32 次重复间 sigma ≈ 1.76，约为信号的 1.5-1.7 倍)，
+    估计器无偏 (sigma * sqrt(n) 近似恒定) 但方差 ∝ 1/n，且 ln|Psi| 的 Hessian 迹
+    在节点附近重尾。**因此本估计器不可用于对外报告能量**，仅供训练期方差缩减。
     """
     batch_size = r.shape[0]
     laplacian_sum = torch.zeros(batch_size, device=r.device, dtype=r.dtype)
@@ -330,10 +350,17 @@ def compute_local_energy(
             - 若为 False，在完成二阶拉普拉斯后释放内部图，节省显存与算力。
         laplacian_method (str): 动能拉普拉斯算子求解策略:
             - 'exact' (默认): 经典反向模式逐维精确求导，结果具机器精度；
-            - 'hutchinson': 基于 Rademacher/Gaussian 随机向量的高性能随机迹估计器，单步仅需 1 次反向传播；
+            - 'hutchinson': 基于 Rademacher/Gaussian 随机向量的批量随机迹估计器。
+              探针数不随体系规模 N 增长 (每探针 1 次反向)，但单步反向次数与总成本
+              仍随体系规模变化，并非 O(1)。单探针方差与信号同量级 (实测重复间
+              sigma ≈ 1.5-1.7 倍信号)，**仅可用于训练期，不可用于对外报告能量**；
             - 'exact_jvp': 基于 torch.func.jvp 前向模式微分的向量化精确求解。
         num_hutchinson_samples (int): Hutchinson 随机迹估计采样次数 (默认为 1)。
         hutchinson_distribution (str): Hutchinson 随机向量分布 ('rademacher' 或 'gaussian'，默认 'rademacher')。
+
+    Warns:
+        UserWarning: 当 ``laplacian_method == 'hutchinson'`` 时发出，提示该结果
+            含随机迹估计噪声，不可用于对外报告能量。
 
     Returns:
         Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -349,6 +376,17 @@ def compute_local_energy(
         raise ValueError(f"不支持的拉普拉斯求解方法: {laplacian_method}，可选: {valid_methods}")
     if num_hutchinson_samples < 1:
         raise ValueError(f"Hutchinson 采样次数必须 >= 1，当前为: {num_hutchinson_samples}")
+
+    # D2 守卫: hutchinson 是随机迹估计，单探针方差与信号同量级 (实测 sigma ≈ 1.5-1.7 倍信号)，
+    # 其结果不可用于对外报告能量 (仅限训练期方差缩减)。
+    if laplacian_method == "hutchinson":
+        warnings.warn(
+            "laplacian_method='hutchinson' 使用随机迹估计 (本次采样数: "
+            f"{num_hutchinson_samples})，单探针方差与信号同量级，含显著随机噪声；"
+            "该局域能量不可用于对外报告能量 (能量报告请使用 laplacian_method='exact')。",
+            UserWarning,
+            stacklevel=2,
+        )
 
     # 当无需为模型参数保留高阶计算图 (create_graph=False) 时，临时禁用参数梯度追踪
     prev_param_states = []

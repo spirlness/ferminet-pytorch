@@ -103,6 +103,8 @@ def vmc_surrogate_loss(
     e_local: torch.Tensor,
     clip_factor: float = 5.0,
     clip_method: str = "none",
+    laplacian_method: str = "exact",
+    num_hutchinson_samples: int = 0,
 ) -> Tuple[torch.Tensor, Dict[str, Any]]:
     """
     计算变分原理代理损失及能量统计指标。
@@ -113,15 +115,21 @@ def vmc_surrogate_loss(
     无偏协方差估计。显式启用 ``tanh`` 或 ``hard`` 时，优化目标是有偏但稳健的代理。
 
     Args:
-        log_abs_psi (torch.Tensor): 具有参数梯度的对数波函数值 ln|Psi_theta(r)|，Shape: `(B,)`。
+        log_abs_psi (torch.Tensor): 具有参数梯度的对数波函数值 ln|Psi_theta(r_i)|，Shape: `(B,)`。
         e_local (torch.Tensor): 各 walker 处的局域能量数值 (若含梯度将自动 detach)，Shape: `(B,)`。
         clip_factor (float): 截断阈值倍数。
         clip_method (str): 截断方法 ('tanh', 'hard', 'none')。
+        laplacian_method (str): 产生 ``e_local`` 的拉普拉斯求解方法 (solver provenance，
+            仅记录进 stats: 'exact' / 'hutchinson' / 'exact_jvp'，默认 'exact')。
+        num_hutchinson_samples (int): 当 ``laplacian_method == 'hutchinson'`` 时实际使用的
+            探针数 (默认 0 表示非 hutchinson 路径，不适用)。
 
     Returns:
         Tuple[torch.Tensor, Dict[str, Any]]:
             - loss (torch.Tensor): 标量代理损失张量 (带模型参数梯度)。
-            - stats (Dict[str, Any]): 包含物理能量统计量和估计器语义的字典。
+            - stats (Dict[str, Any]): 包含物理能量统计量与估计器语义的字典，
+              含 solver provenance 键 ``laplacian_method`` 与 ``hutchinson_samples``
+              (D2: 便于区分局域能量来自精确解还是随机迹估计)。
     """
     batch_size = e_local.shape[0]
     assert log_abs_psi.shape[0] == batch_size, "log_abs_psi 与 e_local 的 Batch 大小必须一致"
@@ -174,6 +182,10 @@ def vmc_surrogate_loss(
         "num_nonfinite": num_nonfinite,
         "gradient_estimator": "iid_covariance_corrected" if clip_method == "none" else "robust_clipped",
         "gradient_is_unbiased": clip_method == "none",
+        # Solver provenance (D2): 记录局域能量实际使用的拉普拉斯求解方法与探针数，
+        # 用于区分能量来自精确解还是随机迹估计 (hutchinson 结果不可用于对外报告)。
+        "laplacian_method": laplacian_method,
+        "hutchinson_samples": int(num_hutchinson_samples) if laplacian_method == "hutchinson" else 0,
     }
 
     return loss, stats
@@ -216,6 +228,9 @@ class VMCLoss(nn.Module):
         self,
         log_abs_psi: torch.Tensor,
         e_local: torch.Tensor,
+        *,
+        laplacian_method: Optional[str] = None,
+        num_hutchinson_samples: Optional[int] = None,
     ) -> Tuple[torch.Tensor, Dict[str, Any]]:
         """
         基于给定的对数波函数与局域能量计算协方差代理损失。
@@ -223,15 +238,25 @@ class VMCLoss(nn.Module):
         Args:
             log_abs_psi (torch.Tensor): Shape: `(B,)`，要求保持模型参数的计算图。
             e_local (torch.Tensor): Shape: `(B,)`。
+            laplacian_method (Optional[str]): solver provenance 覆盖: 记录进 stats 的
+                拉普拉斯方法；None (默认) 时使用实例配置 self.laplacian_method。
+            num_hutchinson_samples (Optional[int]): solver provenance 覆盖: 记录进
+                stats 的 hutchinson 探针数；None (默认) 时使用实例配置。
 
         Returns:
             Tuple[torch.Tensor, Dict[str, Any]]: (loss, stats)
         """
+        lap_method = laplacian_method if laplacian_method is not None else self.laplacian_method
+        hutch_samples = (
+            num_hutchinson_samples if num_hutchinson_samples is not None else self.num_hutchinson_samples
+        )
         return vmc_surrogate_loss(
             log_abs_psi=log_abs_psi,
             e_local=e_local,
             clip_factor=self.clip_factor,
             clip_method=self.clip_method,
+            laplacian_method=lap_method,
+            num_hutchinson_samples=hutch_samples if lap_method == "hutchinson" else 0,
         )
 
     def compute_step_loss(
@@ -263,7 +288,9 @@ class VMCLoss(nn.Module):
         Returns:
             Tuple[torch.Tensor, Dict[str, Any], torch.Tensor]:
                 - loss (torch.Tensor): 可反向传播的协方差代理损失。
-                - stats (Dict[str, Any]): 能量、方差与估计器语义。
+                - stats (Dict[str, Any]): 能量、方差与估计器语义，含 solver provenance
+                  (``laplacian_method`` 为本次局域能量实际使用的拉普拉斯方法，
+                  ``hutchinson_samples`` 为 hutchinson 路径的实际探针数)。
                 - e_local (torch.Tensor): 未截断的原始局域能量序列，Shape: `(B,)`。
         """
         lap_method = laplacian_method if laplacian_method is not None else self.laplacian_method
@@ -286,7 +313,12 @@ class VMCLoss(nn.Module):
         # 2. 干净前向获取带有模型参数梯度的 log|Psi(r)|
         log_abs_psi, _ = model.forward_log_psi(walkers.detach())
 
-        # 3. 计算代理损失
-        loss, stats = self.forward(log_abs_psi, e_local)
+        # 3. 计算代理损失 (透传 solver provenance，确保 stats 反映本次实际使用的方法)
+        loss, stats = self.forward(
+            log_abs_psi,
+            e_local,
+            laplacian_method=lap_method,
+            num_hutchinson_samples=hutch_samples if lap_method == "hutchinson" else 0,
+        )
 
         return loss, stats, e_local

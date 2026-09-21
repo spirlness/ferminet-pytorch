@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 import torch
 import torch.nn as nn
 
@@ -10,6 +10,12 @@ class FermiInteractionLayer(nn.Module):
     针对单电子流 (One-electron stream) 和双电子流 (Two-electron stream) 进行特征交互与更新。
     单电子特征聚合操作分为自旋向上电子集合 (Up-spin) 与自旋向下电子集合 (Down-spin)，
     保证模型网络关于同自旋电子置换的等变性 (Permutation Equivariance)。
+
+    注意：当 ``produce_two_electron_output=False`` 时（FermiNet 装配中的末层），
+    双电子流更新网络 (`linear_two` / `res_proj_two`) 不会被构造——末层的双电子流
+    输出不被任何后续模块消费（轨道矩阵仅由单电子流 h1 构造），若仍构造会得到
+    恒收不到梯度的空转参数。此时 ``forward`` 返回 ``(h1_next, None)``，
+    而双电子流 h2 输入仍参与单电子流的均值池化聚合。
     """
 
     def __init__(
@@ -18,6 +24,7 @@ class FermiInteractionLayer(nn.Module):
         in_dim_two: int,
         out_dim_one: int,
         out_dim_two: int,
+        produce_two_electron_output: bool = True,
     ) -> None:
         """
         初始化自旋等变相互作用层。
@@ -27,12 +34,18 @@ class FermiInteractionLayer(nn.Module):
             in_dim_two (int): 输入双电子流特征维度。
             out_dim_one (int): 输出单电子流特征维度。
             out_dim_two (int): 输出双电子流特征维度。
+            produce_two_electron_output (bool): 是否构造双电子流更新网络并输出
+                更新后的 h2 (默认 True，保持完整层契约)。置为 False 时不创建
+                `linear_two` 与 `res_proj_two`，``forward`` 返回 `(h1_next, None)`。
+                用于模型装配的末层：其 h2 输出无人消费，不构造对应更新网络
+                以避免空转参数。
         """
         super().__init__()
         self.in_dim_one = in_dim_one
         self.in_dim_two = in_dim_two
         self.out_dim_one = out_dim_one
         self.out_dim_two = out_dim_two
+        self.produce_two_electron_output = produce_two_electron_output
 
         # 聚合特征拼接总维度:
         # h_i (in_dim_one) + mean(h_up) (in_dim_one) + mean(h_down) (in_dim_one)
@@ -41,8 +54,9 @@ class FermiInteractionLayer(nn.Module):
 
         # 单电子流更新网络
         self.linear_one = nn.Linear(agg_dim_one, out_dim_one)
-        # 双电子流更新网络
-        self.linear_two = nn.Linear(in_dim_two, out_dim_two)
+        # 双电子流更新网络 (末层不消费 h2 输出时不构造，避免空转参数)
+        if self.produce_two_electron_output:
+            self.linear_two = nn.Linear(in_dim_two, out_dim_two)
 
         self.act = nn.Tanh()
 
@@ -52,10 +66,11 @@ class FermiInteractionLayer(nn.Module):
         else:
             self.res_proj_one = nn.Identity()
 
-        if in_dim_two != out_dim_two:
-            self.res_proj_two = nn.Linear(in_dim_two, out_dim_two, bias=False)
-        else:
-            self.res_proj_two = nn.Identity()
+        if self.produce_two_electron_output:
+            if in_dim_two != out_dim_two:
+                self.res_proj_two = nn.Linear(in_dim_two, out_dim_two, bias=False)
+            else:
+                self.res_proj_two = nn.Identity()
 
     def forward(
         self,
@@ -63,7 +78,7 @@ class FermiInteractionLayer(nn.Module):
         h2: torch.Tensor,
         n_up: int,
         n_down: int,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         """
         前向执行自旋分离聚合与流特征更新。
 
@@ -78,13 +93,15 @@ class FermiInteractionLayer(nn.Module):
             n_down (int): 自旋向下电子数目 (对应后 n_down 个电子)。
 
         Returns:
-            Tuple[torch.Tensor, torch.Tensor]:
+            Tuple[torch.Tensor, Optional[torch.Tensor]]:
                 - h1_next (torch.Tensor): 更新后的单电子流特征。
                     - Shape: `(B, N, out_dim_one)`。
                     - Dtype: 与 h1 一致。
-                - h2_next (torch.Tensor): 更新后的双电子流特征。
+                - h2_next (Optional[torch.Tensor]): 更新后的双电子流特征。
                     - Shape: `(B, N, N, out_dim_two)`。
                     - Dtype: 与 h2 一致。
+                    - 当 ``produce_two_electron_output=False`` 时为 `None`
+                      (末层装配：h2 输出无人消费，仅返回 h1_next)。
         """
         batch_size, num_electrons, _ = h1.shape
         assert num_electrons == n_up + n_down, (
@@ -147,10 +164,13 @@ class FermiInteractionLayer(nn.Module):
         h1_next = h1_transformed + self.res_proj_one(h1)
 
         # ---------------------------------------------------------------------
-        # 4. 更新双电子流特征
+        # 4. 更新双电子流特征 (末层装配时不构造更新网络，直接返回 None)
         # h2_ij 经线性变换后加激活与残差连接
         # shape: (B, N, N, out_dim_two)
         # ---------------------------------------------------------------------
+        if not self.produce_two_electron_output:
+            return h1_next, None
+
         h2_transformed = self.act(self.linear_two(h2))
         h2_next = h2_transformed + self.res_proj_two(h2)
 
