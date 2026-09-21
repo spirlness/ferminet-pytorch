@@ -3,7 +3,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
 [![Python](https://img.shields.io/badge/Python-3.9+-3776ab.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-109%20Passed-brightgreen.svg)](#)
+[![Tests](https://img.shields.io/badge/Tests-118%20Passed-brightgreen.svg)](#)
 
 本项目提供了一个基于 **PyTorch 原生生态** 的高性能、模块化、工业级 **FermiNet (费米神经网络)** 实现，专门用于量子化学与凝聚态物理中多电子薛定谔方程的从头算 (Ab-initio) 变分求解。
 
@@ -85,7 +85,7 @@ ferminet_pytorch/
 ├── benchmark_compile.py  # PyTorch 2.0+ JIT 编译优化加速比评测脚本
 ├── benchmark_100_atoms.py# 100 原子超大规模体系基准测试与物理自洽性校验
 ├── test_ferminet.py      # 核心物理性质与网络架构综合单元测试套件
-├── test_vmc.py           # VMC 采样、无偏梯度与能量截断专项单元测试
+├── test_vmc.py           # VMC 采样、梯度估计与能量截断专项单元测试
 ├── test_phase2.py        # 阶段 2 动能求解器、核电荷注入与各向异性包络专项测试
 ├── test_visualize.py     # 综合可视化模块专项测试套件 (54 项)
 ├── assets/plots/         # 训练生成的可视化图表资源目录
@@ -189,6 +189,27 @@ uv run python train_vmc.py --epochs 50 --walkers 1024 --lr 1e-3
 - `Var(E)` (能量方差)：**量子体系最重要的收敛指标**！当且仅当网络逼近真实薛定谔本征态时，空间各处局域能趋于同一常数，方差自发趋向于 0（零方差原理）；
 - `Acc (%)` (接受率)：内置自适应步长控制器将采样接受率稳定锁定在 $50\%$ 黄金探索平衡点。
 
+#### 科研结果的统计口径
+
+训练期的 `<E_raw>`、`Var(E)` 与 `IID SEM*` 只用于优化诊断：连续 MCMC 样本相关，`IID SEM*` 不是最终误差条。训练结束后，`train_vmc` 会冻结模型参数与采样步长，重新平衡并默认采集 `32 × num_walkers` 个精确局域能量样本。
+
+返回字典中的 `final_energy` 和 `final_variance` 来自该独立复评；`training_last_batch_energy` 单独保留，避免把更新前批次与最终模型混淆。`evaluation` 包含：
+
+- `energy_sem`：按有效样本数修正的链相关标准误；
+- `ess` 与 `tau_int`：有效样本数和积分自相关时间；
+- `r_hat`：split-R-hat 链间收敛诊断；
+- `laplacian_method`：复评使用的局域能量算法。
+
+`r_hat` 接近 1 且 ESS 足够大，才说明该次复评的误差条具有参考价值；短训练的能量下降本身不构成论文精度声明。可按预算调整复评：
+
+```bash
+python train_vmc.py --epochs 50 --walkers 256 \
+  --evaluation_steps 64 --evaluation_mcmc_steps 5 \
+  --evaluation_burn_in 40 --evaluation_laplacian_method exact
+```
+
+H₂ 参考线只在核电荷 `[1, 1]`、自旋 `(1, 1)`、核间距 `1.4 Bohr` 都匹配时显示；LiH 同样要求登记的电荷、自旋与 `3.015 Bohr` 几何。未匹配体系不猜测参考能量。
+
 ---
 
 ### 演示 3：极性异核分子氢化锂 $LiH$ 变分优化
@@ -201,7 +222,7 @@ python train_vmc.py --system lih --laplacian_method hutchinson --epochs 30 --wal
 # 或使用 uv 运行：
 uv run python train_vmc.py --system lih --laplacian_method hutchinson --epochs 30 --walkers 512
 ```
-能量期望值稳定向基态参考能量 $\approx -8.070$ Hartree 收敛。
+只有在登记的 LiH 电荷、自旋和 `3.015 Bohr` 几何完全匹配时，才会显示 $\approx -8.070$ Hartree 的参考线。短训练仅用于验证链路与趋势，不能据此宣称已经收敛。
 
 ---
 
@@ -273,10 +294,10 @@ python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_di
 
 ## 🧪 单元测试套件 (Unit Tests)
 
-本项目包含 4 套覆盖核心物理性质、VMC 训练、阶段 2 高性能求解器以及综合可视化的完整自动化测试：
+本项目包含 5 套覆盖核心物理性质、VMC 训练、链相关统计、阶段 2 求解器以及综合可视化的自动化测试：
 
 ```bash
-# 1. 一键运行全部 109 项专业单元测试：
+# 1. 一键运行全部 118 项单元测试：
 python -m unittest discover -s . -p "test_*.py" -v
 
 # 2. 或分别运行专项测试：
@@ -284,8 +305,9 @@ python -m unittest test_ferminet.py   # 核心物理性质与网络架构测试 
 python -m unittest test_vmc.py        # VMC 采样、代理损失与能量截断测试 (18 项)
 python -m unittest test_phase2.py     # 阶段 2 动能求解器与物理特征测试 (23 项)
 python -m unittest test_visualize.py  # 综合可视化分析模块专项测试 (54 项)
+python -m unittest test_mcmc_stats.py # ESS、链相关 SEM 与 split-R-hat 测试 (4 项)
 ```
-全部 **109 项专业单元测试 100% 通过**，保证从底层物理公式、高阶导数到顶层绘图渲染的绝对可靠性！
+当前基线为 **118 项测试通过**。测试覆盖实现性质与数值回归，但不能替代长时间、多种子、独立复评的科学收敛验证。
 
 ---
 

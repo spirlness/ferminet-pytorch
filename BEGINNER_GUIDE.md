@@ -592,6 +592,16 @@ Epoch  |  <E_raw> (Ha)  | <E_clip> (Ha)  |   Var(E)   | IID SEM*  | Acc (%)  |  
 ===========================================================================
 ```
 
+这里的“最终”不再是最后一次参数更新前的批次均值：训练结束后，程序会冻结模型和采样步长，重新预热，再沿每条 walker 链采集时间序列。返回的 `final_energy` 与 `final_variance` 来自该复评；训练最后一批则以 `training_last_batch_energy` 保存。`IID SEM*` 只用于观察训练过程，正式报告应同时给出 `evaluation.energy_sem`、`evaluation.ess`、`evaluation.tau_int` 与 `evaluation.r_hat`。
+
+推荐把 `R-hat` 接近 1、ESS 足够大视为“误差条可解释”的前提，而不是把一次短训练的能量下降直接视为收敛。复评默认使用精确 Laplacian；可用下列参数提高统计稳健性：
+
+```bash
+python train_vmc.py --epochs 50 --walkers 256 \
+  --evaluation_steps 64 --evaluation_mcmc_steps 5 \
+  --evaluation_burn_in 40 --evaluation_laplacian_method exact
+```
+
 ### 6.3 演示 3：极性异核分子氢化锂 $LiH$ 变分优化
 
 氢化锂 $LiH$ 是一个典型的极性共价键分子：锂核电荷 $Z=3$，氢核电荷 $Z=1$，总电子数 $N=4$。
@@ -602,7 +612,7 @@ python train_vmc.py --system lih --laplacian_method hutchinson --epochs 30 --wal
 # 或使用 uv 运行：
 uv run python train_vmc.py --system lih --laplacian_method hutchinson --epochs 30 --walkers 512
 ```
-最终能量将稳定向参考能量 $\approx -8.070$ Hartree 稳步收敛。
+只有核电荷、自旋电子数与核间距 `3.015 Bohr` 同时匹配登记记录时，才会显示 $\approx -8.070$ Hartree 参考线；短训练只能检查链路和趋势。
 
 ### 6.4 演示 4：100 原子超大规模体系基准测试 (`benchmark_100_atoms.py`)
 
@@ -702,6 +712,9 @@ python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_di
 | `<E_clip>` | 截断后局域能量均值 | 经过 Umrigar tanh 过滤掉奇异离群点后的能量均值 | 与 `<E_raw>` 极其接近，若两者差巨大说明节点奇异点较多 |
 | `Var(E)` | 能量方差 | 局域能量在空间中的波动方差 $\text{Var}(E_L)$ | **黄金指标！随着训练必须逐渐变小**，越小说明波函数越完美 |
 | `IID SEM*` | 单批次 IID 代理量 | 暂时忽略链自相关的训练诊断值，不是可信置信区间 | 仅观察趋势；最终结论使用复评的相关 SEM、ESS 与 R-hat |
+| `evaluation.energy_sem` | 链相关均值标准误 | 使用 walker 时间序列与有效样本数修正的最终误差条 | 与 ESS、`tau_int`、`R-hat` 一起报告 |
+| `ESS` | 有效样本数 | 把自相关链折算为等价独立样本数 | 越大越好，但必须结合采样预算解释 |
+| `R-hat` | 链间收敛诊断 | 比较拆分 walker 链的方差与链内方差 | 接近 1 才适合解释 SEM |
 | `Acc (%)` | MCMC 接受率 | 采样器提议移动并被接受的百分比 | **应稳定在 45% ~ 55% 附近**，若过高或过低步长会自动调节 |
 | `Step` | MCMC 空间移动步长 | 高斯提议分布的标准差 $\sigma$ | 自适应微调，大分子通常在 0.1 ~ 0.5 之间 |
 
