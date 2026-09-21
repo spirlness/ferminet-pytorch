@@ -18,7 +18,7 @@
    - 2.5 传统化学方法是怎么做的？Hartree-Fock 与 Slater 行列式的局限
    - 2.6 FermiNet 深度学习 Backflow 机制做了什么突破？
 3. [🧠 第二章：FermiNet 神经网络核心架构超清晰拆解](#3-第二章ferminet-神经网络核心架构超清晰拆解)
-   - 3.1 [整体架构全景数据流 (高清矢量架构图 & 流程流向)](#31-整体架构全景数据流-高清矢量架构图--流程流向)
+   - 3.1 [整体架构全景数据流 (学术期刊规范架构图)](#31-整体架构全景数据流-学术期刊规范架构图)
    - 3.2 几何特征提取 (`features.py`)：相对位移、距离与核电荷注入
    - 3.3 自旋等变交互层 (`layers.py`)：单/双电子流与自旋分离池化
    - 3.4 原子核指数衰减包络 (`envelope.py`)：物理渐近条件与各向异性度规
@@ -170,10 +170,10 @@ $$\phi_j(r_i; \{r_{\setminus i}\})$$
   <img src="assets/ferminet_nature_architecture.png" alt="FermiNet 3D Scientific Architecture Illustration" width="100%">
 </p>
 
-### 3.1 整体架构全景数据流 (高清矢量架构图 & 流程流向)
+### 3.1 整体架构全景数据流 (学术期刊规范架构图)
 
 <p align="center">
-  <img src="assets/ferminet_architecture.svg" alt="FermiNet Deep Quantum Wavefunction Architecture" width="100%">
+  <img src="assets/ferminet_academic_dataflow.png" alt="FermiNet Academic Dataflow Architecture" width="100%">
 </p>
 
 下面是对应的文本级数据流水线与张量传递概览，请在阅读后续章节时随时对照：

@@ -60,7 +60,7 @@
 ## 📂 项目模块全景导览 (Architecture Overview)
 
 <p align="center">
-  <img src="assets/ferminet_architecture.svg" alt="FermiNet Architecture" width="100%">
+  <img src="assets/ferminet_academic_dataflow.png" alt="FermiNet Academic Architecture and Dataflow" width="100%">
 </p>
 
 ```text
