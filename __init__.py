@@ -9,6 +9,7 @@ from .envelope import NuclearEnvelope
 from .model import FermiNet
 from .hamiltonian import MolecularSystem, compute_local_energy
 from .mcmc import MCMCSampler
+from .mcmc_stats import estimate_mcmc_statistics
 from .loss import clip_local_energy, vmc_surrogate_loss, VMCLoss
 from .train_vmc import train_vmc, build_h2_system, build_lih_system
 
@@ -20,6 +21,7 @@ __all__ = [
     "MolecularSystem",
     "compute_local_energy",
     "MCMCSampler",
+    "estimate_mcmc_statistics",
     "clip_local_energy",
     "vmc_surrogate_loss",
     "VMCLoss",

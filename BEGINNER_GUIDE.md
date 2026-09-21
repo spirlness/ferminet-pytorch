@@ -29,7 +29,7 @@
    - 4.2 Metropolis-Hastings 接受/拒绝机制
    - 4.3 什么是局域能量 $E_L(r)$？动能与势能的精妙平衡
    - 4.4 变分原理：为什么能量越低越逼近真理？
-   - 4.5 核心物理公式纠偏：无偏代理损失 (Surrogate Loss) 与求导真相
+   - 4.5 核心物理公式纠偏：有限批次协方差代理损失与求导真相
    - 4.6 局域能量平滑截断 (Umrigar Tanh Clipping)：防止优化器“炸飞”
 5. [🗺️ 第四章：阶段 0、1、2 核心演进与模块全景导览](#5-第四章阶段-012-核心演进与模块全景导览)
    - 5.1 源码文件与核心职责对照表
@@ -398,7 +398,7 @@ $$\langle E \rangle_{\theta} = \frac{\langle \Psi_\theta | \hat{H} | \Psi_\theta
 这意味着我们可以把**能量期望值 $\langle E \rangle$ 直接当做神经网络的优化目标（Loss 函数）！**
 只要我们通过梯度下降不断降低能量，神经网络就会自发地向微观物理的最深真实收敛！
 
-### 4.5 核心物理公式纠偏：无偏代理损失 (Surrogate Loss) 与求导真相
+### 4.5 核心物理公式纠偏：有限批次协方差代理损失与求导真相
 
 > ⚠️ **新手极易犯的严重物理错误**：
 > 既然优化目标是 $\langle E \rangle = \mathbb{E}[E_L(r)]$，那能不能写成 `loss = torch.mean(e_local)` 然后直接调用 `loss.backward()`？
@@ -419,18 +419,18 @@ $$\nabla_\theta \langle E \rangle = 2 \, \mathbb{E}_{r \sim |\Psi|^2} \left[ \le
 1. **$E_L(r) - \langle E_L \rangle$ 这一项不需要任何参数梯度！** 它只是一个标量系数；
 2. **需要求参数梯度的只有 $\ln|\Psi_\theta(r)|$ 这一项！**
 
-在 `loss.py` 中，我们构建了**无偏变分代理损失 (Surrogate Loss)**：
+在 `loss.py` 中，默认使用无截断并带有限样本修正的协方差代理损失。若批次中有 $B$ 个独立、平衡态 Walker，则乘上 $B/(B-1)$ 可消除同批次均值中心化的有限样本因子：
 ```python
 # 1. 彻底分离局域能量的梯度图 (stop_gradient)
-delta_e = (e_clipped - torch.mean(e_clipped)).detach()
+delta_e = (B / (B - 1)) * (e_local - torch.mean(e_local)).detach()
 
 # 2. 构造代理损失函数
 loss = 2.0 * torch.mean(delta_e * log_abs_psi)
 
-# 3. 反向传播：链式法则自动产出严格符合物理定律的无偏变分梯度！
+# 3. 在 IID Walker 与平衡分布条件下得到有限批次无偏协方差梯度
 loss.backward()
 ```
-这种精巧的设计既省去了三阶导的高昂开销，又保证了物理上的绝对严谨！
+这省去了三阶导的高昂开销。无偏结论依赖 IID Walker、平衡分布和未截断局域能量；不能脱离这些前提使用。
 
 ### 4.6 局域能量平滑截断 (Umrigar Tanh Clipping)：防止优化器“炸飞”
 
@@ -446,7 +446,7 @@ loss.backward()
 3. 用平滑的双曲正切函数处理离群点：
    $$E_{\text{clipped}} = E_{\text{median}} + \Delta \cdot \tanh\left( \frac{E_L - E_{\text{median}}}{\Delta} \right)$$
 
-这种做法把无限大的离群能量柔和地限制在 $[E_{\text{median}} - \Delta, E_{\text{median}} + \Delta]$ 之间，彻底防御了梯度爆炸，保证了训练过程平稳如丝！
+这种做法能限制离群能量并提高稳定性，但它改变了梯度目标，因此现在必须通过 `--clip_method tanh` 或 `hard` 显式启用，不能称为严格无偏估计。
 
 ---
 
@@ -464,7 +464,8 @@ loss.backward()
 | [`model.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/model.py) | FermiNet 主干网络 | `FermiNet` | 组装 Backflow 轨道，调用 `slogdet` 分解计算多行列式对数波函数 `log|Psi|` 与符号 `sign` |
 | [`hamiltonian.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/hamiltonian.py) | 分子哈密顿量与动能 | `MolecularSystem`, `compute_local_energy` | 全向量化计算势能 $V(r)$ 与动能 $T_L(r)$，集成三大拉普拉斯求解器 |
 | [`mcmc.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/mcmc.py) | 批量 GPU MCMC 采样器 | `MCMCSampler` | 并行 Metropolis-Hastings 拒绝抽样，自适应调节步长稳定在 50% 接受率 |
-| [`loss.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/loss.py) | 无偏变分代理损失 | `VMCLoss`, `vmc_surrogate_loss`, `clip_local_energy` | 实现变分梯度定理无偏代理损失与基于 MAD 的 Umrigar tanh 局域能量截断 |
+| [`loss.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/loss.py) | 协方差代理损失 | `VMCLoss`, `vmc_surrogate_loss`, `clip_local_energy` | 默认有限批次修正；Tanh/Hard 截断为显式稳健有偏模式 |
+| [`mcmc_stats.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/mcmc_stats.py) | MCMC 统计 | `estimate_mcmc_statistics` | 由 walker 时间序列估计自相关时间、ESS、split-R-hat 与链相关 SEM |
 | [`train_vmc.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/train_vmc.py) | 端到端训练脚本 | `train_vmc`, `main` | 串联 MCMC 采样、局域能量求解与 Adam 参数优化的完整训练闭环 |
 | [`example_h2.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/example_h2.py) | 极简推断与能量演示 | `run_h2_demo` | 5 分钟上手脚本，单步前向推断 $H_2$ 波函数与局域能量拆解 |
 | [`benchmark_compile.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/benchmark_compile.py) | JIT 图编译基准评测 | `benchmark_compilation` | 测试 PyTorch 2.0 `torch.compile` 对 FermiNet 的算子融合与 5.8x 加速比 |
@@ -577,7 +578,7 @@ uv run python train_vmc.py --epochs 50 --walkers 1024 --lr 1e-3
 [*] 预热阶段: 正在执行 100 步 MCMC 预热...
     预热完成 (耗时: 1.25s, 最终平均接受率: 51.2%, 步长: 0.5023)
 ---------------------------------------------------------------------------
-Epoch  |  <E_raw> (Ha)  | <E_clip> (Ha)  |   Var(E)   |    SEM    | Acc (%)  |  Step  
+Epoch  |  <E_raw> (Ha)  | <E_clip> (Ha)  |   Var(E)   | IID SEM*  | Acc (%)  |  Step
 ---------------------------------------------------------------------------
   1    |    -0.81235    |    -0.81050    |  0.45120   |  0.02099  |   50.8   | 0.5023 
  10    |    -1.05412    |    -1.05380    |  0.21040   |  0.01433  |   51.5   | 0.5041 
@@ -586,7 +587,8 @@ Epoch  |  <E_raw> (Ha)  | <E_clip> (Ha)  |   Var(E)   |    SEM    | Acc (%)  |  
 ===========================================================================
 [*] 训练收敛总结:
 [*] 最终能量期望值: -1.16850 Hartree (H2 理论基态参考: ~ -1.1744 Hartree)
-[*] 最终能量方差: 0.04510
+[*] 最终能量方差: 0.04510 | 相关 SEM: 0.00663
+[*] ESS: 8200.0 | tau_int: 1.998 | R-hat: 1.0040
 ===========================================================================
 ```
 
@@ -648,9 +650,9 @@ python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_di
 小白如何读懂这三张图？
 1. **左图：能量收敛曲线（小球滚入量子基态）**
    - **蓝色实线（原始能量）** 与 **绿色实线（截断能量）**：从初期的约 $-0.57\,\text{Ha}$ 一路下滑，平稳收敛到贴近红色虚线（$H_2$ 真实理论基态能量 $-1.17447\,\text{Ha}$）；
-   - **浅蓝色阴影带**：代表蒙特卡洛统计误差 $\pm 1\sigma_{\bar{E}}$（SEM），随着采样稳定，阴影带越来越纤细，左下角直接标出最终能量残差仅约 $10.92\,\text{mHa}$ ($6.85\,\text{kcal/mol}$)！
+   - 训练曲线不再绘制误导性的 IID 误差带；可信误差来自训练后冻结参数采集的时间序列，并单独报告 ESS 与链相关 SEM。
 2. **中图：零方差原理对数衰减（检验波函数是否完美的终极试金石）**
-   - **紫色实线（能量方差 $\text{Var}(E)$）** 与 **橙色点划线（均值标准误 $\text{SEM}$）**：在对数坐标轴下携手下降，方差从 $0.55$ 骤降至 $0.026$。这在物理上直接向你证明：**神经网络正在把每个空间点处的局域能量压平为同一个常数！**
+   - **紫色实线（能量方差）** 与 **橙色点划线（IID 批次 SEM 代理量）**只用于训练诊断；最终误差必须查看冻结参数复评产生的相关 SEM、ESS 和 R-hat。
 3. **右图：MCMC 采样器健康度与自适应步长（算法的“恒温器”）**
    - **青色折线（接受率）**：围绕着灰色水平虚线（50% 目标线）小幅振荡，说明采样器既没有盲目乱跳（接受率太低），也没有原地踏步（接受率太高）；
    - **棕色点划线（提议移动步长）**：控制器像一个自动温度计，随着波函数越来越聚焦，步长自适应调节收敛到约 $0.47\,\text{Bohr}$。
@@ -699,7 +701,7 @@ python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_di
 | `<E_raw>` | 原始局域能量均值 | 当前批次所有 Walker 局域能量的原始算术平均值（单位：Hartree） | **随着训练逐渐下降**，逐步逼近理论基态能量 |
 | `<E_clip>` | 截断后局域能量均值 | 经过 Umrigar tanh 过滤掉奇异离群点后的能量均值 | 与 `<E_raw>` 极其接近，若两者差巨大说明节点奇异点较多 |
 | `Var(E)` | 能量方差 | 局域能量在空间中的波动方差 $\text{Var}(E_L)$ | **黄金指标！随着训练必须逐渐变小**，越小说明波函数越完美 |
-| `SEM` | 均值标准误 | Standard Error of the Mean，衡量能量期望值统计精度的置信区间 | 越小说明蒙特卡洛统计误差越小（增多 Walkers 可以降低 SEM） |
+| `IID SEM*` | 单批次 IID 代理量 | 暂时忽略链自相关的训练诊断值，不是可信置信区间 | 仅观察趋势；最终结论使用复评的相关 SEM、ESS 与 R-hat |
 | `Acc (%)` | MCMC 接受率 | 采样器提议移动并被接受的百分比 | **应稳定在 45% ~ 55% 附近**，若过高或过低步长会自动调节 |
 | `Step` | MCMC 空间移动步长 | 高斯提议分布的标准差 $\sigma$ | 自适应微调，大分子通常在 0.1 ~ 0.5 之间 |
 

@@ -570,7 +570,7 @@ class TestFermiNet(unittest.TestCase):
         self.assertFalse(sampled.data_ptr() == sampler.walkers.data_ptr())
 
     def test_vmc_surrogate_loss_and_clipping(self) -> None:
-        """验证基于 MAD 的局域能量平滑截断与变分无偏代理损失反向传播."""
+        """验证基于 MAD 的稳健有偏截断与代理损失反向传播."""
         e_local = torch.tensor([-1.1, -1.2, 1000.0, -999.0], dtype=torch.float32)
         e_clip, med, mad = clip_local_energy(e_local, clip_factor=5.0, method="tanh")
         self.assertTrue(torch.isfinite(e_clip).all())
@@ -600,6 +600,9 @@ class TestFermiNet(unittest.TestCase):
             mcmc_steps_per_epoch=2,
             burn_in_steps=4,
             lr=1e-3,
+            evaluation_steps=4,
+            evaluation_mcmc_steps=1,
+            evaluation_burn_in_steps=2,
             verbose=False,
         )
         self.assertIn("history", result)

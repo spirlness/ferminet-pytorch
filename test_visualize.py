@@ -33,6 +33,7 @@ from visualize import (
     REFERENCE_ENERGIES,
     apply_academic_style,
     compute_distribution_stats,
+    get_system_reference,
     get_system_reference_energy,
     get_system_label,
     plot_energy_convergence,
@@ -74,7 +75,7 @@ def _make_training_history(n_epochs: int = 30) -> Dict[str, List[float]]:
         "energy_clipped": [],
         "energy_std": [],
         "energy_var": [],
-        "energy_sem": [],
+        "energy_iid_sem_proxy": [],
         "loss": [],
         "acceptance_rate": [],
         "step_size": [],
@@ -88,7 +89,7 @@ def _make_training_history(n_epochs: int = 30) -> Dict[str, List[float]]:
         history["energy_clipped"].append(float(e + np.random.randn() * 0.005))
         history["energy_std"].append(float(np.sqrt(var)))
         history["energy_var"].append(float(var))
-        history["energy_sem"].append(float(sem))
+        history["energy_iid_sem_proxy"].append(float(sem))
         history["loss"].append(float(abs(e) * 0.1))
         history["acceptance_rate"].append(float(0.4 + 0.1 * progress + np.random.rand() * 0.05))
         history["step_size"].append(float(0.5 - 0.15 * progress))
@@ -200,6 +201,51 @@ class TestSystemReferenceInference(unittest.TestCase):
         ref = get_system_reference_energy(sys)
         self.assertAlmostEqual(ref, -1.17447, places=3)
 
+    def test_reference_match_is_rigid_motion_and_permutation_invariant(self):
+        """共同旋转、平移及原子重排不能改变体系身份。"""
+        sys = _make_h2_system()
+        angle = np.pi / 3.0
+        rotation = torch.tensor(
+            [[np.cos(angle), -np.sin(angle), 0.0],
+             [np.sin(angle), np.cos(angle), 0.0],
+             [0.0, 0.0, 1.0]],
+            dtype=sys.nuclear_coords.dtype,
+        )
+        coords = (sys.nuclear_coords @ rotation.T) + torch.tensor([2.0, -1.0, 0.5])
+        transformed = MolecularSystem(
+            nuclear_coords=coords.flip(0),
+            nuclear_charges=sys.nuclear_charges.flip(0),
+            n_up=1,
+            n_down=1,
+        )
+        ref = get_system_reference(transformed)
+        self.assertIsNotNone(ref)
+        self.assertEqual(ref.key, "h2")
+
+    def test_reference_rejects_same_particle_counts_for_different_system(self):
+        """两个核、两个电子不能自动被当作 H2。"""
+        impostor = MolecularSystem(
+            nuclear_coords=torch.tensor([[0.0, 0.0, -2.0], [0.0, 0.0, 2.0]]),
+            nuclear_charges=torch.tensor([2.0, 1.0]),
+            n_up=1,
+            n_down=1,
+        )
+        self.assertIsNone(get_system_reference(impostor))
+        self.assertIsNone(get_system_reference_energy(impostor))
+        self.assertNotIn("H_2", get_system_label(impostor))
+
+    def test_reference_rejects_wrong_geometry_and_spin(self):
+        wrong_geometry = _make_h2_system()
+        wrong_geometry.update_geometry(torch.tensor([[0.0, 0.0, -0.8], [0.0, 0.0, 0.8]]))
+        wrong_spin = MolecularSystem(
+            nuclear_coords=torch.tensor([[0.0, 0.0, -0.7], [0.0, 0.0, 0.7]]),
+            nuclear_charges=torch.tensor([1.0, 1.0]),
+            n_up=2,
+            n_down=0,
+        )
+        self.assertIsNone(get_system_reference_energy(wrong_geometry))
+        self.assertIsNone(get_system_reference_energy(wrong_spin))
+
     def test_get_system_label_h2(self):
         """H2 体系标签应包含 H_2。"""
         sys = _make_h2_system()
@@ -242,7 +288,7 @@ class TestTrainingProcessPlots(unittest.TestCase):
 
     def test_energy_convergence_empty_history(self):
         """空历史记录应安全绘图 (不崩溃)。"""
-        empty = {"energy_raw": [], "energy_clipped": [], "energy_sem": []}
+        empty = {"energy_raw": [], "energy_clipped": [], "energy_iid_sem_proxy": []}
         fig = plot_energy_convergence(empty)
         self.assertIsInstance(fig, plt.Figure)
 
@@ -527,7 +573,7 @@ class TestAllVisualizationsExporter(unittest.TestCase):
 
     def test_empty_history_no_crash(self):
         """空历史记录不应导致崩溃。"""
-        empty = {"energy_raw": [], "energy_var": [], "energy_sem": [],
+        empty = {"energy_raw": [], "energy_var": [], "energy_iid_sem_proxy": [],
                  "acceptance_rate": [], "step_size": []}
         saved = plot_all_visualizations(
             history=empty,

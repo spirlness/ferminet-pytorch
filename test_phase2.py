@@ -493,6 +493,10 @@ class TestPhase2Features(unittest.TestCase):
             mcmc_steps_per_epoch=2,
             burn_in_steps=3,
             laplacian_method="hutchinson",
+            evaluation_steps=4,
+            evaluation_mcmc_steps=1,
+            evaluation_burn_in_steps=2,
+            evaluation_laplacian_method="hutchinson",
             verbose=False,
         )
         self.assertEqual(len(res["history"]["energy_raw"]), 2)

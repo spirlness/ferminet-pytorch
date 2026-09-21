@@ -1,7 +1,7 @@
 """
 变分量子蒙特卡洛 (VMC) 端到端优化训练脚本
 ==========================================
-实现基于无偏变分梯度与 MCMC 批量采样的完整基态能量求解闭环。
+实现基于有限批次协方差梯度与 MCMC 批量采样的完整基态能量求解闭环。
 默认以氢分子 (H2, R = 1.4 a.u., 基态参考能约 -1.174 Hartree) 为基准体系演示。
 """
 
@@ -23,13 +23,15 @@ for p in [current_dir, parent_dir]:
 
 try:
     from ferminet_pytorch.model import FermiNet
-    from ferminet_pytorch.hamiltonian import MolecularSystem
+    from ferminet_pytorch.hamiltonian import MolecularSystem, compute_local_energy
     from ferminet_pytorch.mcmc import MCMCSampler
+    from ferminet_pytorch.mcmc_stats import estimate_mcmc_statistics
     from ferminet_pytorch.loss import VMCLoss
 except ImportError:
     from model import FermiNet
-    from hamiltonian import MolecularSystem
+    from hamiltonian import MolecularSystem, compute_local_energy
     from mcmc import MCMCSampler
+    from mcmc_stats import estimate_mcmc_statistics
     from loss import VMCLoss
 
 
@@ -99,6 +101,56 @@ def build_lih_system(
     )
 
 
+def evaluate_trained_model(
+    model: nn.Module,
+    system: MolecularSystem,
+    sampler: MCMCSampler,
+    evaluation_steps: int = 32,
+    evaluation_mcmc_steps: int = 5,
+    evaluation_burn_in_steps: int = 20,
+    laplacian_method: str = "exact",
+) -> Dict[str, Any]:
+    """在冻结模型参数和采样步长后采集链时间序列并计算相关性统计。"""
+    if evaluation_steps < 2:
+        raise ValueError(f"evaluation_steps must be >= 2, got {evaluation_steps}")
+    if evaluation_mcmc_steps < 1:
+        raise ValueError(f"evaluation_mcmc_steps must be >= 1, got {evaluation_mcmc_steps}")
+    if evaluation_burn_in_steps < 0:
+        raise ValueError("evaluation_burn_in_steps must be non-negative")
+
+    was_training = model.training
+    previous_adaptation = sampler.adapt_step_size
+    parameter_versions = [parameter.detach().clone() for parameter in model.parameters()]
+    energy_series: List[torch.Tensor] = []
+    try:
+        model.eval()
+        sampler.adapt_step_size = False
+        if evaluation_burn_in_steps:
+            sampler.sample(num_steps=evaluation_burn_in_steps)
+        for _ in range(evaluation_steps):
+            walkers = sampler.sample(num_steps=evaluation_mcmc_steps)
+            walkers = walkers.detach().requires_grad_(True)
+            local_energy, _, _ = compute_local_energy(
+                model=model,
+                system=system,
+                r=walkers,
+                create_graph=False,
+                laplacian_method=laplacian_method,
+            )
+            energy_series.append(local_energy.detach().to(device="cpu", dtype=torch.float64))
+    finally:
+        sampler.adapt_step_size = previous_adaptation
+        model.train(was_training)
+
+    for before, after in zip(parameter_versions, model.parameters()):
+        if not torch.equal(before, after.detach()):
+            raise RuntimeError("model parameters changed during frozen evaluation")
+
+    statistics = estimate_mcmc_statistics(torch.stack(energy_series, dim=0))
+    statistics["laplacian_method"] = laplacian_method
+    return statistics
+
+
 def train_vmc(
     system: Optional[MolecularSystem] = None,
     model: Optional[FermiNet] = None,
@@ -111,11 +163,15 @@ def train_vmc(
     target_acceptance: float = 0.5,
     move_mode: str = "all",
     clip_factor: float = 5.0,
-    clip_method: str = "tanh",
+    clip_method: str = "none",
     laplacian_method: str = "exact",
     num_hutchinson_samples: int = 1,
     hutchinson_distribution: str = "rademacher",
     grad_clip: float = 1.0,
+    evaluation_steps: int = 32,
+    evaluation_mcmc_steps: int = 5,
+    evaluation_burn_in_steps: int = 20,
+    evaluation_laplacian_method: str = "exact",
     device: Optional[str] = None,
     dtype: torch.dtype = torch.float32,
     seed: int = 42,
@@ -136,11 +192,15 @@ def train_vmc(
         target_acceptance (float): MCMC 目标接受率 (默认 0.5)。
         move_mode (str): MCMC 步进模式 ('all' 或 'one_by_one')。
         clip_factor (float): 局域能量平滑截断阈值因子 (MAD 倍数)。
-        clip_method (str): 截断方式 ('tanh', 'hard', 'none')。
+        clip_method (str): 截断方式；默认 'none' 使用有限批次修正估计器。
         laplacian_method (str): 局域动能拉普拉斯求解策略 ('exact', 'hutchinson', 'exact_jvp', 'jvp')。
         num_hutchinson_samples (int): Hutchinson 随机迹估计采样次数 (默认为 1)。
         hutchinson_distribution (str): Hutchinson 探测向量分布 ('rademacher' 或 'gaussian'，默认 'rademacher')。
         grad_clip (float): 梯度范数裁剪阈值。
+        evaluation_steps (int): 冻结参数后的能量时间序列长度，必须至少为 2。
+        evaluation_mcmc_steps (int): 相邻复评样本之间的 MCMC 步数。
+        evaluation_burn_in_steps (int): 最终参数下重新平衡的步数。
+        evaluation_laplacian_method (str): 独立复评使用的 Laplacian 方法，默认精确反向模式。
         device (Optional[str]): 运行设备 ('cuda' 或 'cpu'，若为 None 自动检测)。
         dtype (torch.dtype): 浮点运算精度。
         seed (int): 随机数种子。
@@ -217,7 +277,7 @@ def train_vmc(
     if verbose:
         print(f"    预热完成 (耗时: {burn_in_time:.2f}s, 最终平均接受率: {burn_in_acc * 100:.1f}%, 步长: {sampler.step_size:.4f})")
         print("-" * 75)
-        print(f"{'Epoch':^6} | {'<E_raw> (Ha)':^14} | {'<E_clip> (Ha)':^14} | {'Var(E)':^10} | {'SEM':^9} | {'Acc (%)':^8} | {'Step':^7}")
+        print(f"{'Epoch':^6} | {'<E_raw> (Ha)':^14} | {'<E_clip> (Ha)':^14} | {'Var(E)':^10} | {'IID SEM*':^9} | {'Acc (%)':^8} | {'Step':^7}")
         print("-" * 75)
 
     # 4. 优化器配置
@@ -229,7 +289,7 @@ def train_vmc(
         "energy_clipped": [],
         "energy_std": [],
         "energy_var": [],
-        "energy_sem": [],
+        "energy_iid_sem_proxy": [],
         "loss": [],
         "acceptance_rate": [],
         "step_size": [],
@@ -241,7 +301,7 @@ def train_vmc(
         # A. MCMC 步进更新电子构型
         walkers = sampler.sample(num_steps=mcmc_steps_per_epoch)
 
-        # B. 计算局部能量与无偏代理损失
+        # B. 计算局部能量与协方差代理损失
         loss, stats, _ = vmc_loss.compute_step_loss(model, system, walkers)
 
         # C. 优化器反向传播与更新
@@ -261,7 +321,7 @@ def train_vmc(
         history["energy_clipped"].append(stats["energy_clipped_mean"])
         history["energy_std"].append(stats["energy_std"])
         history["energy_var"].append(stats["energy_var"])
-        history["energy_sem"].append(stats["energy_sem"])
+        history["energy_iid_sem_proxy"].append(stats["energy_iid_sem_proxy"])
         history["loss"].append(stats["loss"])
         history["acceptance_rate"].append(sampler.last_acceptance_rate)
         history["step_size"].append(sampler.step_size)
@@ -273,24 +333,39 @@ def train_vmc(
                 f"{stats['energy_mean']:^14.5f} | "
                 f"{stats['energy_clipped_mean']:^14.5f} | "
                 f"{stats['energy_var']:^10.4f} | "
-                f"{stats['energy_sem']:^9.4f} | "
+                f"{stats['energy_iid_sem_proxy']:^9.4f} | "
                 f"{sampler.last_acceptance_rate * 100:^8.1f} | "
                 f"{sampler.step_size:^7.4f}"
             )
 
     total_train_time = time.time() - start_train_time
+    training_last_batch_energy = history["energy_raw"][-1]
+    training_last_batch_variance = history["energy_var"][-1]
+    evaluation = evaluate_trained_model(
+        model=model,
+        system=system,
+        sampler=sampler,
+        evaluation_steps=evaluation_steps,
+        evaluation_mcmc_steps=evaluation_mcmc_steps,
+        evaluation_burn_in_steps=evaluation_burn_in_steps,
+        laplacian_method=evaluation_laplacian_method,
+    )
     if verbose:
         print("-" * 75)
         print(f"[*] 训练顺利完成! 总耗时: {total_train_time:.2f}s ({total_train_time / num_epochs:.3f}s/epoch)")
-        final_energy = history["energy_raw"][-1]
-        final_var = history["energy_var"][-1]
+        final_energy = evaluation["energy_mean"]
+        final_var = evaluation["energy_variance"]
         ref_energy_str = ""
-        if system.total_electrons == 2 and system.num_nuclei == 2:
-            ref_energy_str = " (H2 参考: ~ -1.174 Hartree)"
-        elif system.total_electrons == 4 and system.num_nuclei == 2:
-            ref_energy_str = " (LiH 参考: ~ -8.070 Hartree)"
+        try:
+            from visualize import get_system_reference
+        except ImportError:
+            from ferminet_pytorch.visualize import get_system_reference
+        reference = get_system_reference(system)
+        if reference is not None:
+            ref_energy_str = f" ({reference.label} 参考: {reference.energy:.5f} Hartree)"
         print(f"[*] 最终能量期望值: {final_energy:.5f} Hartree{ref_energy_str}")
-        print(f"[*] 最终能量方差: {final_var:.5f}")
+        print(f"[*] 最终能量方差: {final_var:.5f} | 相关 SEM: {evaluation['energy_sem']:.5f}")
+        print(f"[*] ESS: {evaluation['ess']:.1f} | tau_int: {evaluation['tau_int']:.3f} | R-hat: {evaluation['r_hat']:.4f}")
         print("=" * 75)
 
     return {
@@ -298,8 +373,11 @@ def train_vmc(
         "system": system,
         "sampler": sampler,
         "history": history,
-        "final_energy": history["energy_raw"][-1],
-        "final_variance": history["energy_var"][-1],
+        "evaluation": evaluation,
+        "final_energy": evaluation["energy_mean"],
+        "final_variance": evaluation["energy_variance"],
+        "training_last_batch_energy": training_last_batch_energy,
+        "training_last_batch_variance": training_last_batch_variance,
     }
 
 
@@ -317,7 +395,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--step_size", type=float, default=0.5, help="MCMC 初始移动步长 (默认: 0.5)")
     parser.add_argument("--move_mode", type=str, default="all", choices=["all", "one_by_one"], help="MCMC 移动模式")
     parser.add_argument("--clip_factor", type=float, default=5.0, help="局域能量 MAD 截断倍数 (默认: 5.0)")
-    parser.add_argument("--clip_method", type=str, default="tanh", choices=["tanh", "hard", "none"], help="局域能量截断方法")
+    parser.add_argument("--clip_method", type=str, default="none", choices=["tanh", "hard", "none"], help="局域能量截断方法")
+    parser.add_argument("--evaluation_steps", type=int, default=32, help="冻结参数后的独立复评时间步数")
+    parser.add_argument("--evaluation_mcmc_steps", type=int, default=5, help="相邻复评样本之间的 MCMC 步数")
+    parser.add_argument("--evaluation_burn_in", type=int, default=20, help="最终参数下的复评预热步数")
+    parser.add_argument("--evaluation_laplacian_method", type=str, default="exact", choices=["exact", "exact_jvp", "jvp", "hutchinson"], help="独立复评的 Laplacian 方法")
     parser.add_argument("--grad_clip", type=float, default=1.0, help="梯度范数裁剪阈值 (默认: 1.0)")
     parser.add_argument("--device", type=str, default=None, help="运行设备 (cuda 或 cpu)")
     parser.add_argument("--seed", type=int, default=42, help="随机数种子 (默认: 42)")
@@ -350,6 +432,10 @@ def main() -> None:
         num_hutchinson_samples=args.hutch_samples,
         hutchinson_distribution=args.hutch_dist,
         grad_clip=args.grad_clip,
+        evaluation_steps=args.evaluation_steps,
+        evaluation_mcmc_steps=args.evaluation_mcmc_steps,
+        evaluation_burn_in_steps=args.evaluation_burn_in,
+        evaluation_laplacian_method=args.evaluation_laplacian_method,
         device=args.device,
         seed=args.seed,
         verbose=True,

@@ -28,7 +28,7 @@
 > 1. 什么是薛定谔方程与波函数（微观世界的牛顿定律与几率振幅）；
 > 2. 泡利不相容原理与费米子反对称性（“撞衫即毁灭”的量子规则）；
 > 3. FermiNet 深度学习 Backflow 机制与数据流架构拆解；
-> 4. 变分量子蒙特卡洛 (VMC) 随机游走采样与无偏代理损失原理；
+> 4. 变分量子蒙特卡洛 (VMC) 随机游走采样与有限批次协方差梯度原理；
 > 5. 6 个极速实操演示（含全套学术级训练看板与物理态热力图解析）；
 > 6. 新手高频问答 FAQ（对数波函数负几百、Hartree 单位制、零方差原理等）。
 
@@ -44,8 +44,9 @@
    - 相对几何特征提取，原生满足三维空间平移不变性与旋转等变性。
 2. **端到端变分量子蒙特卡洛 (VMC) 训练闭环**：
    - 全向量化批量 GPU 并行 Metropolis-Hastings MCMC 采样器，支持全电子/逐电子步进与自适应步长控制；
-   - 严格满足变分梯度定理的无偏代理损失函数 (Surrogate Loss)，彻底废除显存爆炸的三阶导计算；
-   - 集成基于中位数绝对偏差 (MAD) 的 Umrigar Tanh 局域能量平滑截断，根除波函数节点面奇点引起的梯度爆炸。
+   - 默认使用无截断、带 $B/(B-1)$ 有限批次修正的协方差代理梯度，避免三阶导计算；
+   - Tanh/Hard 局域能量截断作为显式稳健模式保留；它能抑制离群点，但会引入训练目标偏差；
+   - 训练结束后冻结模型和采样步长，报告自相关时间、有效样本数、split-R-hat 与链相关 SEM。
 3. **突破性动能拉普拉斯求解器 (百倍加速)**：
    - 集成 **Hutchinson 随机迹估计器**，将二阶导计算复杂度从 $\mathcal{O}(3N)$ 压缩至 $\mathcal{O}(1)$，仅需 1 次方向导数反向传播，在大体系上实现数十倍至数百倍提速；
    - 集成基于 `torch.func.jvp` 的前向模式全向量化精确求解器与经典逐分量精确模式。
@@ -76,7 +77,8 @@ ferminet_pytorch/
 ├── model.py              # FermiNet 核心模型 (Backflow 轨道构建与 slogdet / LogSumExp 计算)
 ├── hamiltonian.py        # 分子哈密顿量 (MolecularSystem, 局域动能与全向量化势能计算)
 ├── mcmc.py               # 批量并行 GPU MCMC 采样器 (MCMCSampler, 自适应步长控制)
-├── loss.py               # 无偏变分代理损失与局域能截断 (VMCLoss, clip_local_energy)
+├── mcmc_stats.py         # 链自相关、ESS、split-R-hat 与相关性修正 SEM
+├── loss.py               # 有限批次协方差代理损失与可选局域能截断
 ├── train_vmc.py          # 端到端 VMC 变分优化训练脚本 (支持 H2, LiH 与各拉普拉斯策略)
 ├── visualize.py          # 综合数据可视化模块 (Nature/PRR 期刊风格, 10 种训练与物理看板)
 ├── example_h2.py         # 5 分钟上手演示：氢分子单步推断与局域能量拆解
@@ -101,9 +103,11 @@ ferminet_pytorch/
 | [`model.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/model.py) | 主干波函数网络 | `FermiNet` | 构造 Backflow 轨道，多行列式 `slogdet` 分解与 LogSumExp 稳定求和 |
 | [`hamiltonian.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/hamiltonian.py) | 哈密顿量与动能 | `MolecularSystem`, `compute_local_energy` | 库仑吸引/排斥势能全向量化计算；集成 Exact, JVP, Hutchinson 三大拉普拉斯求解器 |
 | [`mcmc.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/mcmc.py) | 并行构型采样 | `MCMCSampler` | 批量并行 Metropolis-Hastings 抽样，波函数对数缓存，自适应步长微调 |
-| [`loss.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/loss.py) | 变分代理损失 | `VMCLoss`, `vmc_surrogate_loss` | 变分梯度定理无偏代理损失；基于 MAD 的 Umrigar tanh 局域能量截断 |
-| [`train_vmc.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/train_vmc.py) | 端到端训练优化 | `train_vmc` | 自动化串联采样、局域能计算与 Adam 优化；支持 H2, LiH 体系与丰富 CLI 参数 |
+| [`loss.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/loss.py) | 变分代理损失 | `VMCLoss`, `vmc_surrogate_loss` | 默认无截断有限批次协方差修正；MAD 截断为显式稳健有偏模式 |
+| [`train_vmc.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/train_vmc.py) | 端到端训练优化 | `train_vmc` | 训练后冻结参数独立复评，报告 ESS、自相关时间、R-hat 与链相关 SEM |
 | [`visualize.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/visualize.py) | 综合可视化分析 | `plot_training_dashboard`, `plot_all_visualizations` 等 10+ 绘图函数 | 学术期刊级绘图体系、无 GUI 隔离后端、1D/2D/3D 物理态与零方差收敛全面诊断 |
+
+参考能量只在核电荷、自旋电子数和核间几何与登记记录全部匹配时显示。相同核数和电子数不会被用于猜测分子身份；未知体系不绘制参考线。
 
 ---
 

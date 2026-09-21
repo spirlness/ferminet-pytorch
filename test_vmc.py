@@ -4,7 +4,7 @@
 覆盖:
 1. 批量 GPU/CPU MCMC 采样器 (全电子/逐电子步进、自适应步长调节、预热与抽样)
 2. 基于中位数绝对偏差 (MAD) 的局域能量平滑截断 (Tanh 与 Hard 截断机制)
-3. 变分原理无偏代理损失函数 (Surrogate Loss) 与物理理论梯度的严格数学等价性检验
+3. 有限批次协方差代理损失与物理理论梯度检验
 4. VMCLoss 封装模块端到端能量与方差计算
 5. 端到端 VMC 优化迭代闭环执行与参数更新验证
 """
@@ -189,8 +189,8 @@ class TestVMCComponents(unittest.TestCase):
     def test_surrogate_loss_gradient_exact_match(self) -> None:
         """
         核心物理与数学检验:
-        严格验证代理损失反向传播梯度与量子化学变分无偏梯度定理的理论值完全一致！
-            理论变分梯度: nabla_theta <H> = 2/B * sum_b [ (E_L(r_b) - <E_L>) * nabla_theta ln|Psi_theta(r_b)| ]
+        验证有限批次协方差修正后的代理梯度。
+            梯度估计: 2/(B-1) * sum_b [ (E_L(r_b) - <E_L>) * nabla_theta ln|Psi_theta(r_b)| ]
         """
         walkers = torch.randn(8, self.system.total_electrons, 3)
         e_local = torch.tensor(
@@ -227,7 +227,7 @@ class TestVMCComponents(unittest.TestCase):
             log_psi_b, _ = self.model.forward_log_psi(single_walker)
             # 计算该样本的对数波函数参数梯度
             log_psi_b.backward()
-            weight = (2.0 / b_size) * centered_e[b].item()
+            weight = (2.0 / (b_size - 1)) * centered_e[b].item()
             for idx, p in enumerate(active_params):
                 if p.grad is not None:
                     manual_grads[idx] += weight * p.grad
@@ -260,21 +260,45 @@ class TestVMCComponents(unittest.TestCase):
             "energy_mean",
             "energy_std",
             "energy_var",
-            "energy_sem",
+            "energy_iid_sem_proxy",
             "energy_clipped_mean",
             "energy_median",
             "energy_mad",
             "loss",
+            "num_nonfinite",
         ]
         for k in expected_keys:
             self.assertIn(k, stats)
             self.assertFalse(torch.isnan(torch.tensor(stats[k])))
+        self.assertEqual(stats["gradient_estimator"], "robust_clipped")
+        self.assertFalse(stats["gradient_is_unbiased"])
 
         # 验证梯度反向传播
         self.model.zero_grad()
         loss.backward()
         has_grad = any(p.grad is not None for p in self.model.parameters())
         self.assertTrue(has_grad, "反向传播后模型参数未产生有效梯度")
+
+    def test_strict_gradient_defaults_and_finite_batch_correction(self) -> None:
+        theta = torch.tensor(0.7, dtype=torch.float64, requires_grad=True)
+        features = torch.tensor([-2.0, -0.5, 1.0, 3.0], dtype=torch.float64)
+        energies = torch.tensor([-3.0, -1.0, 2.0, 5.0], dtype=torch.float64)
+        loss, stats = vmc_surrogate_loss(theta * features, energies)
+        loss.backward()
+        expected = 2.0 * torch.sum((energies - energies.mean()) * features) / (len(energies) - 1)
+        self.assertAlmostEqual(theta.grad.item(), expected.item(), places=12)
+        self.assertEqual(stats["gradient_estimator"], "iid_covariance_corrected")
+        self.assertTrue(stats["gradient_is_unbiased"])
+        self.assertNotIn("energy_sem", stats)
+
+    def test_strict_gradient_rejects_singleton_and_nonfinite_batches(self) -> None:
+        with self.assertRaisesRegex(ValueError, "B >= 2"):
+            vmc_surrogate_loss(torch.ones(1, requires_grad=True), torch.ones(1))
+        with self.assertRaisesRegex(FloatingPointError, "non-finite"):
+            vmc_surrogate_loss(
+                torch.ones(3, requires_grad=True),
+                torch.tensor([-1.0, float("nan"), -2.0]),
+            )
 
     def test_train_vmc_end_to_end_loop(self) -> None:
         """测试端到端 VMC 训练迭代完整闭环 (3 步迷你训练)."""
@@ -286,14 +310,25 @@ class TestVMCComponents(unittest.TestCase):
             mcmc_steps_per_epoch=2,
             burn_in_steps=5,
             lr=1e-3,
+            evaluation_steps=4,
+            evaluation_mcmc_steps=1,
+            evaluation_burn_in_steps=2,
             verbose=False,
         )
 
         self.assertIn("history", result)
         self.assertIn("final_energy", result)
         self.assertIn("final_variance", result)
-
+        self.assertIn("evaluation", result)
         history = result["history"]
+        self.assertEqual(result["final_energy"], result["evaluation"]["energy_mean"])
+        self.assertEqual(result["training_last_batch_energy"], history["energy_raw"][-1])
+        self.assertNotIn("energy_sem", history)
+        self.assertTrue(torch.isfinite(torch.tensor(result["evaluation"]["energy_sem"])))
+        self.assertEqual(result["evaluation"]["laplacian_method"], "exact")
+        self.assertTrue(result["sampler"].adapt_step_size)
+        self.assertTrue(result["model"].training)
+
         self.assertEqual(len(history["energy_raw"]), 3)
         self.assertEqual(len(history["energy_clipped"]), 3)
         self.assertEqual(len(history["energy_var"]), 3)
@@ -391,6 +426,9 @@ class TestVMCComponents(unittest.TestCase):
             num_epochs=2,
             mcmc_steps_per_epoch=2,
             burn_in_steps=3,
+            evaluation_steps=4,
+            evaluation_mcmc_steps=1,
+            evaluation_burn_in_steps=2,
             verbose=False,
         )
         self.assertEqual(len(res["history"]["energy_raw"]), 2)

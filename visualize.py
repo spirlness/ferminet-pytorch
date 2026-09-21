@@ -19,6 +19,7 @@ FermiNet 变分量子蒙特卡洛 (VMC) 综合可视化模块
 """
 
 import os
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 import torch
@@ -69,6 +70,85 @@ REFERENCE_ENERGIES: Dict[str, float] = {
     "lih": -8.07050,        # 氢化锂分子 (R=3.015 a.u. FCI 精确基态能)
     "be": -14.66736,        # 铍原子
 }
+
+
+@dataclass(frozen=True)
+class ReferenceEnergy:
+    """与特定电荷、自旋和核几何绑定的参考能量记录。"""
+
+    key: str
+    label: str
+    energy: float
+    nuclear_charges: Tuple[float, ...]
+    n_up: int
+    n_down: int
+    pair_signature: Tuple[Tuple[float, float, float], ...]
+    method: str
+    source: str
+
+
+REFERENCE_SYSTEMS: Dict[str, ReferenceEnergy] = {
+    "h": ReferenceEnergy("h", "H", -0.50000, (1.0,), 1, 0, (), "exact", "Hydrogenic solution"),
+    "he": ReferenceEnergy("he", "He", -2.90372, (2.0,), 1, 1, (), "high-accuracy nonrelativistic", "Pekeris"),
+    "li": ReferenceEnergy("li", "Li", -7.47806, (3.0,), 2, 1, (), "high-accuracy nonrelativistic", "reference literature"),
+    "be": ReferenceEnergy("be", "Be", -14.66736, (4.0,), 2, 2, (), "high-accuracy nonrelativistic", "reference literature"),
+    "h2": ReferenceEnergy(
+        "h2", "$H_2$", -1.17447, (1.0, 1.0), 1, 1,
+        ((1.0, 1.0, 1.4),), "Born-Oppenheimer nonrelativistic, R=1.4 Bohr", "FermiNet benchmark",
+    ),
+    "lih": ReferenceEnergy(
+        "lih", "LiH", -8.07050, (1.0, 3.0), 2, 2,
+        ((1.0, 3.0, 3.015),), "Born-Oppenheimer reference, R=3.015 Bohr", "benchmark literature",
+    ),
+}
+
+_CHARGE_ATOL = 1e-6
+_GEOMETRY_ATOL_BOHR = 5e-4
+
+
+def _system_pair_signature(system: Any) -> Tuple[Tuple[float, float, float], ...]:
+    """生成不依赖平移、旋转或核排列顺序的带电荷核间距离签名。"""
+    coords = system.nuclear_coords.detach().to(device="cpu", dtype=torch.float64)
+    charges = system.nuclear_charges.detach().to(device="cpu", dtype=torch.float64)
+    pairs: List[Tuple[float, float, float]] = []
+    for i in range(coords.shape[0]):
+        for j in range(i + 1, coords.shape[0]):
+            z_low, z_high = sorted((float(charges[i]), float(charges[j])))
+            distance = float(torch.linalg.vector_norm(coords[i] - coords[j]))
+            pairs.append((z_low, z_high, distance))
+    return tuple(sorted(pairs))
+
+
+def get_system_reference(system: Optional[Any]) -> Optional[ReferenceEnergy]:
+    """严格匹配体系参考记录；无法验证电荷、自旋和几何时返回 ``None``。"""
+    if system is None:
+        return None
+    if isinstance(system, str):
+        return REFERENCE_SYSTEMS.get(system.strip().lower())
+    required = ("nuclear_coords", "nuclear_charges", "n_up", "n_down")
+    if not all(hasattr(system, name) for name in required):
+        return None
+
+    charges = tuple(sorted(float(z) for z in system.nuclear_charges.detach().cpu()))
+    signature = _system_pair_signature(system)
+    for reference in REFERENCE_SYSTEMS.values():
+        if system.n_up != reference.n_up or system.n_down != reference.n_down:
+            continue
+        if len(charges) != len(reference.nuclear_charges):
+            continue
+        if any(abs(actual - expected) > _CHARGE_ATOL for actual, expected in zip(charges, reference.nuclear_charges)):
+            continue
+        if len(signature) != len(reference.pair_signature):
+            continue
+        if all(
+            abs(actual_z1 - expected_z1) <= _CHARGE_ATOL
+            and abs(actual_z2 - expected_z2) <= _CHARGE_ATOL
+            and abs(actual_r - expected_r) <= _GEOMETRY_ATOL_BOHR
+            for (actual_z1, actual_z2, actual_r), (expected_z1, expected_z2, expected_r)
+            in zip(signature, reference.pair_signature)
+        ):
+            return reference
+    return None
 
 
 def apply_academic_style() -> None:
@@ -195,32 +275,8 @@ def get_system_reference_energy(system: Optional[Any]) -> Optional[float]:
     Returns:
         Optional[float]: 匹配到的参考基态能量；若未匹配则返回 None。
     """
-    if system is None:
-        return None
-
-    # 若直接传入体系名称字符串
-    if isinstance(system, str):
-        key = system.strip().lower()
-        return REFERENCE_ENERGIES.get(key, None)
-
-    # 若传入 MolecularSystem 实例
-    if hasattr(system, "total_electrons") and hasattr(system, "num_nuclei"):
-        n_elec = system.total_electrons
-        n_nuc = system.num_nuclei
-        if n_nuc == 2 and n_elec == 2:
-            return REFERENCE_ENERGIES["h2"]
-        elif n_nuc == 2 and n_elec == 4:
-            return REFERENCE_ENERGIES["lih"]
-        elif n_nuc == 1 and n_elec == 1:
-            return REFERENCE_ENERGIES["h"]
-        elif n_nuc == 1 and n_elec == 2:
-            return REFERENCE_ENERGIES["he"]
-        elif n_nuc == 1 and n_elec == 3:
-            return REFERENCE_ENERGIES["li"]
-        elif n_nuc == 1 and n_elec == 4:
-            return REFERENCE_ENERGIES["be"]
-
-    return None
+    reference = get_system_reference(system)
+    return reference.energy if reference is not None else None
 
 
 def get_system_label(system: Optional[Any]) -> str:
@@ -229,16 +285,12 @@ def get_system_label(system: Optional[Any]) -> str:
         return "Molecule"
     if isinstance(system, str):
         return system.upper()
-    if hasattr(system, "total_electrons") and hasattr(system, "num_nuclei"):
-        if system.num_nuclei == 2 and system.total_electrons == 2:
-            return "$H_2$"
-        elif system.num_nuclei == 2 and system.total_electrons == 4:
-            return "LiH"
-        elif system.num_nuclei == 1 and system.total_electrons == 1:
-            return "H"
-        elif system.num_nuclei == 1 and system.total_electrons == 2:
-            return "He"
-        return f"Molecule (N={system.total_electrons}, M={system.num_nuclei})"
+    reference = get_system_reference(system)
+    if reference is not None:
+        return reference.label
+    if hasattr(system, "nuclear_charges") and hasattr(system, "total_electrons"):
+        charges = ",".join(f"{float(z):g}" for z in system.nuclear_charges.detach().cpu())
+        return f"Molecule (Z=[{charges}], N={system.total_electrons}, spin=({system.n_up},{system.n_down}))"
     return "Molecule"
 
 
@@ -275,7 +327,6 @@ def plot_energy_convergence(
 
     e_raw = np.array(history.get("energy_raw", []))
     e_clip = np.array(history.get("energy_clipped", []))
-    e_sem = np.array(history.get("energy_sem", []))
     epochs = np.arange(1, len(e_raw) + 1)
 
     if len(epochs) == 0:
@@ -294,7 +345,7 @@ def plot_energy_convergence(
             alpha=0.9,
         )
 
-    # 2. 绘制原始能量曲线与 SEM 阴影区
+    # 2. 绘制原始能量曲线。训练期批次相关，不能把 IID 代理量画成置信带。
     line_raw = ax.plot(
         epochs,
         e_raw,
@@ -304,16 +355,6 @@ def plot_energy_convergence(
         marker="o" if len(epochs) <= 25 else None,
         markersize=4,
     )
-    if len(e_sem) == len(epochs) and np.all(np.isfinite(e_sem)):
-        ax.fill_between(
-            epochs,
-            e_raw - e_sem,
-            e_raw + e_sem,
-            color=COLOR_PALETTE["sem_band"],
-            alpha=0.35,
-            label=r"SEM Uncertainty ($\pm 1\sigma_{\bar{E}}$)",
-        )
-
     # 3. 绘制理论参考能量基准线
     final_e = e_raw[-1] if len(e_raw) > 0 else 0.0
     if ref_energy is not None:
@@ -374,7 +415,7 @@ def plot_variance_and_sem(
     log_scale: bool = True,
 ) -> plt.Figure:
     """
-    绘制能量方差 Var(E) 与均值标准误 (SEM) 变化曲线。
+    绘制能量方差 Var(E) 与单批次 IID SEM 代理量变化曲线。
     体现量子蒙特卡洛著名的零方差原理 (Zero-Variance Principle:
     当变分试探波函数 Psi 逼近哈密顿量真实本征态时，局域能量涨落与方差严格趋近于 0)。
 
@@ -395,7 +436,7 @@ def plot_variance_and_sem(
         fig = ax.get_figure()
 
     var_e = np.array(history.get("energy_var", []))
-    sem_e = np.array(history.get("energy_sem", []))
+    sem_e = np.array(history.get("energy_iid_sem_proxy", []))
     epochs = np.arange(1, len(var_e) + 1)
 
     if len(epochs) == 0:
@@ -413,13 +454,13 @@ def plot_variance_and_sem(
         markersize=4,
     )
 
-    # 辅轴或共轴绘制 SEM
+    # 辅轴绘制 IID 代理量；它不是相关 MCMC 时间序列的可信误差条。
     ax2 = ax.twinx()
     ax2.plot(
         epochs,
         sem_e,
         color=COLOR_PALETTE["sem"],
-        label=r"Mean SEM $\sigma_{\bar{E}}$",
+        label=r"IID Batch SEM Proxy",
         linewidth=1.8,
         linestyle="-.",
         marker="^" if len(epochs) <= 25 else None,
@@ -443,7 +484,7 @@ def plot_variance_and_sem(
     ax.set_title("Zero-Variance Principle Convergence")
     ax.set_xlabel("Optimization Epoch")
     ax.set_ylabel(r"$\mathrm{Var}(E)\ (\mathrm{Ha}^2)$", color=COLOR_PALETTE["variance"])
-    ax2.set_ylabel(r"$\mathrm{SEM}\ (\mathrm{Ha})$", color=COLOR_PALETTE["sem"])
+    ax2.set_ylabel(r"IID SEM Proxy $(\mathrm{Ha})$", color=COLOR_PALETTE["sem"])
     ax.tick_params(axis="y", labelcolor=COLOR_PALETTE["variance"])
     ax2.tick_params(axis="y", labelcolor=COLOR_PALETTE["sem"])
     ax.grid(True, linestyle="--", alpha=0.4)
