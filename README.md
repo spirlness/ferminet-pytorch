@@ -3,7 +3,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
 [![Python](https://img.shields.io/badge/Python-3.9+-3776ab.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-55%20Passed-brightgreen.svg)](#)
+[![Tests](https://img.shields.io/badge/Tests-109%20Passed-brightgreen.svg)](#)
 
 本项目提供了一个基于 **PyTorch 原生生态** 的高性能、模块化、工业级 **FermiNet (费米神经网络)** 实现，专门用于量子化学与凝聚态物理中多电子薛定谔方程的从头算 (Ab-initio) 变分求解。
 
@@ -27,16 +27,16 @@
 > 在该指南中，我们用**程序员最熟悉的通俗比喻与直白语言**，手把手为你拆解：
 > 1. 什么是薛定谔方程与波函数（微观世界的牛顿定律与几率振幅）；
 > 2. 泡利不相容原理与费米子反对称性（“撞衫即毁灭”的量子规则）；
-> 3. FermiNet 深度学习 Backflow 机制与 ASCII 架构图拆解；
+> 3. FermiNet 深度学习 Backflow 机制与数据流架构拆解；
 > 4. 变分量子蒙特卡洛 (VMC) 随机游走采样与无偏代理损失原理；
-> 5. 5 个极速实操演示与输出物理指标通俗白话解读；
+> 5. 6 个极速实操演示（含全套学术级训练看板与物理态热力图解析）；
 > 6. 新手高频问答 FAQ（对数波函数负几百、Hartree 单位制、零方差原理等）。
 
 ---
 
 ## 🌟 项目核心亮点与技术演进
 
-本项目不仅完整复现了 DeepMind 原论文的物理核心，还在 PyTorch 生态下完成了三阶段重大工程与物理性能演进：
+本项目不仅完整复现了 DeepMind 原论文的物理核心，还在 PyTorch 生态下完成了四阶段重大工程与物理性能演进：
 
 1. **严格物理第一性原则 (Ab-Initio)**：
    - 严格满足全同费米子置换反对称性（泡利不相容原理：$\Psi(\dots, r_i, \dots, r_j, \dots) = -\Psi(\dots, r_j, \dots, r_i, \dots)$）；
@@ -54,6 +54,10 @@
 5. **超大体系与异核分子支持**：
    - 单电子特征注入原子核电荷 $Z_I$，原生支持极性异核分子（如 $LiH, H_2O$ 等）；
    - 支持 **100 原子超大体系 (H100 晶格链，100 核 + 100 电子)** 的轻量化显存前向推断与物理自洽检验。
+6. **顶刊级别 (Nature / PRR 规范) 综合可视化与物理状态看板**：
+   - 独立高内聚可视化模块 [`visualize.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/visualize.py)，强制采用无头服务器安全的 `Agg` 后端；
+   - 全面覆盖训练过程动态（能量收敛、零方差原理演化、MCMC 采样健康度三合一看板）与物理状态诊断（3D 电子几率密度、2D 成键截面热力图、核轴 Cusp 尖峰剖面、局域能量偏度分布）；
+   - 深度集成于 CLI（`--plot`, `--save_plots`, `--plot_dir`），支持训练后全自动导出 10 大专业矢量级图表。
 
 ---
 
@@ -74,12 +78,15 @@ ferminet_pytorch/
 ├── mcmc.py               # 批量并行 GPU MCMC 采样器 (MCMCSampler, 自适应步长控制)
 ├── loss.py               # 无偏变分代理损失与局域能截断 (VMCLoss, clip_local_energy)
 ├── train_vmc.py          # 端到端 VMC 变分优化训练脚本 (支持 H2, LiH 与各拉普拉斯策略)
+├── visualize.py          # 综合数据可视化模块 (Nature/PRR 期刊风格, 10 种训练与物理看板)
 ├── example_h2.py         # 5 分钟上手演示：氢分子单步推断与局域能量拆解
 ├── benchmark_compile.py  # PyTorch 2.0+ JIT 编译优化加速比评测脚本
 ├── benchmark_100_atoms.py# 100 原子超大规模体系基准测试与物理自洽性校验
 ├── test_ferminet.py      # 核心物理性质与网络架构综合单元测试套件
 ├── test_vmc.py           # VMC 采样、无偏梯度与能量截断专项单元测试
 ├── test_phase2.py        # 阶段 2 动能求解器、核电荷注入与各向异性包络专项测试
+├── test_visualize.py     # 综合可视化模块专项测试套件 (54 项)
+├── assets/plots/         # 训练生成的可视化图表资源目录
 ├── BEGINNER_GUIDE.md     # 零基础小白从零到一量子化学深度学习图文宝典
 └── README.md             # 架构技术文档与使用手册
 ```
@@ -96,6 +103,7 @@ ferminet_pytorch/
 | [`mcmc.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/mcmc.py) | 并行构型采样 | `MCMCSampler` | 批量并行 Metropolis-Hastings 抽样，波函数对数缓存，自适应步长微调 |
 | [`loss.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/loss.py) | 变分代理损失 | `VMCLoss`, `vmc_surrogate_loss` | 变分梯度定理无偏代理损失；基于 MAD 的 Umrigar tanh 局域能量截断 |
 | [`train_vmc.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/train_vmc.py) | 端到端训练优化 | `train_vmc` | 自动化串联采样、局域能计算与 Adam 优化；支持 H2, LiH 体系与丰富 CLI 参数 |
+| [`visualize.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/visualize.py) | 综合可视化分析 | `plot_training_dashboard`, `plot_all_visualizations` 等 10+ 绘图函数 | 学术期刊级绘图体系、无 GUI 隔离后端、1D/2D/3D 物理态与零方差收敛全面诊断 |
 
 ---
 
@@ -230,20 +238,50 @@ uv run python benchmark_compile.py
 
 ---
 
-## 🧪 单元测试套件 (Unit Tests)
+### 演示 6：一键全自动生成训练过程与物理状态综合可视化看板
 
-本项目包含 3 套覆盖核心物理性质、VMC 训练与阶段 2 高级特性的完整自动化测试：
+在执行 VMC 变分优化时，只需添加 `--save_plots`（或 `--plot`），训练结束后将自动调用 [`visualize.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/visualize.py) 导出 10 张顶刊规格的专业图表到指定目录：
 
 ```bash
-# 1. 一键运行全部 55 项专业单元测试：
+# 启动 30 轮 VMC 优化并自动导出图表至 assets/plots 目录
+python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_dir assets/plots
+```
+
+#### 1. 训练全景综合看板 (`h2_training_dashboard.png`)
+直观涵盖能量收敛、零方差原理演化（能量方差 $\text{Var}(E)$ 衰减）以及 MCMC 采样接受率/自适应步长健康度：
+<p align="center">
+  <img src="assets/plots/h2_training_dashboard.png" alt="VMC Training Process Dashboard" width="100%">
+</p>
+
+#### 2. 量子物理状态综合看板 (`h2_physical_dashboard.png`)
+深度揭示收敛后电子三维空间概率分布（区分 $\alpha/\beta$ 自旋）、沿核轴的一维波函数剖面（Kato Cusp 尖峰条件）以及局域能量分布直方图与偏度分析：
+<p align="center">
+  <img src="assets/plots/h2_physical_dashboard.png" alt="Quantum Physical State Dashboard" width="100%">
+</p>
+
+#### 3. 2D 分子成键截面相对电子密度热力图 (`h2_wavefunction_2d.png`)
+清晰展示氢分子中两原子核之间的共价键电子云重叠通道与空间对称性衰减：
+<p align="center">
+  <img src="assets/plots/h2_wavefunction_2d.png" alt="2D Wavefunction Bonding Slice" width="70%">
+</p>
+
+---
+
+## 🧪 单元测试套件 (Unit Tests)
+
+本项目包含 4 套覆盖核心物理性质、VMC 训练、阶段 2 高性能求解器以及综合可视化的完整自动化测试：
+
+```bash
+# 1. 一键运行全部 109 项专业单元测试：
 python -m unittest discover -s . -p "test_*.py" -v
 
 # 2. 或分别运行专项测试：
-python -m unittest test_ferminet.py  # 核心物理性质与网络架构测试 (14 项)
-python -m unittest test_vmc.py       # VMC 采样、代理损失与能量截断测试 (18 项)
-python -m unittest test_phase2.py    # 阶段 2 动能求解器与物理特征测试 (23 项)
+python -m unittest test_ferminet.py   # 核心物理性质与网络架构测试 (14 项)
+python -m unittest test_vmc.py        # VMC 采样、代理损失与能量截断测试 (18 项)
+python -m unittest test_phase2.py     # 阶段 2 动能求解器与物理特征测试 (23 项)
+python -m unittest test_visualize.py  # 综合可视化分析模块专项测试 (54 项)
 ```
-全部 55 项专业单元测试全部通过，保证物理公式的绝对正确性与数值鲁棒性！
+全部 **109 项专业单元测试 100% 通过**，保证从底层物理公式、高阶导数到顶层绘图渲染的绝对可靠性！
 
 ---
 

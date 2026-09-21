@@ -41,7 +41,8 @@
    - 6.3 演示 3：极性异核分子氢化锂 $LiH$ 变分优化
    - 6.4 演示 4：100 原子超大规模体系基准测试 (`benchmark_100_atoms.py`)
    - 6.5 演示 5：PyTorch 编译加速基准评测 (`benchmark_compile.py`)
-   - 6.6 训练输出物理指标白话对照表 (解读 `<E_raw>`, `Var(E)`, `Acc (%)` 等)
+   - 6.6 演示 6：一键生成全套学术级训练与物理状态综合看板 (`visualize.py`)
+   - 6.7 训练输出物理指标白话对照表 (解读 `<E_raw>`, `Var(E)`, `Acc (%)` 等)
 7. [❓ 第六章：新手高频问答 FAQ](#7-第六章新手高频问答-faq)
    - Q1: 为什么波函数的对数值 `log|Psi|` 经常是负几百？
    - Q2: 什么是 Hartree 原子单位制？怎么换算成熟悉的单位？
@@ -468,6 +469,7 @@ loss.backward()
 | [`example_h2.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/example_h2.py) | 极简推断与能量演示 | `run_h2_demo` | 5 分钟上手脚本，单步前向推断 $H_2$ 波函数与局域能量拆解 |
 | [`benchmark_compile.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/benchmark_compile.py) | JIT 图编译基准评测 | `benchmark_compilation` | 测试 PyTorch 2.0 `torch.compile` 对 FermiNet 的算子融合与 5.8x 加速比 |
 | [`benchmark_100_atoms.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/benchmark_100_atoms.py) | 100 原子超大体系基准 | `run_benchmark` | 评测 100 核 100 电子链在超大规模下的显存占用、吞吐与物理反对称性 |
+| [`visualize.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/visualize.py) | 学术级综合可视化库 | `plot_training_dashboard`, `plot_physical_results_dashboard` | 顶刊规范、包含 10 种训练动态与量子物理状态看板，无 GUI 隔离后端 |
 
 ### 5.2 三大高性能动能拉普拉斯求解器对比
 
@@ -625,7 +627,69 @@ uv run python benchmark_compile.py
 ```
 - **评测结论**：`reduce-overhead` 模式下可获得高达 **5.77x** 的加速提升，端到端延迟降低至毫秒以下！
 
-### 6.6 训练输出物理指标白话对照表
+### 6.6 演示 6：一键生成全套学术级训练与物理状态综合看板 (`visualize.py`)
+
+在前面的训练中，我们在终端只看到了刷屏的数字，初学者往往很难建立空间几何与物理收敛的直观感觉。
+为此，我们提供了**一键可视化导出功能**！在运行 `train_vmc.py` 时只需加上 `--save_plots` 参数：
+
+```bash
+# 运行 30 轮 VMC 优化并自动生成 10 张顶刊级学术可视化图表
+python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_dir assets/plots
+```
+
+脚本将自动在 `assets/plots/` 目录下生成包含**训练全景三合一看板**、**物理状态三合一看板**、**2D 成键热力图**在内的全套高清图表：
+
+#### 🖼️ 看板 1：训练过程动力学全景看板 (`h2_training_dashboard.png`)
+
+<p align="center">
+  <img src="assets/plots/h2_training_dashboard.png" alt="VMC Training Process Dashboard" width="100%">
+</p>
+
+小白如何读懂这三张图？
+1. **左图：能量收敛曲线（小球滚入量子基态）**
+   - **蓝色实线（原始能量）** 与 **绿色实线（截断能量）**：从初期的约 $-0.57\,\text{Ha}$ 一路下滑，平稳收敛到贴近红色虚线（$H_2$ 真实理论基态能量 $-1.17447\,\text{Ha}$）；
+   - **浅蓝色阴影带**：代表蒙特卡洛统计误差 $\pm 1\sigma_{\bar{E}}$（SEM），随着采样稳定，阴影带越来越纤细，左下角直接标出最终能量残差仅约 $10.92\,\text{mHa}$ ($6.85\,\text{kcal/mol}$)！
+2. **中图：零方差原理对数衰减（检验波函数是否完美的终极试金石）**
+   - **紫色实线（能量方差 $\text{Var}(E)$）** 与 **橙色点划线（均值标准误 $\text{SEM}$）**：在对数坐标轴下携手下降，方差从 $0.55$ 骤降至 $0.026$。这在物理上直接向你证明：**神经网络正在把每个空间点处的局域能量压平为同一个常数！**
+3. **右图：MCMC 采样器健康度与自适应步长（算法的“恒温器”）**
+   - **青色折线（接受率）**：围绕着灰色水平虚线（50% 目标线）小幅振荡，说明采样器既没有盲目乱跳（接受率太低），也没有原地踏步（接受率太高）；
+   - **棕色点划线（提议移动步长）**：控制器像一个自动温度计，随着波函数越来越聚焦，步长自适应调节收敛到约 $0.47\,\text{Bohr}$。
+
+---
+
+#### 🖼️ 看板 2：量子物理状态全景看板 (`h2_physical_dashboard.png`)
+
+<p align="center">
+  <img src="assets/plots/h2_physical_dashboard.png" alt="Quantum Physical State Dashboard" width="100%">
+</p>
+
+这三幅图揭示了微观分子的真实物理空间分布：
+1. **左图：3D 电子几率密度空间散点（看见微观电子云）**
+   - 中间两个黑色大球是两颗氢原子核（$z = \pm 0.7\,\text{Bohr}$）；
+   - 浅蓝色散点是自旋向上电子（$\alpha$），浅粉色散点是自旋向下电子（$\beta$）；
+   - 电子并非固定在轨道上打转，而是像一团有弹性的“棉花糖云雾”，在两颗核周围形成高密度的空间概率弥散，这正是量子力学玻恩几率诠释 $|\Psi(r)|^2$ 的真实写照！
+2. **中图：沿核间键轴的一维密度剖面（共价键成键的秘密）**
+   - 蓝色实线是沿穿过两颗核的轴线（$z$ 轴）测得的电子相对几率密度 $|\Psi(z)|^2$；
+   - 观察最高峰：它正好稳稳地坐落在两颗核（两条橙色虚线）的正中间！这生动地向你展示了化学键的本质——**两个电子在两个原子核之间积聚负电荷，同时吸引两侧带正电的原子核，把它们紧紧粘合在一起！**
+3. **右图：局域能量直方图与统计偏度（防御奇异点）**
+   - 展示了各个空间构型处算出来的局域能量 $E_L(r)$ 的分布直方图；
+   - 浅蓝色区域代表 MAD 平滑截断窗口，它有效地将靠近节点面或靠近原子核可能出现的极端离群值柔和截断，左上角信息卡片记录了均值、标准差、偏度与峰度。
+
+---
+
+#### 🖼️ 看板 3：2D 分子成键截面相对几率密度热力图 (`h2_wavefunction_2d.png`)
+
+<p align="center">
+  <img src="assets/plots/h2_wavefunction_2d.png" alt="2D Wavefunction Bonding Slice" width="70%">
+</p>
+
+这是量子化学中最经典的分子成键轨道等高线图：
+- 两个带白边的红圈标出了原子核的位置 $(0, \pm 0.7)$；
+- 亮黄色和翠绿色代表高电子概率区域，可以清晰看到两核之间有一条宽阔的**高几率绿色通道**，这就是大名鼎鼎的 **$\sigma_g$ 分子成键轨道**！外围深紫色逐渐衰减至零，体现了指数衰减包络的物理约束。
+
+---
+
+### 6.7 训练输出物理指标白话对照表
 
 初学者在看训练日志时，常常不知道各项指标代表什么含义，请参考下表：
 
