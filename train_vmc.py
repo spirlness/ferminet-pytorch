@@ -321,6 +321,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--grad_clip", type=float, default=1.0, help="梯度范数裁剪阈值 (默认: 1.0)")
     parser.add_argument("--device", type=str, default=None, help="运行设备 (cuda 或 cpu)")
     parser.add_argument("--seed", type=int, default=42, help="随机数种子 (默认: 42)")
+    # 可视化参数
+    parser.add_argument("--plot", action="store_true", default=False, help="训练完成后自动生成并展示全部可视化图表")
+    parser.add_argument("--save_plots", action="store_true", default=False, help="将所有可视化图表保存为 PNG 文件")
+    parser.add_argument("--plot_dir", type=str, default="assets/plots", help="图表保存目录 (默认: assets/plots)")
     return parser.parse_args()
 
 
@@ -331,7 +335,7 @@ def main() -> None:
     else:
         system = build_h2_system()
 
-    train_vmc(
+    result = train_vmc(
         system=system,
         num_epochs=args.epochs,
         num_walkers=args.walkers,
@@ -350,6 +354,41 @@ def main() -> None:
         seed=args.seed,
         verbose=True,
     )
+
+    # 训练后可视化生成
+    if args.plot or args.save_plots:
+        try:
+            from visualize import plot_all_visualizations
+        except ImportError:
+            from ferminet_pytorch.visualize import plot_all_visualizations
+
+        # 从最终采样器获取当前 walkers 和局域能量
+        final_walkers = result["sampler"].current_positions.detach()
+        trained_model = result["model"]
+        trained_system = result["system"]
+
+        # 计算最终局域能量用于直方图
+        with torch.no_grad():
+            from hamiltonian import compute_local_energy
+            e_local, _, _ = compute_local_energy(
+                trained_model, trained_system, final_walkers
+            )
+
+        save_dir = args.plot_dir if args.save_plots else None
+        saved = plot_all_visualizations(
+            history=result["history"],
+            system=trained_system,
+            model=trained_model,
+            walkers=final_walkers,
+            local_energies=e_local,
+            plot_dir=args.plot_dir if args.save_plots else "assets/plots",
+            prefix=args.system,
+        )
+
+        if args.save_plots and saved:
+            print(f"\n[*] 已保存 {len(saved)} 张可视化图表到 {os.path.abspath(args.plot_dir)}/:")
+            for name, path in saved.items():
+                print(f"    - {name}: {os.path.basename(path)}")
 
 
 if __name__ == "__main__":
