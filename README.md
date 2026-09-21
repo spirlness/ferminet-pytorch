@@ -55,6 +55,10 @@
 
 ## 📂 项目模块全景导览 (Architecture Overview)
 
+<p align="center">
+  <img src="assets/ferminet_architecture.svg" alt="FermiNet Architecture" width="100%">
+</p>
+
 ```text
 ferminet_pytorch/
 ├── __init__.py           # 包顶层导出与版本定义
