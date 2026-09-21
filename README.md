@@ -41,7 +41,7 @@
 1. **物理结构与数值约束**：
    - 通过 Slater 行列式结构实现同自旋电子交换反对称性；浮点结果仍需按数值容差检查；
    - 使用指数包络约束远场衰减；粒子间距离采用 clamp 软化核 `sqrt(clamp(r², min=eps))`，其中 `eps` 是最小**平方**距离、软化半径为 `sqrt(eps)`（默认 1e-12 Bohr）。该核在 `r² ≥ eps` 处与未软化距离**逐位相同**，故势能偏置精确为零；但波函数 ansatz 本身并不强制 Kato 尖点条件，因此仍不宣称精确 Coulomb cusp；
-   - 相对几何特征提取，满足整体平移不变性；当前普通 MLP 特征通路不提供一般 SO(3) 旋转等变保证；
+   - 相对几何特征提取，满足整体平移不变性与**旋转不变性**：默认 `rotation_invariant=True` 时特征只由标量不变量构成（电子-核距离 $d_{iI}$、电子-电子距离 $d_{ij}$、核电荷 $Z_I$），不含任何笛卡尔位移向量，故整体旋转下前向计算**逐位相同**（实测 Δlog|Ψ| = 0）。对本仓库的线性分子，到各核的距离已完整确定电子在分子标架下的位置（轴向 + 垂直距离），该特征集不损失表达力——H2 收敛对照：不变模式 −1.17397 Ha vs 笛卡尔模式 −1.17416 Ha，差异在 SEM 之内。置 `rotation_invariant=False` 可复现旧的笛卡尔特征行为（该模式**不具备**旋转不变性）；
    - 同电荷核共享包络参数（`NuclearEnvelope` 按电荷组参数化），因此**包络部分**在同核置换下严格不变；但**完整波函数不具备核置换不变性**——单电子特征按原子核顺序拼接后送入普通密集层，密集层对核块不对称。以「按距离排序」补上这一项的做法**已被否决**：排序会在电子穿越两同核的垂直平分面时翻转核块顺序，导致波函数在该余维 1 曲面上不连续、∇²ln|Ψ| 失去意义（实测训练能量由 −1.174 退化至 −1.162 并一度跌破变分下界）。要做到既不变又连续必须改为对核做对称聚合，属架构改写。
 2. **端到端变分量子蒙特卡洛 (VMC) 训练闭环**：
    - 全向量化批量 GPU 并行 Metropolis-Hastings MCMC 采样器，支持全电子/逐电子步进与自适应步长控制；
@@ -100,7 +100,7 @@ ferminet_pytorch/
 
 | 源码文件 | 核心职责 | 主要类 / 函数 | 物理/工程特性 |
 | :--- | :--- | :--- | :--- |
-| [`features.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/features.py) | 几何特征提取 | `ElectronFeatureEmbedding` | 提取相对位移与欧氏距离（clamp 软化核），保证平移不变；不提供一般旋转等变约束；支持注入核电荷 $Z_I$；核轴按电荷组与距离规范化排序，支持同核置换不变 |
+| [`features.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/features.py) | 几何特征提取 | `ElectronFeatureEmbedding` | 默认只提取旋转不变量（距离 + 核电荷，clamp 软化核），平移与旋转均严格不变；支持注入核电荷 $Z_I$；`rotation_invariant=False` 时额外拼接笛卡尔位移向量（不具备旋转不变性，仅供复现与消融） |
 | [`layers.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/layers.py) | 自旋分流前馈层 | `FermiInteractionLayer` | 单/双流信息融合，自旋向上与向下分别池化聚合，满足同自旋置换等变性；末层双电子流输出不被下游消费，故不再构造其更新网络（消除空转参数） |
 | [`envelope.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/envelope.py) | 指数衰减基底 | `NuclearEnvelope` | 约束 $r \to \infty$ 时波函数趋零；支持可学习各向异性三维主轴度规 $\Sigma$ |
 | [`model.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/model.py) | 主干波函数网络 | `FermiNet` | 构造 Backflow 轨道，多行列式 `slogdet` 分解与 LogSumExp 稳定求和 |

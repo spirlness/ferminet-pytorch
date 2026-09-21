@@ -60,6 +60,8 @@ def _clone_with_geometry(model: FermiNet, coords: torch.Tensor,
         eps=model.eps,
         use_nuclear_charges=model.use_nuclear_charges,
         anisotropic_envelope=model.anisotropic_envelope,
+        tie_nuclear_envelope=model.tie_nuclear_envelope,
+        rotation_invariant=model.rotation_invariant,
     ).to(dtype=model.nuclear_coords.dtype)
     source = model.state_dict()
     target = clone.state_dict()
@@ -91,11 +93,14 @@ class TestWavefunctionSymmetry(unittest.TestCase):
             moved, _ = translated.forward_log_psi(self.r + shift)
         self.assertLess(float((base - moved).abs().max()), 1e-9)
 
-    def test_rotation_invariance_is_absent_known_limitation(self) -> None:
-        """D4 已知限制：架构不具备旋转不变性，旋转会显著改变 log|Psi|。
+    def test_rotation_invariance_holds(self) -> None:
+        """D4 修复：核与电子同时旋转时 log|Psi| 必须不变。
 
-        原因：features.py 把笛卡尔位移向量送入普通 MLP，无 SO(3) 等变约束。
-        若将来引入旋转等变层，本测试会失败，应改为断言 < 1e-9。
+        机制：默认 `rotation_invariant=True` 时，特征只由标量不变量构成
+        (电子-核距离 d_{iI}、电子-电子距离 d_{ij}、核电荷 Z_I)，不含任何笛卡尔
+        位移向量，因此整个前向计算在整体旋转下逐位相同——不是"近似不变"，是精确不变。
+        对本仓库的线性分子，到各核的距离已完整确定电子在分子标架下的位置
+        (轴向 + 垂直距离)，故该特征集不损失表达力 (H2 收敛对照见提交信息)。
         """
         rotation = torch.tensor(
             [[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], dtype=torch.float64
@@ -107,6 +112,40 @@ class TestWavefunctionSymmetry(unittest.TestCase):
         )
         with torch.no_grad():
             base, _ = self.model.forward_log_psi(self.r)
+            turned, _ = rotated.forward_log_psi(torch.einsum("ij,bnj->bni", rotation, self.r))
+        self.assertLess(float((base - turned).abs().max()), 1e-12)
+
+    def test_legacy_cartesian_features_are_not_rotation_invariant(self) -> None:
+        """回归保护：`rotation_invariant=False` 的笛卡尔特征模式**确实**不具备
+        旋转不变性——该开关只为复现历史结果与消融对照保留，不得据此作任何
+        "等变" 声明。若将来该模式也变得旋转不变，本测试会失败，应更新文档措辞。
+        """
+        model = _build_model(seed=3)
+        model.rotation_invariant = False
+        legacy = FermiNet(
+            nuclear_coords=model.nuclear_coords,
+            nuclear_charges=model.nuclear_charges,
+            n_up=model.n_up,
+            n_down=model.n_down,
+            num_determinants=model.num_determinants,
+            hidden_dim_one=model.hidden_dim_one,
+            hidden_dim_two=model.hidden_dim_two,
+            num_layers=model.num_layers,
+            rotation_invariant=False,
+        ).double()
+        self.assertEqual(legacy.in_dim_one, 5 * 2)
+        self.assertEqual(legacy.in_dim_two, 4)
+
+        rotation = torch.tensor(
+            [[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], dtype=torch.float64
+        )
+        rotated = _clone_with_geometry(
+            legacy,
+            legacy.nuclear_coords @ rotation.T,
+            legacy.nuclear_charges,
+        )
+        with torch.no_grad():
+            base, _ = legacy.forward_log_psi(self.r)
             turned, _ = rotated.forward_log_psi(torch.einsum("ij,bnj->bni", rotation, self.r))
         self.assertGreater(float((base - turned).abs().max()), 0.1)
 

@@ -59,19 +59,29 @@ class TestFermiNet(unittest.TestCase):
         )
 
     def test_feature_embedding_shapes(self) -> None:
-        """测试特征嵌入层输出张量形状."""
+        """测试特征嵌入层输出张量形状 (两种特征模式)."""
         r = torch.randn(self.batch_size, self.total_electrons, 3)
-        embedding = ElectronFeatureEmbedding()
-        h1, h2 = embedding(r, self.nuclear_coords)
+        num_nuclei = self.nuclear_coords.shape[0]
 
-        # 单电子特征: (B, N, 4 * M) -> (4, 4, 8)
+        # 默认旋转不变模式: 单电子流每核 1 维 [d_{iI}]，双电子流 1 维 [d_{ij}]
+        invariant = ElectronFeatureEmbedding()
+        h1, h2 = invariant(r, self.nuclear_coords)
         self.assertEqual(
-            h1.shape,
-            (self.batch_size, self.total_electrons, 4 * self.nuclear_coords.shape[0]),
+            h1.shape, (self.batch_size, self.total_electrons, 1 * num_nuclei)
         )
-        # 双电子特征: (B, N, N, 4) -> (4, 4, 4, 4)
         self.assertEqual(
             h2.shape,
+            (self.batch_size, self.total_electrons, self.total_electrons, 1),
+        )
+
+        # 旧笛卡尔模式: 每核 4 维 [r_{iI}, d_{iI}]，双电子流 4 维
+        legacy = ElectronFeatureEmbedding(rotation_invariant=False)
+        h1_legacy, h2_legacy = legacy(r, self.nuclear_coords)
+        self.assertEqual(
+            h1_legacy.shape, (self.batch_size, self.total_electrons, 4 * num_nuclei)
+        )
+        self.assertEqual(
+            h2_legacy.shape,
             (self.batch_size, self.total_electrons, self.total_electrons, 4),
         )
 

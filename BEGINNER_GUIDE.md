@@ -194,8 +194,8 @@ $$\phi_j(r_i; \{r_{\setminus i}\})$$
                               【特征提取层 features.py】
                                               │
                ┌──────────────────────────────┴──────────────────────────────┐
-               │ 单电子流特征 h1: (B, N, 5M)   │ 双电子流特征 h2: (B, N, N, 4)│
-               │   [r_i - R_I, ||r_i - R_I||, Z_I] │   [r_i - r_j, ||r_i - r_j||]    │
+               │ 单电子流特征 h1: (B, N, 2M)   │ 双电子流特征 h2: (B, N, N, 1)│
+               │   [||r_i - R_I||, Z_I]        │   [||r_i - r_j||]             │
                └──────────────────────┬───────┴──────────────┬───────────────┘
                                       │                      │
                        【自旋分流交互层 FermiInteractionLayer layers.py】
@@ -246,19 +246,24 @@ $$\phi_j(r_i; \{r_{\setminus i}\})$$
 在 `ElectronFeatureEmbedding` 中，为什么我们**绝不能直接把电子的绝对坐标 $(x, y, z)$ 喂进全连接层**？
 
 #### 物理不变性原理 (Physical Invariance)
-如果我们将整个分子在空间中整体平移，分子的内部物理性质（能量、分子键长、相互作用）不应改变。旋转也应保持物理等价，但这需要专门的旋转不变量或 SO(3)/E(3) 等变结构；当前实现不能仅凭相对位移输入保证这一点。
+如果我们将整个分子在空间中整体平移，分子的内部物理性质（能量、分子键长、相互作用）不应改变。**旋转同样应保持物理等价**——哈密顿量本身是旋转不变的，因此基态波函数也必须满足这一点。
+
+做法有两种：**只用旋转不变量**，或者引入专门的 SO(3)/E(3) 等变结构。本项目采用前者：默认 `rotation_invariant=True` 时，特征中**不含任何笛卡尔位移向量**，只由标量不变量构成，因此整体旋转下前向计算**逐位相同**（实测 $\Delta \log|\Psi| = 0$，不是"近似很小"而是精确为零）。
+
+对本仓库的体系（H2、LiH、H100 链）全部是**线性分子**，到各原子核的距离已经完整确定了电子在分子标架下的位置（轴向坐标 + 垂直距离），所以这个特征集**不损失表达力**——H2 收敛对照：不变模式 $-1.17397$ Ha vs 笛卡尔模式 $-1.17416$ Ha，差异落在统计误差之内。
+
 如果直接把绝对坐标丢给 MLP，神经网络必须死记硬背每个坐标位置，泛化能力极差。
 
-因此，FermiNet 只提取两类**相对几何特征**：
+因此，FermiNet 提取两类**相对几何特征**。默认（旋转不变）模式下：
 1. **单电子-核几何特征 ($h_i^0$)**：
-   - 相对位移向量：$r_{iI} = r_i - R_I$（3 维，包含空间方向信息）
-   - 相对欧氏距离：$d_{iI} = \sqrt{\operatorname{clamp}(\|r_i - R_I\|^2,\ \min=\epsilon)}$（1 维，具有旋转不变性）
+   - 相对欧氏距离：$d_{iI} = \sqrt{\operatorname{clamp}(\|r_i - R_I\|^2,\ \min=\epsilon)}$（1 维，旋转不变）
    - 原子核电荷：$Z_I$（1 维标度，标识当前原子核的元素种类）
-   - 每个原子核提供 5 维特征，体系总共有 $M$ 个核，总维度为 $5 \times M$。
+   - 每个原子核提供 **2 维**特征，体系总共有 $M$ 个核，总维度为 $2 \times M$。
 2. **双电子-电子几何特征 ($h_{ij}^0$)**：
-   - 相对位移向量：$r_{ij} = r_i - r_j$（3 维）
    - 相对欧氏距离：$d_{ij} = \sqrt{\operatorname{clamp}(\|r_i - r_j\|^2,\ \min=\epsilon)}$（1 维）
-   - 拼接为 4 维特征。
+   - 即 **1 维**特征。
+
+> **另一种模式（`rotation_invariant=False`，仅供复现与消融）**：额外拼接笛卡尔位移向量——单电子流每核 5 维 $[r_{iI}, d_{iI}, Z_I]$（不注入电荷时 4 维），双电子流 4 维 $[r_{ij}, d_{ij}]$。方向信息更丰富，但**不具备旋转不变性**（实测整体旋转使 $\Delta\log|\Psi| = 2.22$）。该模式为复现历史结果保留，**不得**据此作任何"等变"声明。
 
 > **为什么用 `clamp` 而不是 $\sqrt{r^2 + \epsilon}$？**
 > 两者都避免 $r = 0$ 处梯度为 `NaN`，但代价不同。加性 $\epsilon$ 在**每一个**距离上都引入相对偏差 $\epsilon / (2r^2)$，处处不为零；而 `clamp(r², min=ε)` 在**所有** $r^2 \ge \epsilon$ 处是恒等变换，因此距离与未软化时**逐位相同**，偏置精确为零。只有 $r^2 < \epsilon$ 时距离才被限制为 $\sqrt{\epsilon}$，以保证重合点的数值稳定。默认 $\epsilon = 10^{-24}$，软化半径仅 $10^{-12}$ Bohr。
@@ -270,7 +275,7 @@ $$\phi_j(r_i; \{r_{\setminus i}\})$$
 > 💡 **核心代码亮点**：
 > 全部采用 PyTorch 高阶广播机制（Broadcasting），如 `r.unsqueeze(2) - nuclei.unsqueeze(0).unsqueeze(0)`，零 Python 显式循环，原生 GPU 全并行向量化！
 
-> **核序与同核置换（一个如实声明的限制）**：上表的 5 维特征是按**原子核顺序**拼接成 $(B, N, 5M)$ 后送入全连接层的。若交换两个同种原子核（例如 $H_2$ 的两个质子），特征块的位置会互换，而全连接层对核块并不对称，因此网络输出随之改变——**完整波函数不具备核置换不变性**。
+> **核序与同核置换（一个如实声明的限制）**：上表的单核特征是按**原子核顺序**拼接后送入全连接层的。若交换两个同种原子核（例如 $H_2$ 的两个质子），特征块的位置会互换，而全连接层对核块并不对称，因此网络输出随之改变——**完整波函数不具备核置换不变性**。
 >
 > 一个自然的想法是「按距离排序后再拼接」：把同核块按电子到核的距离排好序，顺序就只取决于几何而与标签无关。**这个方案是错误的，已被否决**。原因是排序在电子穿越两同核的**垂直平分面**时会翻转核块顺序，而两个块在该面上并不相等（位移向量 $r_{iI}$ 方向不同），于是波函数在该余维 1 曲面上出现**不连续跳变**（实测 $\ln|\Psi|$ 跳变约 0.044）。$\nabla^2 \ln|\Psi|$ 在不连续处失去意义，局域动能被污染——实测训练能量从 $-1.174$ Ha 退化到 $-1.162$ Ha，并一度跌破变分下界（低于精确值，物理上不可能）。
 >
@@ -475,7 +480,7 @@ loss.backward()
 
 | 源码文件 | 核心职责 | 主要类 / 函数 | 输入与输出 |
 | :--- | :--- | :--- | :--- |
-| [`features.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/features.py) | 相对几何特征嵌入 | `ElectronFeatureEmbedding` | 输入电子坐标 `(B, N, 3)` 与核坐标/电荷；输出单电子特征 `(B, N, 5M)` 与双电子特征 `(B, N, N, 4)` |
+| [`features.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/features.py) | 相对几何特征嵌入 | `ElectronFeatureEmbedding` | 输入电子坐标 `(B, N, 3)` 与核坐标/电荷；默认输出旋转不变的单电子特征 `(B, N, 2M)` 与双电子特征 `(B, N, N, 1)`；`rotation_invariant=False` 时为 `(B, N, 5M)` / `(B, N, N, 4)` |
 | [`layers.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/layers.py) | 自旋分流前馈交互 | `FermiInteractionLayer` | 输入单/双电子流；按自旋分别平均池化交互，输出更新后的表征 |
 | [`envelope.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/envelope.py) | 束缚态指数衰减包络 | `NuclearEnvelope` | 保证波函数在远离核时指数衰减；支持各向同性标量与各向异性三维主轴度规 |
 | [`model.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/model.py) | FermiNet 主干网络 | `FermiNet` | 组装 Backflow 轨道，调用 `slogdet` 分解计算多行列式对数波函数 `log|Psi|` 与符号 `sign` |

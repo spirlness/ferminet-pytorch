@@ -53,6 +53,7 @@ class FermiNet(nn.Module):
         use_nuclear_charges: bool = True,
         anisotropic_envelope: bool = False,
         tie_nuclear_envelope: bool = True,
+        rotation_invariant: bool = True,
         compile: bool = False,
         compile_mode: str = "default",
         compile_backend: str = "inductor",
@@ -74,11 +75,17 @@ class FermiNet(nn.Module):
                 末层不构造双电子流更新网络 (其 h2 输出不被消费)。
             eps (float): 数值微小量，防止除零或 log(0)。语义为距离平方的 clamp 下限
                 (最小平方距离)，软化半径为 sqrt(eps)；默认 1e-24 对应 1e-12 Bohr。
-            use_nuclear_charges (bool): 是否在几何特征中注入核电荷 Z_I (默认 True，单核特征由 4 提升为 5 维，总特征为 5*M)。
+            use_nuclear_charges (bool): 是否在几何特征中注入核电荷 Z_I (默认 True)。
+                旋转不变模式下单核特征由 1 维 [d_{iI}] 提升为 2 维 [d_{iI}, Z_I]；
+                笛卡尔模式下由 4 维提升为 5 维。
             anisotropic_envelope (bool): 是否启用各向异性可学习三维主轴度规核包络 (默认 False)。
             tie_nuclear_envelope (bool): 是否向 NuclearEnvelope 传入核电荷向量，使同电荷核
                 共享包络参数 (核置换等变)；默认 True。置为 False 时包络按核索引独立参数化
                 (旧行为)。
+            rotation_invariant (bool): 是否使用旋转不变特征 (默认 True)。开启时特征只由
+                标量不变量 (距离与核电荷) 构成，波函数对整体旋转**严格不变**；关闭时
+                额外拼接笛卡尔位移向量，方向信息更丰富但不具备旋转不变性 (仅供复现与
+                消融对照)。
             compile (bool): 是否启用 PyTorch 2.0+ JIT 图编译优化 (默认为 False，按需显式启用)。
             compile_mode (str): 默认编译优化模式 (默认为 'default'，也可选 'reduce-overhead' 等)。
             compile_backend (str): 编译后端 (默认为 'inductor')。
@@ -98,6 +105,7 @@ class FermiNet(nn.Module):
         self.use_nuclear_charges = use_nuclear_charges
         self.anisotropic_envelope = anisotropic_envelope
         self.tie_nuclear_envelope = tie_nuclear_envelope
+        self.rotation_invariant = rotation_invariant
         self.use_compile = compile
         self.compile_mode = compile_mode
         self.compile_backend = compile_backend
@@ -126,10 +134,15 @@ class FermiNet(nn.Module):
         self.num_nuclei = num_nuclei
 
         # 1. 几何特征提取模块
-        self.embedding = ElectronFeatureEmbedding(eps=eps)
-        # 单电子流输入维度: 启用核电荷注入时为 5 * M，否则为 4 * M
-        in_dim_one = (5 if use_nuclear_charges else 4) * num_nuclei
-        in_dim_two = 4              # 电子对之间 3 维位移 + 1 维距离
+        self.embedding = ElectronFeatureEmbedding(
+            eps=eps, rotation_invariant=rotation_invariant
+        )
+        # 输入维度由特征模块统一定义，避免两处重复推导
+        in_dim_one, in_dim_two = ElectronFeatureEmbedding.feature_dims(
+            num_nuclei=num_nuclei,
+            use_nuclear_charges=use_nuclear_charges,
+            rotation_invariant=rotation_invariant,
+        )
         self.in_dim_one = in_dim_one
         self.in_dim_two = in_dim_two
 
@@ -228,7 +241,8 @@ class FermiNet(nn.Module):
             )
             self._warned_precision = True
 
-        # 1. 提取几何特征 (若开启 use_nuclear_charges 则注入核电荷 Z_I 提取 5M 维特征)
+        # 1. 提取几何特征 (rotation_invariant=True 时只含标量不变量；use_nuclear_charges
+        #    控制是否注入核电荷 Z_I)
         if self.use_nuclear_charges:
             h1, h2 = self.embedding(r, self.nuclear_coords, self.nuclear_charges)
         else:

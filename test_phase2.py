@@ -40,36 +40,44 @@ class TestPhase2Features(unittest.TestCase):
     # 1. 物理几何特征层注入原子核电荷 Z_I
     # -------------------------------------------------------------------------
     def test_feature_embedding_charges_injection(self) -> None:
-        """测试特征嵌入层在传入 nuclear_charges 时的 5M 维输出与未传入时的 4M 维输出."""
+        """测试两种特征模式下注入核电荷的输出维度与电荷分量位置."""
         b, n, m = 2, 4, 2
         r = torch.randn(b, n, 3)
         coords = torch.tensor([[0.0, 0.0, -1.0], [0.0, 0.0, 1.0]])
         charges = torch.tensor([3.0, 1.0])
 
-        embedding = ElectronFeatureEmbedding()
+        # A. 默认旋转不变模式: 每核 [d_{iI}, Z_I] -> 2 * M，双电子流 1 维
+        invariant = ElectronFeatureEmbedding()
+        h1_inv, h2_inv = invariant(r, coords, charges)
+        self.assertEqual(h1_inv.shape, (b, n, 2 * m))
+        self.assertEqual(h2_inv.shape, (b, n, n, 1))
+        h1_inv_raw = h1_inv.view(b, n, m, 2)
+        self.assertTrue(torch.allclose(h1_inv_raw[:, :, 0, 1], torch.full((b, n), 3.0)))
+        self.assertTrue(torch.allclose(h1_inv_raw[:, :, 1, 1], torch.full((b, n), 1.0)))
 
-        # A. 兼容模式: 未提供 charges -> 4 * M
-        h1_4m, h2 = embedding(r, coords)
-        self.assertEqual(h1_4m.shape, (b, n, 4 * m))
-        self.assertEqual(h2.shape, (b, n, n, 4))
-
-        # B. 阶段 2 注入模式: 提供 charges -> 5 * M
-        h1_5m, h2_5m = embedding(r, coords, charges)
+        # B. 旧笛卡尔模式 + 注入电荷: 每核 [r_{iI}, d_{iI}, Z_I] -> 5 * M
+        legacy = ElectronFeatureEmbedding(rotation_invariant=False)
+        h1_5m, h2 = legacy(r, coords, charges)
         self.assertEqual(h1_5m.shape, (b, n, 5 * m))
-        self.assertEqual(h2_5m.shape, (b, n, n, 4))
-        self.assertTrue(torch.allclose(h2, h2_5m))
+        self.assertEqual(h2.shape, (b, n, n, 4))
 
         # 检验第 5 个特征分量是否与 nuclear_charges 严格一致
         h1_raw = h1_5m.view(b, n, m, 5)
         self.assertTrue(torch.allclose(h1_raw[:, :, 0, 4], torch.full((b, n), 3.0)))
         self.assertTrue(torch.allclose(h1_raw[:, :, 1, 4], torch.full((b, n), 1.0)))
 
+        # C. 旧笛卡尔模式不传 charges -> 4 * M，双电子流不受影响
+        h1_4m, h2_noz = legacy(r, coords)
+        self.assertEqual(h1_4m.shape, (b, n, 4 * m))
+        self.assertEqual(h2_noz.shape, (b, n, n, 4))
+        self.assertTrue(torch.allclose(h2, h2_noz))
+
     def test_nuclear_charges_flexible_shapes(self) -> None:
         """测试特征嵌入层对 (M,), (M, 1), (1, M) 等多种核电荷形状的鲁棒支持."""
         b, n, m = 2, 3, 2
         r = torch.randn(b, n, 3)
         coords = torch.tensor([[0.0, 0.0, -1.0], [0.0, 0.0, 1.0]])
-        embedding = ElectronFeatureEmbedding()
+        embedding = ElectronFeatureEmbedding(rotation_invariant=False)
 
         # (M,)
         h1_1d, _ = embedding(r, coords, torch.tensor([3.0, 1.0]))
@@ -82,56 +90,59 @@ class TestPhase2Features(unittest.TestCase):
         self.assertTrue(torch.allclose(h1_1d, h1_2d))
         self.assertTrue(torch.allclose(h1_1d, h1_row))
 
+        # 旋转不变模式下同样接受三种形状
+        invariant = ElectronFeatureEmbedding()
+        h1_inv, _ = invariant(r, coords, torch.tensor([[3.0, 1.0]]))
+        self.assertEqual(h1_inv.shape, (b, n, 2 * m))
+
         # 错误形状断言测试
         with self.assertRaises(AssertionError):
             embedding(r, coords, torch.tensor([3.0, 1.0, 2.0]))  # 3 个核 != 2
 
     def test_ferminet_use_nuclear_charges_toggle(self) -> None:
-        """测试 FermiNet 在 use_nuclear_charges=True/False 时的输入层维度与前向一致性."""
+        """测试 FermiNet 的输入层维度推导 (核电荷注入 × 特征模式 四种组合)."""
         coords = torch.tensor([[0.0, 0.0, -1.0], [0.0, 0.0, 1.0]])
         charges = torch.tensor([3.0, 1.0])
         n_up, n_down = 2, 2
 
-        # 默认开启注入核电荷 (5M 维)
-        model_with_z = FermiNet(
-            nuclear_coords=coords,
-            nuclear_charges=charges,
-            n_up=n_up,
-            n_down=n_down,
-            use_nuclear_charges=True,
-            num_determinants=2,
-            hidden_dim_one=32,
-            hidden_dim_two=16,
-            num_layers=1,
-        )
-        self.assertEqual(model_with_z.in_dim_one, 5 * 2)
-        self.assertEqual(model_with_z.layers[0].in_dim_one, 5 * 2)
-        self.assertEqual(model_with_z.layers[0].linear_one.in_features, 3 * (5 * 2) + 2 * 4)
+        def build(use_charges, invariant):
+            return FermiNet(
+                nuclear_coords=coords,
+                nuclear_charges=charges,
+                n_up=n_up,
+                n_down=n_down,
+                use_nuclear_charges=use_charges,
+                rotation_invariant=invariant,
+                num_determinants=2,
+                hidden_dim_one=32,
+                hidden_dim_two=16,
+                num_layers=1,
+            )
 
-        # 显式关闭注入核电荷 (4M 维)
-        model_no_z = FermiNet(
-            nuclear_coords=coords,
-            nuclear_charges=charges,
-            n_up=n_up,
-            n_down=n_down,
-            use_nuclear_charges=False,
-            num_determinants=2,
-            hidden_dim_one=32,
-            hidden_dim_two=16,
-            num_layers=1,
-        )
-        self.assertEqual(model_no_z.in_dim_one, 4 * 2)
-        self.assertEqual(model_no_z.layers[0].in_dim_one, 4 * 2)
-        self.assertEqual(model_no_z.layers[0].linear_one.in_features, 3 * (4 * 2) + 2 * 4)
-
-        r = torch.randn(3, n_up + n_down, 3)
-        with torch.no_grad():
-            psi_z = model_with_z(r)
-            psi_no_z = model_no_z(r)
-        self.assertEqual(psi_z.shape, (3,))
-        self.assertEqual(psi_no_z.shape, (3,))
-        self.assertTrue(torch.isfinite(psi_z).all())
-        self.assertTrue(torch.isfinite(psi_no_z).all())
+        # (use_nuclear_charges, rotation_invariant) -> (每核维数, 双电子流维数)
+        expected = {
+            (True, True): (2, 1),    # [d_{iI}, Z_I] / [d_{ij}]  <- 默认
+            (False, True): (1, 1),   # [d_{iI}] / [d_{ij}]
+            (True, False): (5, 4),   # [r_{iI}, d_{iI}, Z_I] / [r_{ij}, d_{ij}]
+            (False, False): (4, 4),  # [r_{iI}, d_{iI}] / [r_{ij}, d_{ij}]
+        }
+        for (use_charges, invariant), (per_nucleus, dim_two) in expected.items():
+            with self.subTest(use_charges=use_charges, rotation_invariant=invariant):
+                model = build(use_charges, invariant)
+                dim_one = per_nucleus * 2
+                self.assertEqual(model.in_dim_one, dim_one)
+                self.assertEqual(model.in_dim_two, dim_two)
+                self.assertEqual(model.layers[0].in_dim_one, dim_one)
+                self.assertEqual(model.layers[0].in_dim_two, dim_two)
+                # 聚合维度: 3 * h1 + 2 * h2
+                self.assertEqual(
+                    model.layers[0].linear_one.in_features, 3 * dim_one + 2 * dim_two
+                )
+                r = torch.randn(3, n_up + n_down, 3)
+                with torch.no_grad():
+                    psi = model(r)
+                self.assertEqual(psi.shape, (3,))
+                self.assertTrue(torch.isfinite(psi).all())
 
     # -------------------------------------------------------------------------
     # 2. 各向异性可学习度规核包络扩展
