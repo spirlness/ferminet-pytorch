@@ -41,7 +41,7 @@
    - 6.3 演示 3：极性异核分子氢化锂 $LiH$ 变分优化
    - 6.4 演示 4：100 原子超大规模体系基准测试 (`benchmark_100_atoms.py`)
    - 6.5 演示 5：PyTorch 编译加速基准评测 (`benchmark_compile.py`)
-   - 6.6 演示 6：一键生成全套学术级训练与物理状态综合看板 (`visualize.py`)
+   - 6.6 演示 6：一键生成训练与物理状态诊断看板 (`visualize.py`)
    - 6.7 训练输出物理指标白话对照表 (解读 `<E_raw>`, `Var(E)`, `Acc (%)` 等)
 7. [❓ 第六章：新手高频问答 FAQ](#7-第六章新手高频问答-faq)
    - Q1: 为什么波函数的对数值 `log|Psi|` 经常是负几百？
@@ -61,10 +61,10 @@
 
 在过去近百年里，化学家们发明了各种经验公式、近似算法（如密度泛函理论 DFT、耦合簇理论 CCSD(T) 等），但往往在“计算速度快”和“化学精度准”之间左右为难。
 
-2020 年，DeepMind 团队在顶级期刊发表了 **FermiNet (Fermi Neural Network)**。他们发现：**深度神经网络作为全能函数拟合器，是逼近多电子量子波函数前所未有的终极工具！** 
-它不用昂贵的人工特征，从最底层的库仑电荷相互作用出发（Ab-initio，从头算），直接用 PyTorch 训练神经网络去逼近分子的真实基态能量，取得了惊艳整个物理与计算化学界的极高精度。
+2020 年，DeepMind 团队发表了 **FermiNet (Fermi Neural Network)**。该方法用神经网络参数化多电子试探波函数，并结合变分量子蒙特卡洛进行优化。
+它以电子—核几何和库仑相互作用为输入先验；不同实现的精度取决于 Hamiltonian、网络、采样、优化和误差统计。本仓库是研究型 PyTorch 实现，不自动继承论文结果。
 
-本仓库正是用清晰、模块化、高性能的 PyTorch 代码，为你复现并进一步扩展了这一划时代的算法架构！
+本仓库提供模块化代码，用于复现实验链路并探索这一类架构；它不等同于官方实现或论文级复现。
 
 ---
 
@@ -391,6 +391,8 @@ $$E_L(r) \equiv \frac{\hat{H} \Psi(r)}{\Psi(r)}$$
 
 $$\langle E \rangle_{\theta} = \frac{\langle \Psi_\theta | \hat{H} | \Psi_\theta \rangle}{\langle \Psi_\theta | \Psi_\theta \rangle} \ge E_0$$
 
+本项目在核附近使用平滑距离以提高数值稳定性，因此实际计算的 Hamiltonian 与未软化的点核 Coulomb Hamiltonian 存在近核差异；参考能量比较必须遵守登记体系和相同模型假设。
+
 当且仅当 $\Psi_\theta$ 与真实基态波函数完全一致时，等号才成立！
 **这意味着什么？**
 这意味着我们可以把**能量期望值 $\langle E \rangle$ 直接当做神经网络的优化目标（Loss 函数）！**
@@ -417,7 +419,7 @@ $$\nabla_\theta \langle E \rangle = 2 \, \mathbb{E}_{r \sim |\Psi|^2} \left[ \le
 1. **$E_L(r) - \langle E_L \rangle$ 这一项不需要任何参数梯度！** 它只是一个标量系数；
 2. **需要求参数梯度的只有 $\ln|\Psi_\theta(r)|$ 这一项！**
 
-在 `loss.py` 中，默认使用无截断并带有限样本修正的协方差代理损失。若批次中有 $B$ 个独立、平衡态 Walker，则乘上 $B/(B-1)$ 可消除同批次均值中心化的有限样本因子：
+在 `loss.py` 中，默认使用无截断并带有限样本修正的协方差代理损失。若一个固定时刻的批次可视为 $B$ 个独立、平衡态 Walker，则乘上 $B/(B-1)$ 可消除同批次均值中心化的有限样本因子；实际 MCMC 链的时间相关和 burn-in 偏差仍需单独处理：
 ```python
 # 1. 彻底分离局域能量的梯度图 (stop_gradient)
 delta_e = (B / (B - 1)) * (e_local - torch.mean(e_local)).detach()
@@ -425,10 +427,10 @@ delta_e = (B / (B - 1)) * (e_local - torch.mean(e_local)).detach()
 # 2. 构造代理损失函数
 loss = 2.0 * torch.mean(delta_e * log_abs_psi)
 
-# 3. 在 IID Walker 与平衡分布条件下得到有限批次无偏协方差梯度
+# 3. 在 IID Walker 与平衡分布条件下得到有限批次协方差修正
 loss.backward()
 ```
-这省去了三阶导的高昂开销。无偏结论依赖 IID Walker、平衡分布和未截断局域能量；不能脱离这些前提使用。
+这省去了三阶导的高昂开销。有限批次无偏性只是在 IID Walker、平衡分布和未截断局域能量条件下的统计结论；实际 MCMC 训练仍可能存在链相关和有限 burn-in 偏差。
 
 ### 4.6 局域能量平滑截断 (Umrigar Tanh Clipping)：防止优化器“炸飞”
 
@@ -461,7 +463,7 @@ loss.backward()
 | [`envelope.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/envelope.py) | 束缚态指数衰减包络 | `NuclearEnvelope` | 保证波函数在远离核时指数衰减；支持各向同性标量与各向异性三维主轴度规 |
 | [`model.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/model.py) | FermiNet 主干网络 | `FermiNet` | 组装 Backflow 轨道，调用 `slogdet` 分解计算多行列式对数波函数 `log|Psi|` 与符号 `sign` |
 | [`hamiltonian.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/hamiltonian.py) | 分子哈密顿量与动能 | `MolecularSystem`, `compute_local_energy` | 全向量化计算势能 $V(r)$ 与动能 $T_L(r)$，集成三大拉普拉斯求解器 |
-| [`mcmc.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/mcmc.py) | 批量 GPU MCMC 采样器 | `MCMCSampler` | 并行 Metropolis-Hastings 拒绝抽样，自适应调节步长稳定在 50% 接受率 |
+| [`mcmc.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/mcmc.py) | 批量 GPU MCMC 采样器 | `MCMCSampler` | 并行 Metropolis-Hastings 拒绝抽样，自适应调节步长趋向默认目标；实际接受率依赖体系和提议分布 |
 | [`loss.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/loss.py) | 协方差代理损失 | `VMCLoss`, `vmc_surrogate_loss`, `clip_local_energy` | 默认有限批次修正；Tanh/Hard 截断为显式稳健有偏模式 |
 | [`mcmc_stats.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/mcmc_stats.py) | MCMC 统计 | `estimate_mcmc_statistics` | 由 walker 时间序列估计自相关时间、ESS、split-R-hat 与链相关 SEM |
 | [`train_vmc.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/train_vmc.py) | 端到端训练脚本 | `train_vmc`, `main` | 串联 MCMC 采样、局域能量求解与 Adam 参数优化的完整训练闭环 |
@@ -511,10 +513,10 @@ FermiNet 的前向推理包含大量的张量索引、小算子切片与矩阵�
 # 一键编译优化
 compiled_model = model.compile_model(backend="inductor", mode="reduce-overhead")
 ```
-在实测中：
+在特定硬件和固定图配置下可能观察到：
 - 算子融合减少了显存频繁读写；
 - CUDA Graphs 捕获固定图执行，消除了 CPU 发射延迟；
-- 在多电子体系下获得 **3.6x ~ 5.8x 的显著吞吐加速**，且误差保持在 $10^{-10}$ 机器精度级！
+- 算子融合和图捕获可能降低稳态调度开销；加速比、首次编译成本和数值差异必须按硬件、版本、batch 与 dtype 单独报告，不能预设固定倍数或“机器精度”。
 
 ---
 
@@ -583,8 +585,8 @@ Epoch  |  <E_raw> (Ha)  | <E_clip> (Ha)  |   Var(E)   | IID SEM*  | Acc (%)  |  
  30    |    -1.14205    |    -1.14180    |  0.09820   |  0.00979  |   49.8   | 0.4985 
  50    |    -1.16850    |    -1.16820    |  0.04510   |  0.00663  |   50.2   | 0.5012 
 ===========================================================================
-[*] 训练收敛总结:
-[*] 最终能量期望值: -1.16850 Hartree (H2 理论基态参考: ~ -1.1744 Hartree)
+[*] 示例输出（仅展示字段格式，不代表固定收敛结果）:
+[*] 独立复评能量: -1.16850 Hartree (参考线只适用于登记的 H2 体系)
 [*] 最终能量方差: 0.04510 | 相关 SEM: 0.00663
 [*] ESS: 8200.0 | tau_int: 1.998 | R-hat: 1.0040
 ===========================================================================
@@ -624,7 +626,7 @@ python benchmark_100_atoms.py --double --quick
 ```
 **关键评测指标亮点**：
 - **数值性质检查**：在指定 dtype 和阈值下检查轨道置换与符号反号；同自旋电子重叠在精确算术下应为零，浮点实现只报告小幅值或对数幅值阈值，不宣称精确归零。
-- **显存极致轻量**：在 100 电子超大规模下，模型参数量仅为数十万，全向量化势能计算吞吐高达每秒上万个构型。
+- **资源与吞吐需实测**：模型参数量和势能批处理耗时取决于 dtype、batch、硬件及是否包含完整局域能量；本示例只验证可执行性和数值容差。
 
 ### 6.5 演示 5：PyTorch 编译加速基准评测 (`benchmark_compile.py`)
 
@@ -635,9 +637,9 @@ python benchmark_compile.py
 # 或使用 uv 运行：
 uv run python benchmark_compile.py
 ```
-- **评测结论**：`reduce-overhead` 模式下可获得高达 **5.77x** 的加速提升，端到端延迟降低至毫秒以下！
+- **评测方法**：脚本比较 Eager 与 `torch.compile` 的稳态耗时；应同时记录硬件、版本、首次编译成本、dtype、batch 和误差，不能把单次结果推广为固定加速比。
 
-### 6.6 演示 6：一键生成全套学术级训练与物理状态综合看板 (`visualize.py`)
+### 6.6 演示 6：一键生成训练与物理状态诊断看板 (`visualize.py`)
 
 在前面的训练中，我们在终端只看到了刷屏的数字，初学者往往很难建立空间几何与物理收敛的直观感觉。
 为此，我们提供了**一键可视化导出功能**！在运行 `train_vmc.py` 时只需加上 `--save_plots` 参数：
@@ -762,10 +764,10 @@ python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_di
 > 
 > 观察薛定谔方程：
 > $$\hat{H} \Psi_0(r) = E_0 \Psi_0(r)$$
-> 如果你的神经网络拟合得**无比完美**，已经严格成为了真实基态波函数 $\Psi_0$，那么在空间的**任何一个位置 $r$**（哪怕某个电子在核旁边，另一个电子在无限远）：
+> 如果你的神经网络拟合得**无比完美**，已经成为目标 Hamiltonian 的真实基态波函数 $\Psi_0$，那么在节点之外、局域能量定义良好的位置（$\Psi_0(r)\ne 0$）：
 > $$E_L(r) = \frac{\hat{H} \Psi_0(r)}{\Psi_0(r)} = \frac{E_0 \Psi_0(r)}{\Psi_0(r)} \equiv E_0 \quad (\text{恒等于常数！})$$
 > 
-> 想想看：在空间中任意采样 1000 个点，算出来的局域能量 $E_L(r)$ **在每一个点上都完全等于常数 $E_0$！**
+> 因此在避开节点和数值奇异点的有效采样区域，局域能量理论上等于常数 $E_0$；节点处的比值本身不定义。
 > 一组完全等于常数的数列，它的方差是多少？
 > $$\text{Var}(E_L) = 0!$$
 > 
