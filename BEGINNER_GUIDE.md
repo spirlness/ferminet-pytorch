@@ -123,6 +123,12 @@ $$\Psi(\dots, r_i, \dots, r_j, \dots) = - \Psi(\dots, r_j, \dots, r_i, \dots)$$
 $$\Psi(\dots, r_i, \dots, r_i, \dots) = - \Psi(\dots, r_i, \dots, r_i, \dots) \implies \Psi = -\Psi \implies \Psi = 0!$$
 波函数直接等于 0，意味着两个同自旋电子处于相同位置的概率为 $|\Psi|^2 = 0$——它们绝对不可能占据完全相同的空间位置！这也是为什么物质不会坍缩、原子具有丰富化学性质的终极物理原因。
 
+<p align="center">
+  <img src="assets/fermion_antisymmetry_nodal_surface.png" alt="Pauli Exclusion Principle and Nodal Surface" width="100%">
+  <br>
+  <em>图 2-1 | 泡利不相容原理与费米子波函数反对称性学术图解。(a) 同自旋电子空间坐标置换引发波函数正负相位反转 $\Psi(\mathbf{r}_1, \mathbf{r}_2) = -\Psi(\mathbf{r}_2, \mathbf{r}_1)$；(b) 两个同自旋电子相互靠近时中间自发形成的节点面（Nodal Surface, $\Psi = 0$），严格阻止电子重合。</em>
+</p>
+
 ### 2.5 传统化学方法是怎么做的？Hartree-Fock 与 Slater 行列式的局限
 
 数学上，什么样的结构天然满足“交换两行/两列就变号，有两行相同就等于 0”？
