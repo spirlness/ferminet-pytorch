@@ -364,8 +364,22 @@ def train_vmc(
         if reference is not None:
             ref_energy_str = f" ({reference.label} 参考: {reference.energy:.5f} Hartree)"
         print(f"[*] 最终能量期望值: {final_energy:.5f} Hartree{ref_energy_str}")
-        print(f"[*] 最终能量方差: {final_var:.5f} | 相关 SEM: {evaluation['energy_sem']:.5f}")
-        print(f"[*] ESS: {evaluation['ess']:.1f} | tau_int: {evaluation['tau_int']:.3f} | R-hat: {evaluation['r_hat']:.4f}")
+        print(f"[*] 最终能量方差: {final_var:.5f}")
+        if evaluation["autocorrelation_status"] in ("ok", "constant"):
+            print(
+                f"[*] 相关 SEM: {evaluation['energy_sem']:.5f} | ESS: {evaluation['ess']:.1f} | "
+                f"tau_int: {evaluation['tau_int']:.3f} | R-hat: {evaluation['r_hat']:.4f}"
+            )
+        else:
+            print(
+                f"[!] 自相关时间无法解析 (autocorrelation_status={evaluation['autocorrelation_status']}, "
+                f"链长 {evaluation['num_steps']} 步): SEM / ESS / tau_int 报告为 nan。"
+            )
+            print(
+                f"    请提高 --evaluation_steps (当前 {evaluation_steps}) 后重新运行; "
+                f"不要按独立样本假设引用误差棒。"
+            )
+            print(f"[*] R-hat: {evaluation['r_hat']:.4f}")
         print("=" * 75)
 
     return {

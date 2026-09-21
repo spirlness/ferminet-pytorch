@@ -310,7 +310,7 @@ class TestVMCComponents(unittest.TestCase):
             mcmc_steps_per_epoch=2,
             burn_in_steps=5,
             lr=1e-3,
-            evaluation_steps=4,
+            evaluation_steps=64,
             evaluation_mcmc_steps=1,
             evaluation_burn_in_steps=2,
             verbose=False,
@@ -324,6 +324,8 @@ class TestVMCComponents(unittest.TestCase):
         self.assertEqual(result["final_energy"], result["evaluation"]["energy_mean"])
         self.assertEqual(result["training_last_batch_energy"], history["energy_raw"][-1])
         self.assertNotIn("energy_sem", history)
+        # 复评链长 (64) 足以解析自相关，SEM 必须为有限值
+        self.assertEqual(result["evaluation"]["autocorrelation_status"], "ok")
         self.assertTrue(torch.isfinite(torch.tensor(result["evaluation"]["energy_sem"])))
         self.assertEqual(result["evaluation"]["laplacian_method"], "exact")
         self.assertTrue(result["sampler"].adapt_step_size)
