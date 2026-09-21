@@ -1,375 +1,320 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 980" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 620" width="100%" height="100%">
   <defs>
-    <!-- 基础背景渐变 -->
+    <!-- 学术浅色卡片微渐变 -->
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#070b14"/>
-      <stop offset="50%" stop-color="#0d1527"/>
-      <stop offset="100%" stop-color="#050811"/>
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f8fafc"/>
     </linearGradient>
 
-    <!-- 网格图案 -->
-    <pattern id="gridPattern" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.75" stroke-opacity="0.4"/>
-      <circle cx="40" cy="40" r="1" fill="#38bdf8" fill-opacity="0.15"/>
-    </pattern>
-
-    <!-- 卡片质感渐变 -->
-    <linearGradient id="cardGradDark" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.85"/>
-      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.95"/>
+    <linearGradient id="panelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f1f5f9"/>
     </linearGradient>
 
-    <linearGradient id="cardGradCyan" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0e7490" stop-opacity="0.25"/>
-      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9"/>
+    <!-- 学术色彩体系 (Nature / Science 风格: 柔和、专业、低饱和) -->
+    <!-- 单电子流: 柔和海蓝 -->
+    <linearGradient id="streamOneGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#e0f2fe"/>
+      <stop offset="100%" stop-color="#bae6fd"/>
+    </linearGradient>
+    
+    <!-- 双电子流: 柔和淡紫 -->
+    <linearGradient id="streamTwoGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f3e8ff"/>
+      <stop offset="100%" stop-color="#e9d5ff"/>
     </linearGradient>
 
-    <linearGradient id="cardGradPurple" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6d28d9" stop-opacity="0.25"/>
-      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9"/>
+    <!-- 包络层: 柔和琥珀 -->
+    <linearGradient id="envelopeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fef3c7"/>
+      <stop offset="100%" stop-color="#fde68a"/>
     </linearGradient>
 
-    <linearGradient id="cardGradAmber" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#b45309" stop-opacity="0.25"/>
-      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9"/>
+    <!-- 行列式与输出: 柔和薄荷与玫瑰 -->
+    <linearGradient id="detGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffe4e6"/>
+      <stop offset="100%" stop-color="#fecdd3"/>
     </linearGradient>
 
-    <linearGradient id="cardGradRose" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#be123c" stop-opacity="0.25"/>
-      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9"/>
+    <linearGradient id="outputGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0369a1"/>
     </linearGradient>
 
-    <!-- 流程流向彩色渐变连线 -->
-    <linearGradient id="lineGradCyan" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#06b6d4"/>
-      <stop offset="100%" stop-color="#3b82f6"/>
-    </linearGradient>
-
-    <linearGradient id="lineGradPurple" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#a855f7"/>
-      <stop offset="100%" stop-color="#6366f1"/>
-    </linearGradient>
-
-    <linearGradient id="lineGradMulti" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38bdf8"/>
-      <stop offset="50%" stop-color="#a855f7"/>
-      <stop offset="100%" stop-color="#f43f5e"/>
-    </linearGradient>
-
-    <!-- 阴影滤镜 -->
-    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.6"/>
-    </filter>
-    <filter id="glowCyan" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="8" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
-    <filter id="glowRose" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="6" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    <!-- 柔和微阴影 -->
+    <filter id="softShadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.06"/>
     </filter>
 
-    <!-- 箭头标记 -->
-    <marker id="arrowCyan" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 8 5 L 0 9 z" fill="#06b6d4" />
+    <!-- 学术连线箭头 -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 2 L 7 5 L 1 8 z" fill="#64748b"/>
     </marker>
-    <marker id="arrowPurple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 8 5 L 0 9 z" fill="#a855f7" />
-    </marker>
-    <marker id="arrowAmber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 8 5 L 0 9 z" fill="#f59e0b" />
-    </marker>
-    <marker id="arrowRose" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 8 5 L 0 9 z" fill="#f43f5e" />
-    </marker>
-    <marker id="arrowSky" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 8 5 L 0 9 z" fill="#38bdf8" />
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 2 L 7 5 L 1 8 z" fill="#0284c7"/>
     </marker>
   </defs>
 
   <style>
-    .code-text { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .main-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
-    .title-text { font-weight: 800; letter-spacing: -0.5px; }
-    .badge { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .math { font-family: "Cambria Math", "Times New Roman", "STIXGeneral", "Latin Modern Math", serif; font-style: italic; }
+    .math-up { font-family: "Cambria Math", "Times New Roman", "STIXGeneral", "Latin Modern Math", serif; font-style: normal; }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "PingFang SC", sans-serif; }
+    .label-title { font-size: 13px; font-weight: 700; fill: #1e293b; letter-spacing: 0.2px; }
+    .dim-tag { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; fill: #475569; }
+    .panel-header { font-size: 14px; font-weight: 800; fill: #0f172a; }
+    .panel-sub { font-size: 11px; font-weight: 500; fill: #64748b; }
   </style>
 
-  <!-- 1. 背景层 -->
-  <rect width="100%" height="100%" fill="url(#bgGrad)"/>
-  <rect width="100%" height="100%" fill="url(#gridPattern)"/>
-
-  <!-- 顶部科技光晕装饰 -->
-  <circle cx="200" cy="100" r="180" fill="#06b6d4" fill-opacity="0.08" filter="blur(60px)"/>
-  <circle cx="1200" cy="180" r="220" fill="#a855f7" fill-opacity="0.08" filter="blur(80px)"/>
-  <circle cx="700" cy="850" r="240" fill="#f43f5e" fill-opacity="0.06" filter="blur(90px)"/>
+  <!-- 主画布背景 -->
+  <rect width="1280" height="620" rx="12" fill="url(#bgGrad)" stroke="#cbd5e1" stroke-width="1.5"/>
 
   <!-- ================================================================================= -->
-  <!-- 2. 顶部 Header 标题栏 -->
+  <!-- 顶部论文式标题与引言 -->
   <!-- ================================================================================= -->
-  <g transform="translate(60, 40)">
-    <!-- 徽标与标题 -->
-    <rect x="0" y="0" width="1320" height="72" rx="16" fill="url(#cardGradDark)" stroke="#334155" stroke-width="1.2" filter="url(#cardShadow)"/>
-    
-    <circle cx="40" cy="36" r="18" fill="#38bdf8" fill-opacity="0.15" stroke="#38bdf8" stroke-width="2"/>
-    <path d="M 32 36 Q 40 24 48 36 T 64 36" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/>
+  <g transform="translate(40, 32)">
+    <text x="0" y="0" class="sans" font-size="16" font-weight="800" fill="#0f172a">Figure 1 | Architecture and Tensor Dataflow of the FermiNet Wavefunction</text>
+    <text x="0" y="18" class="sans" font-size="12" fill="#64748b">Deep neural network ansatz for many-electron systems satisfying spin-equivariance, Pauli exclusion principle, and asymptotic boundary conditions.</text>
+  </g>
 
-    <text x="75" y="32" fill="#ffffff" class="main-text title-text" font-size="22">FermiNet (Fermi Neural Network) 全景架构与物理数据流</text>
-    <text x="75" y="52" fill="#94a3b8" class="main-text" font-size="13">Ab-Initio Deep Learning Architecture for Many-Electron Schrödinger Equation · PyTorch 2.0+</text>
+  <!-- ================================================================================= -->
+  <!-- PANEL A: 输入与几何特征嵌入 (x: 40, y: 75, w: 260, h: 485) -->
+  <!-- ================================================================================= -->
+  <g transform="translate(40, 75)">
+    <!-- 子图外框 -->
+    <rect x="0" y="0" width="260" height="485" rx="10" fill="url(#panelGrad)" stroke="#cbd5e1" stroke-width="1.2" filter="url(#softShadow)"/>
+    <text x="16" y="24" class="sans panel-header">a <tspan font-weight="600" font-size="13" fill="#334155">Feature Embedding</tspan></text>
+    <text x="16" y="40" class="sans panel-sub">Translation &amp; rotation invariant</text>
 
-    <!-- 右侧特性标签 Badges -->
-    <g transform="translate(830, 22)">
-      <rect x="0" y="0" width="110" height="28" rx="6" fill="#0369a1" fill-opacity="0.3" stroke="#0ea5e9" stroke-width="1"/>
-      <text x="55" y="18" fill="#38bdf8" class="main-text badge" text-anchor="middle">Ab-Initio QMC</text>
-
-      <rect x="120" y="0" width="150" height="28" rx="6" fill="#581c87" fill-opacity="0.3" stroke="#a855f7" stroke-width="1"/>
-      <text x="195" y="18" fill="#c084fc" class="main-text badge" text-anchor="middle">Spin-Equivariant</text>
-
-      <rect x="280" y="0" width="190" height="28" rx="6" fill="#9f1239" fill-opacity="0.3" stroke="#f43f5e" stroke-width="1"/>
-      <text x="375" y="18" fill="#fb7185" class="main-text badge" text-anchor="middle">Hutchinson O(1) Speedup</text>
+    <!-- 输入坐标节点 -->
+    <g transform="translate(16, 55)">
+      <rect x="0" y="0" width="228" height="64" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1"/>
+      <text x="12" y="22" class="sans label-title">Physical Coordinates</text>
+      <text x="12" y="42" class="math" font-size="14" fill="#0f172a">r <tspan class="math-up" font-size="11" fill="#64748b">∈ ℝ</tspan><tspan class="sans" font-size="10" dy="-4">B×N×3</tspan></text>
+      <text x="115" y="42" class="math" font-size="14" fill="#0f172a">R <tspan class="math-up" font-size="11" fill="#64748b">∈ ℝ</tspan><tspan class="sans" font-size="10" dy="-4">M×3</tspan></text>
+      <text x="180" y="42" class="math" font-size="14" fill="#0f172a">Z <tspan class="math-up" font-size="11" fill="#64748b">∈ ℝ</tspan><tspan class="sans" font-size="10" dy="-4">M</tspan></text>
+      <text x="12" y="56" class="sans" font-size="10" fill="#94a3b8">Electrons (N), Nuclei (M), Charges (Z)</text>
     </g>
-  </g>
 
-  <!-- ================================================================================= -->
-  <!-- 3. 左侧主数据流架构 (Width: 920px) -->
-  <!-- ================================================================================= -->
+    <!-- 箭头向下 -->
+    <line x1="75" y1="119" x2="75" y2="150" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="185" y1="119" x2="185" y2="295" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <!-- STEP 1: 分子物理体系输入 (y: 135) -->
-  <g transform="translate(60, 135)">
-    <rect x="0" y="0" width="900" height="85" rx="14" fill="url(#cardGradDark)" stroke="#38bdf8" stroke-width="1.5" filter="url(#cardShadow)"/>
-    <rect x="0" y="0" width="8" height="85" rx="4" fill="#38bdf8"/>
-    
-    <text x="25" y="32" fill="#38bdf8" class="main-text title-text" font-size="15">【输入层】分子物理体系空间坐标与核电荷 (Molecular Configuration)</text>
-    <text x="25" y="54" fill="#94a3b8" class="main-text" font-size="12">将连续电子位置采样与原子核几何排布传入模型，保持连续可微计算图</text>
-
-    <!-- 电子坐标 -->
-    <rect x="470" y="16" width="200" height="52" rx="8" fill="#0f172a" stroke="#1e293b" stroke-width="1.2"/>
-    <text x="485" y="38" fill="#f8fafc" class="code-text" font-size="13" font-weight="700">r: (B, N, 3)</text>
-    <text x="485" y="55" fill="#64748b" class="main-text" font-size="11">电子笛卡尔坐标 (N = n↑ + n↓)</text>
-
-    <!-- 原子核坐标与电荷 -->
-    <rect x="685" y="16" width="200" height="52" rx="8" fill="#0f172a" stroke="#1e293b" stroke-width="1.2"/>
-    <text x="700" y="38" fill="#f8fafc" class="code-text" font-size="13" font-weight="700">R: (M, 3) | Z: (M,)</text>
-    <text x="700" y="55" fill="#64748b" class="main-text" font-size="11">M 个原子核坐标与核电荷标度</text>
-  </g>
-
-  <!-- 连接线 1 -> 2 -->
-  <path d="M 285 220 L 285 260" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-dasharray="4,3" marker-end="url(#arrowCyan)"/>
-  <path d="M 735 220 L 735 260" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-dasharray="4,3" marker-end="url(#arrowPurple)"/>
-
-  <!-- STEP 2: 特征嵌入层 (features.py) (y: 260) -->
-  <g transform="translate(60, 260)">
-    <!-- 外框 -->
-    <rect x="0" y="0" width="900" height="135" rx="14" fill="url(#cardGradDark)" stroke="#334155" stroke-width="1.2" filter="url(#cardShadow)"/>
-    <text x="25" y="28" fill="#f1f5f9" class="main-text title-text" font-size="14">【特征工程 features.py】相对物理几何嵌入 (ElectronFeatureEmbedding)</text>
-    <text x="590" y="28" fill="#10b981" class="main-text" font-size="12" font-weight="600">✓ 平移旋转不变性保证 · 零 Python 循环广播</text>
-
-    <!-- 单电子流特征框 -->
-    <rect x="25" y="42" width="415" height="78" rx="10" fill="url(#cardGradCyan)" stroke="#06b6d4" stroke-width="1.2"/>
-    <text x="40" y="65" fill="#38bdf8" class="main-text" font-size="13" font-weight="700">单电子-核几何流 (One-Electron Stream)</text>
-    <text x="40" y="85" fill="#e2e8f0" class="code-text" font-size="12">h1_0 = [ r_i - R_I, ||r_i - R_I||, Z_I ]</text>
-    <rect x="40" y="93" width="135" height="20" rx="4" fill="#0891b2" fill-opacity="0.3"/>
-    <text x="48" y="107" fill="#67e8f9" class="code-text" font-size="11">Shape: (B, N, 5*M)</text>
-    <text x="190" y="107" fill="#94a3b8" class="main-text" font-size="11">单核5维 · 支持异核 (LiH)</text>
-
-    <!-- 双电子流特征框 -->
-    <rect x="460" y="42" width="415" height="78" rx="10" fill="url(#cardGradPurple)" stroke="#a855f7" stroke-width="1.2"/>
-    <text x="475" y="65" fill="#c084fc" class="main-text" font-size="13" font-weight="700">双电子相对几何流 (Two-Electron Stream)</text>
-    <text x="475" y="85" fill="#e2e8f0" class="code-text" font-size="12">h2_0 = [ r_i - r_j, ||r_i - r_j|| ]</text>
-    <rect x="475" y="93" width="145" height="20" rx="4" fill="#7e22ce" fill-opacity="0.3"/>
-    <text x="483" y="107" fill="#d8b4fe" class="code-text" font-size="11">Shape: (B, N, N, 4)</text>
-    <text x="635" y="107" fill="#94a3b8" class="main-text" font-size="11">相对位移与相对欧氏距离</text>
-  </g>
-
-  <!-- 连接线 2 -> 3 -->
-  <path d="M 235 395 L 235 435" fill="none" stroke="#06b6d4" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
-  <path d="M 665 395 L 665 435" fill="none" stroke="#a855f7" stroke-width="2.5" marker-end="url(#arrowPurple)"/>
-
-  <!-- STEP 3: 自旋等变前馈交互层 (layers.py) (y: 435) -->
-  <g transform="translate(60, 435)">
-    <rect x="0" y="0" width="900" height="150" rx="14" fill="url(#cardGradDark)" stroke="#3b82f6" stroke-width="1.5" filter="url(#cardShadow)"/>
-    <rect x="0" y="0" width="8" height="150" rx="4" fill="#3b82f6"/>
-
-    <text x="25" y="28" fill="#60a5fa" class="main-text title-text" font-size="14">【自旋等变层 layers.py】多层 FermiInteractionLayer (重复 L 层，默认 L=2~4)</text>
-    <text x="595" y="28" fill="#38bdf8" class="main-text" font-size="12" font-weight="600">✓ 同自旋置换等变性 (Permutation Equivariant)</text>
-
-    <!-- 交互核心：自旋分离池化 -->
-    <g transform="translate(25, 42)">
-      <rect x="0" y="0" width="850" height="96" rx="10" fill="#0f172a" stroke="#1e293b" stroke-width="1.2"/>
+    <!-- 单电子流特征卡片 -->
+    <g transform="translate(16, 150)">
+      <rect x="0" y="0" width="228" height="120" rx="8" fill="url(#streamOneGrad)" stroke="#0284c7" stroke-width="1.2"/>
+      <rect x="8" y="8" width="105" height="20" rx="4" fill="#0284c7"/>
+      <text x="14" y="22" class="sans" font-size="10" font-weight="700" fill="#ffffff">One-electron Stream</text>
       
-      <!-- 4 个分离池化项 -->
-      <g transform="translate(20, 12)">
-        <rect x="0" y="0" width="185" height="34" rx="6" fill="#1e293b"/>
-        <text x="10" y="22" fill="#38bdf8" class="code-text" font-size="12">mean(h1↑): (B, 1, d1)</text>
-        <text x="10" y="44" fill="#64748b" class="main-text" font-size="10">向上自旋均值池化</text>
+      <text x="12" y="48" class="math" font-size="13" fill="#0369a1">h<tspan font-size="10" dy="2">i</tspan><tspan font-size="10" dy="-4">(0)</tspan> <tspan class="math-up" font-size="12" fill="#0f172a">= [ r</tspan><tspan font-size="10" dy="2">iI</tspan><tspan class="math-up" font-size="12" dy="-2">, ‖r</tspan><tspan font-size="10" dy="2">iI</tspan><tspan class="math-up" font-size="12" dy="-2">‖, Z</tspan><tspan font-size="10" dy="2">I</tspan><tspan class="math-up" font-size="12" dy="-2"> ]</tspan></text>
+      <text x="12" y="70" class="dim-tag">r<tspan font-size="9" dy="2">iI</tspan><tspan dy="-2"> = r</tspan><tspan font-size="9" dy="2">i</tspan><tspan dy="-2"> - R</tspan><tspan font-size="9" dy="2">I</tspan><tspan dy="-2"> (relative displacement)</tspan></text>
+      
+      <line x1="12" y1="84" x2="216" y2="84" stroke="#7dd3fc" stroke-width="1"/>
+      <text x="12" y="102" class="dim-tag" font-weight="600" fill="#0369a1">Shape: (B, N, 5M)</text>
+    </g>
 
-        <rect x="200" y="0" width="185" height="34" rx="6" fill="#1e293b"/>
-        <text x="210" y="22" fill="#38bdf8" class="code-text" font-size="12">mean(h1↓): (B, 1, d1)</text>
-        <text x="210" y="44" fill="#64748b" class="main-text" font-size="10">向下自旋均值池化</text>
+    <!-- 双电子流特征卡片 -->
+    <g transform="translate(16, 295)">
+      <rect x="0" y="0" width="228" height="115" rx="8" fill="url(#streamTwoGrad)" stroke="#9333ea" stroke-width="1.2"/>
+      <rect x="8" y="8" width="105" height="20" rx="4" fill="#9333ea"/>
+      <text x="14" y="22" class="sans" font-size="10" font-weight="700" fill="#ffffff">Two-electron Stream</text>
+      
+      <text x="12" y="48" class="math" font-size="13" fill="#7e22ce">h<tspan font-size="10" dy="2">ij</tspan><tspan font-size="10" dy="-4">(0)</tspan> <tspan class="math-up" font-size="12" fill="#0f172a">= [ r</tspan><tspan font-size="10" dy="2">ij</tspan><tspan class="math-up" font-size="12" dy="-2">, ‖r</tspan><tspan font-size="10" dy="2">ij</tspan><tspan class="math-up" font-size="12" dy="-2">‖ ]</tspan></text>
+      <text x="12" y="70" class="dim-tag">r<tspan font-size="9" dy="2">ij</tspan><tspan dy="-2"> = r</tspan><tspan font-size="9" dy="2">i</tspan><tspan dy="-2"> - r</tspan><tspan font-size="9" dy="2">j</tspan><tspan dy="-2"> (inter-electron vector)</tspan></text>
+      
+      <line x1="12" y1="84" x2="216" y2="84" stroke="#d8b4fe" stroke-width="1"/>
+      <text x="12" y="102" class="dim-tag" font-weight="600" fill="#7e22ce">Shape: (B, N, N, 4)</text>
+    </g>
 
-        <rect x="400" y="0" width="200" height="34" rx="6" fill="#1e293b"/>
-        <text x="410" y="22" fill="#c084fc" class="code-text" font-size="12">mean_j(h2_i↑): (B, N, d2)</text>
-        <text x="410" y="44" fill="#64748b" class="main-text" font-size="10">电子i与向上自旋交互均值</text>
+    <!-- 底部备注 -->
+    <text x="130" y="450" class="sans" font-size="11" fill="#64748b" text-anchor="middle">Z<tspan font-size="9" dy="2">I</tspan><tspan dy="-2"> injected for hetero-molecules</tspan></text>
+  </g>
 
-        <rect x="615" y="0" width="200" height="34" rx="6" fill="#1e293b"/>
-        <text x="625" y="22" fill="#c084fc" class="code-text" font-size="12">mean_j(h2_i↓): (B, N, d2)</text>
-        <text x="625" y="44" fill="#64748b" class="main-text" font-size="10">电子i与向下自旋交互均值</text>
+  <!-- 连接 a -> b -->
+  <line x1="300" y1="265" x2="335" y2="265" stroke="#0284c7" stroke-width="1.8" marker-end="url(#arrowBlue)"/>
+  <line x1="300" y1="410" x2="335" y2="410" stroke="#9333ea" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+  <!-- ================================================================================= -->
+  <!-- PANEL B: 自旋等变前馈交互层 (x: 340, y: 75, w: 330, h: 485) -->
+  <!-- ================================================================================= -->
+  <g transform="translate(340, 75)">
+    <rect x="0" y="0" width="330" height="485" rx="10" fill="url(#panelGrad)" stroke="#cbd5e1" stroke-width="1.2" filter="url(#softShadow)"/>
+    <text x="16" y="24" class="sans panel-header">b <tspan font-weight="600" font-size="13" fill="#334155">Interaction Layer</tspan> <tspan class="dim-tag" font-size="11">(× L layers)</tspan></text>
+    <text x="16" y="40" class="sans panel-sub">Permutation equivariant over spins</text>
+
+    <!-- 交互块核心卡片 -->
+    <g transform="translate(16, 55)">
+      <rect x="0" y="0" width="298" height="405" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      
+      <!-- 1. 自旋分离均值池化 -->
+      <text x="12" y="24" class="sans label-title">1. Spin-Separated Mean Pooling</text>
+      
+      <g transform="translate(12, 34)">
+        <rect x="0" y="0" width="130" height="42" rx="4" fill="#f0f9ff" stroke="#bae6fd" stroke-width="1"/>
+        <text x="8" y="18" class="math" font-size="12" fill="#0369a1">h̄<tspan font-size="9" dy="2">↑</tspan><tspan font-size="9" dy="-3">(l)</tspan> <tspan class="math-up" font-size="11" fill="#64748b">= </tspan><tspan class="sans" font-size="10">mean</tspan><tspan class="math" font-size="11">(h<tspan font-size="9" dy="2">j↑</tspan>)</tspan></text>
+        <text x="8" y="34" class="dim-tag">Dim: (B, 1, d<tspan font-size="8" dy="1">1</tspan><tspan dy="-1">)</tspan></text>
+
+        <rect x="144" y="0" width="130" height="42" rx="4" fill="#f0f9ff" stroke="#bae6fd" stroke-width="1"/>
+        <text x="8" y="18" class="math" font-size="12" fill="#0369a1">h̄<tspan font-size="9" dy="2">↓</tspan><tspan font-size="9" dy="-3">(l)</tspan> <tspan class="math-up" font-size="11" fill="#64748b">= </tspan><tspan class="sans" font-size="10">mean</tspan><tspan class="math" font-size="11">(h<tspan font-size="9" dy="2">j↓</tspan>)</tspan></text>
+        <text x="8" y="34" class="dim-tag">Dim: (B, 1, d<tspan font-size="8" dy="1">1</tspan><tspan dy="-1">)</tspan></text>
       </g>
 
-      <!-- 聚合更新公式与残差连接 -->
-      <line x1="20" y1="58" x2="830" y2="58" stroke="#334155" stroke-width="1"/>
-      <text x="20" y="80" fill="#e2e8f0" class="code-text" font-size="12">聚合输入 a_i = [ h1_i,  mean(h1↑),  mean(h1↓),  mean_j(h2_i↑),  mean_j(h2_i↓) ]  (维度: 3*d1 + 2*d2)</text>
-      <text x="635" y="80" fill="#f59e0b" class="code-text" font-size="12">h1^(l+1) = tanh(W*a_i + b) + h1^(l)</text>
+      <g transform="translate(12, 84)">
+        <rect x="0" y="0" width="130" height="42" rx="4" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1"/>
+        <text x="8" y="18" class="math" font-size="12" fill="#7e22ce">h̄<tspan font-size="9" dy="2">i↑</tspan><tspan font-size="9" dy="-3">(l)</tspan> <tspan class="math-up" font-size="11" fill="#64748b">= </tspan><tspan class="sans" font-size="10">mean</tspan><tspan class="math" font-size="11">(h<tspan font-size="9" dy="2">ij↑</tspan>)</tspan></text>
+        <text x="8" y="34" class="dim-tag">Dim: (B, N, d<tspan font-size="8" dy="1">2</tspan><tspan dy="-1">)</tspan></text>
+
+        <rect x="144" y="0" width="130" height="42" rx="4" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1"/>
+        <text x="8" y="18" class="math" font-size="12" fill="#7e22ce">h̄<tspan font-size="9" dy="2">i↓</tspan><tspan font-size="9" dy="-3">(l)</tspan> <tspan class="math-up" font-size="11" fill="#64748b">= </tspan><tspan class="sans" font-size="10">mean</tspan><tspan class="math" font-size="11">(h<tspan font-size="9" dy="2">ij↓</tspan>)</tspan></text>
+        <text x="8" y="34" class="dim-tag">Dim: (B, N, d<tspan font-size="8" dy="1">2</tspan><tspan dy="-1">)</tspan></text>
+      </g>
+
+      <!-- 2. 特征拼接算子 -->
+      <g transform="translate(12, 140)">
+        <line x1="0" y1="0" x2="274" y2="0" stroke="#e2e8f0" stroke-width="1"/>
+        <text x="0" y="18" class="sans label-title">2. Concatenation &amp; Update</text>
+        
+        <rect x="0" y="26" width="274" height="44" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="10" y="44" class="math" font-size="12" fill="#0f172a">a<tspan font-size="9" dy="2">i</tspan><tspan font-size="9" dy="-2">(l)</tspan> <tspan class="math-up" font-size="11" fill="#64748b">= [ </tspan>h<tspan font-size="9" dy="2">i</tspan><tspan font-size="9" dy="-2">(l)</tspan><tspan class="math-up" font-size="11">, </tspan>h̄<tspan font-size="9" dy="2">↑</tspan><tspan font-size="9" dy="-2">(l)</tspan><tspan class="math-up" font-size="11">, </tspan>h̄<tspan font-size="9" dy="2">↓</tspan><tspan font-size="9" dy="-2">(l)</tspan><tspan class="math-up" font-size="11">, </tspan>h̄<tspan font-size="9" dy="2">i↑</tspan><tspan font-size="9" dy="-2">(l)</tspan><tspan class="math-up" font-size="11">, </tspan>h̄<tspan font-size="9" dy="2">i↓</tspan><tspan font-size="9" dy="-2">(l)</tspan><tspan class="math-up" font-size="11"> ]</tspan></text>
+        <text x="10" y="60" class="dim-tag">Dimension: 3·d<tspan font-size="8" dy="1">1</tspan><tspan dy="-1"> + 2·d</tspan><tspan font-size="8" dy="1">2</tspan></text>
+      </g>
+
+      <!-- 3. 前馈与残差连接 -->
+      <g transform="translate(12, 226)">
+        <rect x="0" y="0" width="274" height="66" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="10" y="20" class="sans" font-size="11" font-weight="700" fill="#334155">Nonlinear Feedforward (MLP)</text>
+        <text x="10" y="38" class="math" font-size="12" fill="#0f172a">h<tspan font-size="9" dy="2">i</tspan><tspan font-size="9" dy="-2">(l+1)</tspan> <tspan class="math-up" font-size="11" fill="#64748b">= </tspan><tspan class="sans" font-size="11">tanh</tspan><tspan class="math-up" font-size="11">( W </tspan>a<tspan font-size="9" dy="2">i</tspan><tspan font-size="9" dy="-2">(l)</tspan><tspan class="math-up" font-size="11"> + b ) </tspan><tspan class="math-up" font-size="13" font-weight="700" fill="#0284c7">⊕</tspan><tspan class="math" font-size="12"> h<tspan font-size="9" dy="2">i</tspan><tspan font-size="9" dy="-2">(l)</tspan></tspan></text>
+        <text x="10" y="56" class="dim-tag" fill="#0284c7">Residual Skip Connection (d<tspan font-size="8" dy="1">1</tspan><tspan dy="-1"> = 64)</tspan></text>
+      </g>
+
+      <!-- 4. 双电子流前馈更新 -->
+      <g transform="translate(12, 305)">
+        <rect x="0" y="0" width="274" height="48" rx="5" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1"/>
+        <text x="10" y="18" class="sans" font-size="11" font-weight="700" fill="#7e22ce">Two-electron Stream Update</text>
+        <text x="10" y="36" class="math" font-size="12" fill="#0f172a">h<tspan font-size="9" dy="2">ij</tspan><tspan font-size="9" dy="-2">(l+1)</tspan> <tspan class="math-up" font-size="11" fill="#64748b">= </tspan><tspan class="sans" font-size="11">tanh</tspan><tspan class="math-up" font-size="11">( W<tspan font-size="8" dy="2">2</tspan><tspan dy="-2"> </tspan>h<tspan font-size="9" dy="2">ij</tspan><tspan font-size="9" dy="-2">(l)</tspan><tspan class="math-up" font-size="11"> + b<tspan font-size="8" dy="2">2</tspan><tspan dy="-2"> ) </tspan><tspan class="math-up" font-size="13" font-weight="700" fill="#9333ea">⊕</tspan><tspan class="math" font-size="12"> h<tspan font-size="9" dy="2">ij</tspan><tspan font-size="9" dy="-2">(l)</tspan></tspan></text>
+      </g>
+
+      <!-- 输出标注 -->
+      <text x="137" y="390" class="dim-tag" font-weight="700" fill="#0f172a" text-anchor="middle">Output: h<tspan font-size="9" dy="1">i</tspan><tspan dy="-1">(L)</tspan> ∈ ℝ<tspan font-size="9" dy="-3">B×N×d1</tspan></text>
     </g>
   </g>
 
-  <!-- 连接线 3 -> 4 (分两路：自旋向上与向下) -->
-  <path d="M 285 585 L 285 625" fill="none" stroke="#06b6d4" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
-  <path d="M 735 585 L 735 625" fill="none" stroke="#a855f7" stroke-width="2.5" marker-end="url(#arrowPurple)"/>
+  <!-- 连接 b -> c -->
+  <line x1="670" y1="265" x2="705" y2="265" stroke="#0284c7" stroke-width="1.8" marker-end="url(#arrowBlue)"/>
 
-  <!-- STEP 4: 轨道映射与指数衰减包络 (envelope.py & model.py) (y: 625) -->
-  <g transform="translate(60, 625)">
-    <rect x="0" y="0" width="900" height="155" rx="14" fill="url(#cardGradDark)" stroke="#f59e0b" stroke-width="1.2" filter="url(#cardShadow)"/>
-    <text x="25" y="26" fill="#fbbf24" class="main-text title-text" font-size="14">【分子轨道与包络 envelope.py】Backflow 广义轨道投影 ⊗ 核指数衰减包络</text>
-    <text x="615" y="26" fill="#f59e0b" class="main-text" font-size="12" font-weight="600">✓ 束缚态渐近衰减满足 (r → ∞, Envelope → 0)</text>
+  <!-- ================================================================================= -->
+  <!-- PANEL C: Backflow 轨道与核包络 (x: 710, y: 75, w: 260, h: 485) -->
+  <!-- ================================================================================= -->
+  <g transform="translate(710, 75)">
+    <rect x="0" y="0" width="260" height="485" rx="10" fill="url(#panelGrad)" stroke="#cbd5e1" stroke-width="1.2" filter="url(#softShadow)"/>
+    <text x="16" y="24" class="sans panel-header">c <tspan font-weight="600" font-size="13" fill="#334155">Orbitals &amp; Envelope</tspan></text>
+    <text x="16" y="40" class="sans panel-sub">Asymptotic cusp condition</text>
 
-    <!-- 自旋向上轨道模块 -->
-    <g transform="translate(25, 40)">
-      <rect x="0" y="0" width="415" height="100" rx="10" fill="url(#cardGradAmber)" stroke="#f59e0b" stroke-width="1"/>
-      <text x="15" y="24" fill="#fde68a" class="main-text" font-size="13" font-weight="700">自旋向上分子轨道方阵 D_up</text>
-      <text x="15" y="44" fill="#cbd5e1" class="code-text" font-size="11">Linear Backflow 投影: (B, K, n_up, n_up)</text>
-      <text x="15" y="62" fill="#f59e0b" class="code-text" font-size="11">⊗ Nuclear Envelope: exp( - || Σ_m (r_i - R_m) || )</text>
-      <rect x="15" y="72" width="180" height="20" rx="4" fill="#d97706" fill-opacity="0.3"/>
-      <text x="22" y="86" fill="#fef3c7" class="code-text" font-size="11">D_up: (B, K, n_up, n_up)</text>
-      <text x="210" y="86" fill="#94a3b8" class="main-text" font-size="11">支持各向异性 3D 主轴度规</text>
+    <!-- 1. Backflow 投影 -->
+    <g transform="translate(16, 55)">
+      <rect x="0" y="0" width="228" height="96" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="10" y="20" class="sans label-title">Backflow Transformation</text>
+      <text x="10" y="38" class="sans" font-size="11" fill="#475569">Linear projection from h<tspan font-size="9" dy="2">i</tspan><tspan dy="-2">(L)</tspan>:</text>
+      <text x="10" y="58" class="math" font-size="13" fill="#0284c7">ϕ<tspan font-size="9" dy="2">j</tspan><tspan font-size="9" dy="-2">k</tspan><tspan class="math-up" font-size="12">(r</tspan><tspan font-size="9" dy="2">i</tspan><tspan class="math-up" font-size="12" dy="-2">; {r</tspan><tspan font-size="9" dy="2">/i</tspan><tspan class="math-up" font-size="12" dy="-2">}) = (W</tspan><tspan font-size="9" dy="2">k</tspan><tspan class="math-up" font-size="12" dy="-2"> h</tspan><tspan font-size="9" dy="2">i</tspan><tspan font-size="9" dy="-2">(L)</tspan><tspan class="math-up" font-size="12"> + b</tspan><tspan font-size="9" dy="2">k</tspan><tspan class="math-up" font-size="12" dy="-2">)</tspan></text>
+      <line x1="10" y1="70" x2="218" y2="70" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="10" y="86" class="dim-tag" fill="#0284c7">Dim: (B, K, n<tspan font-size="8" dy="1">↑/↓</tspan><tspan dy="-1">, n</tspan><tspan font-size="8" dy="1">↑/↓</tspan><tspan dy="-1">)</tspan></text>
     </g>
 
-    <!-- 自旋向下轨道模块 -->
-    <g transform="translate(460, 40)">
-      <rect x="0" y="0" width="415" height="100" rx="10" fill="url(#cardGradPurple)" stroke="#a855f7" stroke-width="1"/>
-      <text x="15" y="24" fill="#e9d5ff" class="main-text" font-size="13" font-weight="700">自旋向下分子轨道方阵 D_down</text>
-      <text x="15" y="44" fill="#cbd5e1" class="code-text" font-size="11">Linear Backflow 投影: (B, K, n_down, n_down)</text>
-      <text x="15" y="62" fill="#a855f7" class="code-text" font-size="11">⊗ Nuclear Envelope: exp( - || Σ_m (r_i - R_m) || )</text>
-      <rect x="15" y="72" width="200" height="20" rx="4" fill="#7e22ce" fill-opacity="0.3"/>
-      <text x="22" y="86" fill="#fae8ff" class="code-text" font-size="11">D_down: (B, K, n_dn, n_dn)</text>
-      <text x="235" y="86" fill="#94a3b8" class="main-text" font-size="11">K 个 Multi-determinants 分支</text>
+    <!-- 乘法符号 Hadamard -->
+    <circle cx="130" cy="180" r="14" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+    <text x="130" y="185" class="sans" font-size="15" font-weight="800" fill="#d97706" text-anchor="middle">⊙</text>
+
+    <!-- 2. 原子核指数衰减包络 -->
+    <g transform="translate(16, 210)">
+      <rect x="0" y="0" width="228" height="130" rx="8" fill="url(#envelopeGrad)" stroke="#d97706" stroke-width="1.2"/>
+      <rect x="8" y="8" width="115" height="20" rx="4" fill="#d97706"/>
+      <text x="14" y="22" class="sans" font-size="10" font-weight="700" fill="#ffffff">Nuclear Envelope</text>
+
+      <text x="10" y="48" class="sans" font-size="11" fill="#92400e">Exponential decay (r → ∞):</text>
+      <text x="10" y="70" class="math" font-size="12" fill="#b45309">f<tspan font-size="9" dy="2">j</tspan><tspan font-size="9" dy="-2">k</tspan><tspan class="math-up" font-size="11">(r</tspan><tspan font-size="9" dy="2">i</tspan><tspan class="math-up" font-size="11" dy="-2">) = ∑</tspan><tspan font-size="9" dy="2">m</tspan><tspan dy="-2"> π</tspan><tspan font-size="9" dy="2">jm</tspan><tspan dy="-2"> e</tspan><tspan font-size="9" dy="-4">-‖Σ</tspan><tspan font-size="8" dy="1">m</tspan><tspan font-size="9" dy="-1">(r</tspan><tspan font-size="8" dy="1">i</tspan><tspan font-size="9" dy="-1">-R</tspan><tspan font-size="8" dy="1">m</tspan><tspan font-size="9" dy="-1">)‖</tspan></text>
+      
+      <line x1="10" y1="88" x2="218" y2="88" stroke="#fcd34d" stroke-width="1"/>
+      <text x="10" y="104" class="sans" font-size="10" fill="#78350f">Σ<tspan font-size="8" dy="1">m</tspan><tspan dy="-1">: Anisotropic metric tensor</tspan></text>
+      <text x="10" y="118" class="dim-tag" fill="#92400e">Softplus: α &gt; 0 (strict stability)</text>
+    </g>
+
+    <!-- 3. 分子轨道矩阵输出 -->
+    <g transform="translate(16, 360)">
+      <rect x="0" y="0" width="228" height="100" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="10" y="20" class="sans label-title">Molecular Orbitals (D)</text>
+      <text x="10" y="40" class="math" font-size="12" fill="#0f172a">D<tspan font-size="9" dy="2">ki</tspan><tspan font-size="9" dy="-2">↑</tspan><tspan class="math-up" font-size="11">(r</tspan><tspan font-size="9" dy="2">i</tspan><tspan class="math-up" font-size="11" dy="-2">) = ϕ</tspan><tspan font-size="9" dy="2">i</tspan><tspan font-size="9" dy="-2">k</tspan><tspan class="math-up" font-size="11">(r</tspan><tspan font-size="9" dy="2">i</tspan><tspan class="math-up" font-size="11" dy="-2">) · f</tspan><tspan font-size="9" dy="2">i</tspan><tspan font-size="9" dy="-2">k</tspan><tspan class="math-up" font-size="11">(r</tspan><tspan font-size="9" dy="2">i</tspan><tspan class="math-up" font-size="11" dy="-2">)</tspan></text>
+      <text x="10" y="60" class="math" font-size="12" fill="#0f172a">D<tspan font-size="9" dy="2">ki</tspan><tspan font-size="9" dy="-2">↓</tspan><tspan class="math-up" font-size="11">(r</tspan><tspan font-size="9" dy="2">i</tspan><tspan class="math-up" font-size="11" dy="-2">) = ϕ</tspan><tspan font-size="9" dy="2">i</tspan><tspan font-size="9" dy="-2">k</tspan><tspan class="math-up" font-size="11">(r</tspan><tspan font-size="9" dy="2">i</tspan><tspan class="math-up" font-size="11" dy="-2">) · f</tspan><tspan font-size="9" dy="2">i</tspan><tspan font-size="9" dy="-2">k</tspan><tspan class="math-up" font-size="11">(r</tspan><tspan font-size="9" dy="2">i</tspan><tspan class="math-up" font-size="11" dy="-2">)</tspan></text>
+      <line x1="10" y1="72" x2="218" y2="72" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="10" y="88" class="dim-tag" fill="#0284c7">D<tspan font-size="8" dy="1">↑</tspan><tspan dy="-1">: (B, K, n</tspan><tspan font-size="8" dy="1">↑</tspan><tspan dy="-1">, n</tspan><tspan font-size="8" dy="1">↑</tspan><tspan dy="-1">) | D</tspan><tspan font-size="8" dy="1">↓</tspan><tspan dy="-1">: (B, K, n</tspan><tspan font-size="8" dy="1">↓</tspan><tspan dy="-1">, n</tspan><tspan font-size="8" dy="1">↓</tspan><tspan dy="-1">)</tspan></text>
     </g>
   </g>
 
-  <!-- 连接线 4 -> 5 -->
-  <path d="M 510 780 L 510 815" fill="none" stroke="#f43f5e" stroke-width="3" marker-end="url(#arrowRose)"/>
+  <!-- 连接 c -> d -->
+  <line x1="970" y1="410" x2="1005" y2="410" stroke="#e11d48" stroke-width="1.8" marker-end="url(#arrow)"/>
 
-  <!-- STEP 5: 反对称波函数与数值防溢出层 (model.py) (y: 815) -->
-  <g transform="translate(60, 815)">
-    <rect x="0" y="0" width="900" height="125" rx="14" fill="url(#cardGradRose)" stroke="#f43f5e" stroke-width="1.8" filter="url(#cardShadow)"/>
-    <rect x="0" y="0" width="8" height="125" rx="4" fill="#f43f5e"/>
+  <!-- ================================================================================= -->
+  <!-- PANEL D: Slater 行列式与对数波函数 (x: 1010, y: 75, w: 230, h: 485) -->
+  <!-- ================================================================================= -->
+  <g transform="translate(1010, 75)">
+    <rect x="0" y="0" width="230" height="485" rx="10" fill="url(#panelGrad)" stroke="#cbd5e1" stroke-width="1.2" filter="url(#softShadow)"/>
+    <text x="16" y="24" class="sans panel-header">d <tspan font-weight="600" font-size="13" fill="#334155">Slater Determinant</tspan></text>
+    <text x="16" y="40" class="sans panel-sub">Antisymmetric &amp; slogdet</text>
 
-    <text x="25" y="28" fill="#fda4af" class="main-text title-text" font-size="15">【反对称性与数值稳定性】slogdet 块行列式分解与 LogSumExp 极值平移</text>
-    <text x="635" y="28" fill="#fb7185" class="main-text" font-size="12" font-weight="700">✓ 泡利不相容原理 100% 严格满足</text>
+    <!-- 1. 行列式方阵与 slogdet -->
+    <g transform="translate(14, 55)">
+      <rect x="0" y="0" width="202" height="135" rx="8" fill="url(#detGrad)" stroke="#e11d48" stroke-width="1.2"/>
+      <rect x="8" y="8" width="105" height="20" rx="4" fill="#e11d48"/>
+      <text x="14" y="22" class="sans" font-size="10" font-weight="700" fill="#ffffff">slogdet Block</text>
 
-    <!-- 行列式计算与加权 -->
-    <g transform="translate(25, 42)">
-      <rect x="0" y="0" width="480" height="68" rx="8" fill="#0f172a" stroke="#be123c" stroke-width="1"/>
-      <text x="15" y="22" fill="#e2e8f0" class="code-text" font-size="11">sign_k, log|Det_k| = slogdet(D_up_k) + slogdet(D_down_k)</text>
-      <text x="15" y="42" fill="#cbd5e1" class="code-text" font-size="11">多行列式加权: Psi = Σ_k w_k * Det_k = Σ_k w_k * (Det_k↑ · Det_k↓)</text>
-      <text x="15" y="60" fill="#fb7185" class="code-text" font-size="11">LogSumExp 技巧: 减去 max_log 消除 10^-50 量级浮点下溢</text>
+      <text x="10" y="48" class="sans" font-size="11" font-weight="700" fill="#9f1239">Spin-split Block Matrices:</text>
+      <text x="10" y="68" class="math" font-size="12" fill="#881337">det(D<tspan font-size="9" dy="2">k</tspan><tspan dy="-2">) = det(D</tspan><tspan font-size="9" dy="2">k</tspan><tspan font-size="9" dy="-2">↑</tspan><tspan class="math-up" font-size="11">) · </tspan><tspan class="math" font-size="12">det(D</tspan><tspan font-size="9" dy="2">k</tspan><tspan font-size="9" dy="-2">↓</tspan><tspan class="math-up" font-size="11">)</tspan></text>
+
+      <line x1="10" y1="80" x2="192" y2="80" stroke="#fda4af" stroke-width="1"/>
+      <text x="10" y="96" class="dim-tag" fill="#9f1239">slogdet(D) → sign, log|det|</text>
+      <text x="10" y="112" class="sans" font-size="10" fill="#be123c">Avoids float underflow (&lt;10<tspan font-size="8" dy="-3">-40</tspan><tspan dy="3">)</tspan></text>
+      <text x="10" y="126" class="sans" font-size="10" font-weight="700" fill="#e11d48">Pauli Exclusion Guaranteed</text>
     </g>
 
-    <!-- 输出张量徽标 -->
-    <g transform="translate(525, 42)">
-      <rect x="0" y="0" width="350" height="68" rx="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.2"/>
-      <text x="15" y="24" fill="#38bdf8" class="code-text" font-size="13" font-weight="700">log|Psi|: (B,)  [用于动能与损失优化]</text>
-      <text x="15" y="43" fill="#a7f3d0" class="code-text" font-size="13" font-weight="700">sign:     (B,)  [记录波函数符号 (-1, 1)]</text>
-      <text x="15" y="61" fill="#fbcfe8" class="code-text" font-size="12">Psi:      (B,)  [真实标量波函数幅值]</text>
+    <!-- 2. Multi-determinant 加权和 (LogSumExp) -->
+    <g transform="translate(14, 205)">
+      <rect x="0" y="0" width="202" height="110" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="10" y="20" class="sans label-title">LogSumExp Linear Sum</text>
+      <text x="10" y="40" class="math" font-size="13" fill="#0f172a">Ψ = ∑<tspan font-size="9" dy="2">k=1</tspan><tspan font-size="9" dy="-4">K</tspan><tspan dy="2"> w</tspan><tspan font-size="9" dy="2">k</tspan><tspan dy="-2"> det(D</tspan><tspan font-size="9" dy="2">k</tspan><tspan dy="-2">)</tspan></text>
+      <text x="10" y="60" class="sans" font-size="10" fill="#64748b">LogSumExp subtraction of M<tspan font-size="8" dy="1">max</tspan><tspan dy="-1">:</tspan></text>
+      <text x="10" y="78" class="code-text" font-size="10" fill="#334155">diff = log|det_k| - max_log</text>
+      <text x="10" y="96" class="dim-tag" fill="#0284c7">K = 8~32 determinants</text>
+    </g>
+
+    <!-- 3. 最终输出层 -->
+    <g transform="translate(14, 330)">
+      <rect x="0" y="0" width="202" height="130" rx="8" fill="url(#outputGrad)" stroke="#0284c7" stroke-width="1.5" filter="url(#softShadow)"/>
+      <text x="12" y="24" class="sans" font-size="12" font-weight="800" fill="#ffffff">Final Wavefunction</text>
+
+      <rect x="10" y="34" width="182" height="26" rx="4" fill="#ffffff" fill-opacity="0.15"/>
+      <text x="18" y="52" class="code-text" font-size="12" font-weight="700" fill="#ffffff">log|Ψ(r)| <tspan font-size="10" fill="#bae6fd">: (B,)</tspan></text>
+
+      <rect x="10" y="66" width="182" height="26" rx="4" fill="#ffffff" fill-opacity="0.15"/>
+      <text x="18" y="84" class="code-text" font-size="12" font-weight="700" fill="#ffffff">sign(Ψ)   <tspan font-size="10" fill="#bae6fd">: (B,)</tspan></text>
+
+      <text x="12" y="112" class="sans" font-size="10" fill="#e0f2fe">Direct input to Local Energy E<tspan font-size="8" dy="1">L</tspan><tspan dy="-1">(r)</tspan></text>
     </g>
   </g>
 
   <!-- ================================================================================= -->
-  <!-- 4. 右侧边栏：物理第一性原则、求解器与核心公式 (Width: 380px, x: 990) -->
+  <!-- 底部图例与学术标识 (Footer) -->
   <!-- ================================================================================= -->
+  <g transform="translate(40, 580)">
+    <line x1="0" y1="0" x2="1200" y2="0" stroke="#e2e8f0" stroke-width="1"/>
+    
+    <g transform="translate(0, 18)">
+      <!-- 符号图例 -->
+      <text x="0" y="0" class="sans" font-size="11" font-weight="700" fill="#475569">Operations:</text>
+      <text x="75" y="0" class="sans" font-size="11" fill="#64748b"><tspan font-weight="700" fill="#0284c7">⊕</tspan> Concatenation / Residual Sum</text>
+      <text x="275" y="0" class="sans" font-size="11" fill="#64748b"><tspan font-weight="700" fill="#d97706">⊙</tspan> Hadamard (Elementwise) Product</text>
+      <text x="495" y="0" class="sans" font-size="11" fill="#64748b"><tspan font-weight="700" fill="#e11d48">det</tspan> Slater Determinant</text>
+      <text x="655" y="0" class="sans" font-size="11" fill="#64748b"><tspan font-weight="700" fill="#7e22ce">mean</tspan> Spin-split Equivariant Pooling</text>
 
-  <!-- 边栏卡片 1: 量子化学四大物理基石 (y: 135) -->
-  <g transform="translate(990, 135)">
-    <rect x="0" y="0" width="390" height="235" rx="14" fill="url(#cardGradDark)" stroke="#334155" stroke-width="1.2" filter="url(#cardShadow)"/>
-    <rect x="0" y="0" width="6" height="235" rx="3" fill="#38bdf8"/>
-
-    <text x="22" y="28" fill="#38bdf8" class="main-text title-text" font-size="14">⚛️ 量子物理第一性保证 (Physical Inductive Biases)</text>
-
-    <!-- 4 个物理点 -->
-    <g transform="translate(20, 42)">
-      <!-- 1. 反对称性 -->
-      <circle cx="10" cy="14" r="5" fill="#f43f5e"/>
-      <text x="25" y="18" fill="#f8fafc" class="main-text" font-size="12" font-weight="700">1. 费米子置换反对称性 (Antisymmetry)</text>
-      <text x="25" y="34" fill="#94a3b8" class="main-text" font-size="11">交换两个同自旋电子坐标，波函数严格反号；</text>
-      <text x="25" y="48" fill="#67e8f9" class="code-text" font-size="10">Ψ(..., r_i, ..., r_j, ...) = - Ψ(..., r_j, ..., r_i, ...)</text>
-
-      <!-- 2. 泡利不相容 -->
-      <circle cx="10" cy="68" r="5" fill="#f59e0b"/>
-      <text x="25" y="72" fill="#f8fafc" class="main-text" font-size="12" font-weight="700">2. 泡利不相容原理 (Pauli Principle)</text>
-      <text x="25" y="88" fill="#94a3b8" class="main-text" font-size="11">同自旋电子重合时行列式两行相同，波函数精确为 0。</text>
-
-      <!-- 3. 几何不变性 -->
-      <circle cx="10" cy="118" r="5" fill="#10b981"/>
-      <text x="25" y="122" fill="#f8fafc" class="main-text" font-size="12" font-weight="700">3. 几何平移旋转不变性 (E(3) Invariance)</text>
-      <text x="25" y="138" fill="#94a3b8" class="main-text" font-size="11">全网依赖相对差向量与欧氏距离，消除绝对空间依赖。</text>
-
-      <!-- 4. 束缚态渐近衰减 -->
-      <circle cx="10" cy="168" r="5" fill="#a855f7"/>
-      <text x="25" y="172" fill="#f8fafc" class="main-text" font-size="12" font-weight="700">4. 远离核指数衰减 (Asymptotic Cusp)</text>
-      <text x="25" y="188" fill="#94a3b8" class="main-text" font-size="11">指数包络约束，阻止高维自由网络在无穷远处发散。</text>
-    </g>
-  </g>
-
-  <!-- 边栏卡片 2: 变分训练与无偏代理损失 (y: 390) -->
-  <g transform="translate(990, 390)">
-    <rect x="0" y="0" width="390" height="255" rx="14" fill="url(#cardGradDark)" stroke="#334155" stroke-width="1.2" filter="url(#cardShadow)"/>
-    <rect x="0" y="0" width="6" height="255" rx="3" fill="#10b981"/>
-
-    <text x="22" y="28" fill="#34d399" class="main-text title-text" font-size="14">🎲 变分蒙特卡洛 (VMC) 训练与求导纠偏</text>
-
-    <g transform="translate(20, 42)">
-      <text x="0" y="16" fill="#f8fafc" class="main-text" font-size="12" font-weight="700">局域能量 (Local Energy) 拆解：</text>
-      <rect x="0" y="24" width="350" height="46" rx="6" fill="#0f172a"/>
-      <text x="12" y="42" fill="#38bdf8" class="code-text" font-size="11">E_L(r) = T_L(r) + V(r)</text>
-      <text x="12" y="60" fill="#94a3b8" class="code-text" font-size="10">T_L = -1/2 [ ∇²ln|Ψ| + ||∇ln|Ψ||² ], V = V_en + V_ee + V_nn</text>
-
-      <text x="0" y="92" fill="#f8fafc" class="main-text" font-size="12" font-weight="700">⚠️ 变分无偏梯度定理 (废除显存三阶导)：</text>
-      <rect x="0" y="100" width="350" height="50" rx="6" fill="#0f172a" stroke="#059669" stroke-width="1"/>
-      <text x="12" y="118" fill="#34d399" class="code-text" font-size="11">∇_θ ⟨E⟩ = 2 * E[ (E_L - ⟨E_L⟩) * ∇_θ ln|Ψ_θ| ]</text>
-      <text x="12" y="138" fill="#6ee7b7" class="code-text" font-size="10">Loss_VMC = 2 * mean( stop_gradient(ΔE) * ln|Ψ_θ| )</text>
-
-      <text x="0" y="172" fill="#f8fafc" class="main-text" font-size="12" font-weight="700">🛡️ Umrigar Tanh 局域能截断 (Energy Clipping)：</text>
-      <text x="0" y="190" fill="#94a3b8" class="main-text" font-size="11">基于 MAD (中位数绝对偏差) 过滤波函数节点面奇点，</text>
-      <text x="0" y="204" fill="#94a3b8" class="main-text" font-size="11">彻底根除极端离群点引发的 Adam 梯度爆炸崩溃！</text>
-    </g>
-  </g>
-
-  <!-- 边栏卡片 3: 三大动能拉普拉斯求解器对比 (y: 665) -->
-  <g transform="translate(990, 665)">
-    <rect x="0" y="0" width="390" height="275" rx="14" fill="url(#cardGradDark)" stroke="#334155" stroke-width="1.2" filter="url(#cardShadow)"/>
-    <rect x="0" y="0" width="6" height="275" rx="3" fill="#a855f7"/>
-
-    <text x="22" y="28" fill="#c084fc" class="main-text title-text" font-size="14">⚡ 三大动能拉普拉斯 ∇²ln|Ψ| 求解器</text>
-
-    <!-- 求解器对比表格 -->
-    <g transform="translate(18, 42)">
-      <!-- exact -->
-      <rect x="0" y="0" width="354" height="64" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1"/>
-      <text x="12" y="20" fill="#38bdf8" class="code-text" font-size="12" font-weight="700">1. exact (经典高精度模式)</text>
-      <text x="12" y="38" fill="#cbd5e1" class="main-text" font-size="11">循环 3N 次 autograd.grad 逐轴求导 · 时间 O(3N)</text>
-      <text x="12" y="54" fill="#94a3b8" class="main-text" font-size="10">严格机器精度，小分子基准黄金标准</text>
-
-      <!-- jvp -->
-      <rect x="0" y="72" width="354" height="64" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1"/>
-      <text x="12" y="92" fill="#a855f7" class="code-text" font-size="12" font-weight="700">2. exact_jvp (前向模式 JVP 向量化)</text>
-      <text x="12" y="110" fill="#cbd5e1" class="main-text" font-size="11">torch.func.jvp + vmap 全向量化 · 零显式 Python 循环</text>
-      <text x="12" y="126" fill="#94a3b8" class="main-text" font-size="10">利用 PyTorch 2.x 前向自动微分硬件并行</text>
-
-      <!-- hutchinson -->
-      <rect x="0" y="144" width="354" height="74" rx="8" fill="#1e1b4b" stroke="#ec4899" stroke-width="1.2"/>
-      <text x="12" y="164" fill="#f43f5e" class="code-text" font-size="12" font-weight="700">3. hutchinson (随机迹估计器 · 百倍提速)</text>
-      <text x="12" y="182" fill="#fbcfe8" class="main-text" font-size="11">Tr(H) = E[ v^T H v ], v ~ Rademacher(±1)</text>
-      <text x="12" y="198" fill="#fda4af" class="main-text" font-size="11" font-weight="700">仅需 1 次方向导数反向传播 · 时间复杂度 O(1)</text>
-      <text x="12" y="212" fill="#cbd5e1" class="main-text" font-size="10">在大体系 (100原子) 上耗时从 345s 降至 1.8s (加速近200倍)</text>
+      <!-- 论文与实现标注 -->
+      <text x="1200" y="0" class="sans" font-size="11" fill="#94a3b8" text-anchor="end">FermiNet PyTorch Implementation · Phys. Rev. Research 2, 033429 (2020)</text>
     </g>
   </g>
 
