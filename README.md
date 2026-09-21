@@ -3,7 +3,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
 [![Python](https://img.shields.io/badge/Python-3.9+-3776ab.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-118%20Passed-brightgreen.svg)](#)
+[![Tests](https://img.shields.io/badge/Tests-134%20Passed-brightgreen.svg)](#)
 
 本项目提供了一个基于 **PyTorch 原生生态** 的模块化 **FermiNet (费米神经网络)** 研究原型，用于量子化学中多电子薛定谔方程的变分求解、数值实验与算法验证。
 
@@ -40,15 +40,16 @@
 
 1. **物理结构与数值约束**：
    - 通过 Slater 行列式结构实现同自旋电子交换反对称性；浮点结果仍需按数值容差检查；
-   - 使用指数包络约束远场衰减；核附近采用数值软化，因此不宣称精确 Coulomb cusp；
-   - 相对几何特征提取，满足整体平移不变性；当前普通 MLP 特征通路不提供一般 SO(3) 旋转等变保证。
+   - 使用指数包络约束远场衰减；粒子间距离采用 clamp 软化核 `sqrt(clamp(r², min=eps))`，其中 `eps` 是最小**平方**距离、软化半径为 `sqrt(eps)`（默认 1e-12 Bohr）。该核在 `r² ≥ eps` 处与未软化距离**逐位相同**，故势能偏置精确为零；但波函数 ansatz 本身并不强制 Kato 尖点条件，因此仍不宣称精确 Coulomb cusp；
+   - 相对几何特征提取，满足整体平移不变性；当前普通 MLP 特征通路不提供一般 SO(3) 旋转等变保证；
+   - 同电荷核共享包络参数，且几何特征的核轴按「电荷组 + 距离」规范化排序，因此同核置换下波函数不变。**已知例外**：当电子与两个同核严格等距时（测度零集），稳定排序保留原顺序，此时仍不严格不变。
 2. **端到端变分量子蒙特卡洛 (VMC) 训练闭环**：
    - 全向量化批量 GPU 并行 Metropolis-Hastings MCMC 采样器，支持全电子/逐电子步进与自适应步长控制；
    - 默认使用无截断、带 $B/(B-1)$ 有限批次修正的协方差代理梯度，避免三阶导计算；
    - Tanh/Hard 局域能量截断作为显式稳健模式保留；它能抑制离群点，但会引入训练目标偏差；
    - 训练结束后冻结模型和采样步长，报告自相关时间、有效样本数、split-R-hat 与链相关 SEM。
 3. **动能拉普拉斯求解器（精确与随机估计）**：
-   - 集成 **Hutchinson 随机迹估计器**，默认用少量随机方向估计 Hessian 迹；探针数量近似为常数，但总计算成本、方差和误差仍随体系、网络与 batch 规模变化，不承诺固定倍数加速；
+   - 集成 **Hutchinson 随机迹估计器**：探针数与体系规模无关，但探针循环本身是 Python 级，总计算成本、方差与误差仍随体系、网络和 batch 规模变化，不承诺固定倍数加速。单探针估计的重复间标准差可达信号本身的 1.5 倍以上，因此**仅用于训练期方差缩减，禁止用于对外报告能量**——复评路径已强制使用精确求解器；
    - 集成基于 `torch.func.jvp` 的前向模式全向量化精确求解器与经典逐分量精确模式。
 4. **PyTorch 2.0+ `torch.compile` JIT 图编译优化**：
    - 提供 TorchDynamo/TorchInductor 编译路径；吞吐收益依赖硬件、batch、精度和算子图，应通过统一基准测量，不预设固定倍数。
@@ -88,6 +89,8 @@ ferminet_pytorch/
 ├── test_vmc.py           # VMC 采样、梯度估计与能量截断专项单元测试
 ├── test_phase2.py        # 阶段 2 动能求解器、核电荷注入与各向异性包络专项测试
 ├── test_visualize.py     # 综合可视化模块专项测试套件 (54 项)
+├── test_mcmc_stats.py    # 链自相关统计与 AR(1) 解析对照回归测试
+├── test_physics_invariants.py # 物理不变量与已知限制回归测试（对称性、尖点、参数可达性、估计器）
 ├── assets/plots/         # 训练生成的可视化图表资源目录
 ├── BEGINNER_GUIDE.md     # 零基础小白从零到一量子化学深度学习图文宝典
 └── README.md             # 架构技术文档与使用手册
@@ -97,8 +100,8 @@ ferminet_pytorch/
 
 | 源码文件 | 核心职责 | 主要类 / 函数 | 物理/工程特性 |
 | :--- | :--- | :--- | :--- |
-| [`features.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/features.py) | 几何特征提取 | `ElectronFeatureEmbedding` | 提取相对位移与欧氏距离，保证平移不变；不提供一般旋转等变约束；支持注入核电荷 $Z_I$ |
-| [`layers.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/layers.py) | 自旋分流前馈层 | `FermiInteractionLayer` | 单/双流信息融合，自旋向上与向下分别池化聚合，满足同自旋置换等变性 |
+| [`features.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/features.py) | 几何特征提取 | `ElectronFeatureEmbedding` | 提取相对位移与欧氏距离（clamp 软化核），保证平移不变；不提供一般旋转等变约束；支持注入核电荷 $Z_I$；核轴按电荷组与距离规范化排序，支持同核置换不变 |
+| [`layers.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/layers.py) | 自旋分流前馈层 | `FermiInteractionLayer` | 单/双流信息融合，自旋向上与向下分别池化聚合，满足同自旋置换等变性；末层双电子流输出不被下游消费，故不再构造其更新网络（消除空转参数） |
 | [`envelope.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/envelope.py) | 指数衰减基底 | `NuclearEnvelope` | 约束 $r \to \infty$ 时波函数趋零；支持可学习各向异性三维主轴度规 $\Sigma$ |
 | [`model.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/model.py) | 主干波函数网络 | `FermiNet` | 构造 Backflow 轨道，多行列式 `slogdet` 分解与 LogSumExp 稳定求和 |
 | [`hamiltonian.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/hamiltonian.py) | 哈密顿量与动能 | `MolecularSystem`, `compute_local_energy` | 库仑吸引/排斥势能全向量化计算；集成 Exact, JVP, Hutchinson 三大拉普拉斯求解器 |
@@ -215,7 +218,9 @@ H₂ 参考线只在核电荷 `[1, 1]`、自旋 `(1, 1)`、核间距 `1.4 Bohr` 
 ### 演示 3：极性异核分子氢化锂 $LiH$ 变分优化
 
 氢化锂 $LiH$ 是具有非对称电荷分布的经典分子（$Z_{\text{Li}} = 3, Z_{\text{H}} = 1$，4 电子）。
-结合核电荷注入几何特征与 Hutchinson 随机迹估计器，可在特定硬件和误差容忍度下减少单步导数开销；实际收益需按统一基准测量：
+结合核电荷注入几何特征与 Hutchinson 随机迹估计器，可在特定硬件和误差容忍度下减少单步导数开销；实际收益需按统一基准测量。
+
+> ⚠️ `--laplacian_method hutchinson` **仅作用于训练期**。最终报告的能量走独立复评路径，强制使用精确求解器（`exact`）；`--evaluation_laplacian_method` 不接受 `hutchinson`。原因见上文：单探针随机迹估计的标准差可达信号本身的 1.5 倍以上。
 
 ```bash
 python train_vmc.py --system lih --laplacian_method hutchinson --epochs 30 --walkers 512
@@ -291,7 +296,7 @@ python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_di
 本项目包含 5 套覆盖核心物理性质、VMC 训练、链相关统计、阶段 2 求解器以及综合可视化的自动化测试：
 
 ```bash
-# 1. 一键运行全部 118 项单元测试：
+# 1. 一键运行全部 134 项单元测试：
 python -m unittest discover -s . -p "test_*.py" -v
 
 # 2. 或分别运行专项测试：
@@ -301,7 +306,7 @@ python -m unittest test_phase2.py     # 阶段 2 动能求解器与物理特征�
 python -m unittest test_visualize.py  # 综合可视化分析模块专项测试 (54 项)
 python -m unittest test_mcmc_stats.py # ESS、链相关 SEM 与 split-R-hat 测试 (4 项)
 ```
-当前基线为 **118 项测试通过**。测试覆盖实现性质与数值回归，但不能替代长时间、多种子、独立复评的科学收敛验证。
+当前基线为 **134 项测试通过**。测试覆盖实现性质与数值回归，但不能替代长时间、多种子、独立复评的科学收敛验证。
 
 ---
 
