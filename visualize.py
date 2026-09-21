@@ -84,7 +84,7 @@ def apply_academic_style() -> None:
         "axes.titlesize": 12,
         "axes.titleweight": "bold",
         "axes.labelsize": 11,
-        "axes.labelweight": "medium",
+        "axes.labelweight": "normal",
         "xtick.labelsize": 10,
         "ytick.labelsize": 10,
         "xtick.direction": "out",
@@ -333,16 +333,25 @@ def plot_energy_convergence(
             f"$\\Delta E$: {delta_e_ha * 1e3:.2f} mHa\n"
             f"({delta_e_kcal:.2f} kcal/mol)"
         )
+        # 放置在左下角，避免与后期收敛到右下角基准线的曲线碰撞
         ax.text(
-            0.97,
-            0.05,
+            0.04,
+            0.08,
             info_text,
             transform=ax.transAxes,
             fontsize=8.5,
             verticalalignment="bottom",
-            horizontalalignment="right",
-            bbox=dict(boxstyle="round,pad=0.4", facecolor="white", alpha=0.9, edgecolor="#bdc3c7"),
+            horizontalalignment="left",
+            bbox=dict(boxstyle="round,pad=0.4", facecolor="white", alpha=0.92, edgecolor="#bdc3c7"),
         )
+
+    # 动态设定 y 轴范围，为基线与阴影预留呼吸空间
+    all_energy_pts = np.concatenate([e_raw, e_clip]) if len(e_clip) > 0 else e_raw
+    if len(all_energy_pts) > 0:
+        y_min = min(float(np.min(all_energy_pts)), ref_energy if ref_energy is not None else float(np.min(all_energy_pts)))
+        y_max = float(np.max(all_energy_pts))
+        y_span = max(y_max - y_min, 0.05)
+        ax.set_ylim(y_min - 0.08 * y_span, y_max + 0.10 * y_span)
 
     ax.set_title(f"{system_name} Ground State Energy Convergence")
     ax.set_xlabel("Optimization Epoch")
@@ -418,10 +427,18 @@ def plot_variance_and_sem(
     )
 
     if log_scale:
-        if np.all(var_e[np.isfinite(var_e)] > 0):
+        finite_var = var_e[np.isfinite(var_e)]
+        finite_sem = sem_e[np.isfinite(sem_e)]
+        if len(finite_var) > 0 and np.all(finite_var > 0):
             ax.set_yscale("log")
-        if np.all(sem_e[np.isfinite(sem_e)] > 0):
+            v_min, v_max = float(np.min(finite_var)), float(np.max(finite_var))
+            # 让 Var 位于偏上方，留出呼吸空间
+            ax.set_ylim(v_min * 0.4, v_max * 3.0)
+        if len(finite_sem) > 0 and np.all(finite_sem > 0):
             ax2.set_yscale("log")
+            s_min, s_max = float(np.min(finite_sem)), float(np.max(finite_sem))
+            # 让 SEM 位于偏下方，防止两条曲线直接黏连重合
+            ax2.set_ylim(s_min * 0.15, s_max * 1.5)
 
     ax.set_title("Zero-Variance Principle Convergence")
     ax.set_xlabel("Optimization Epoch")
@@ -512,13 +529,23 @@ def plot_mcmc_diagnostics(
     ax2.set_ylabel(r"Proposal Step Size (Bohr)", color=COLOR_PALETTE["step_size"])
     ax.tick_params(axis="y", labelcolor=COLOR_PALETTE["acceptance"])
     ax2.tick_params(axis="y", labelcolor=COLOR_PALETTE["step_size"])
-    ax.set_ylim([max(0.0, float(np.min(acc)) - 10), min(100.0, float(np.max(acc)) + 10)])
+
+    # 动态预留轴呼吸空间
+    acc_min, acc_max = float(np.min(acc)), float(np.max(acc))
+    acc_span = max(acc_max - acc_min, 10.0)
+    ax.set_ylim([max(0.0, acc_min - 0.15 * acc_span), min(100.0, acc_max + 0.15 * acc_span)])
+
+    if len(step) > 0:
+        s_min, s_max = float(np.min(step)), float(np.max(step))
+        s_span = max(s_max - s_min, 0.05)
+        ax2.set_ylim([s_min - 0.20 * s_span, s_max + 0.25 * s_span])
+
     ax.grid(True, linestyle="--", alpha=0.4)
 
-    # 汇总图例
+    # 汇总图例 (放置于右上角，彻底防范被下降的步长曲线划过)
     lines = l1 + [ax.lines[-1]] + l2
     labels = [l.get_label() for l in lines]
-    ax.legend(lines, labels, loc="lower right")
+    ax.legend(lines, labels, loc="upper right")
 
     if created_fig and save_path:
         os.makedirs(os.path.dirname(os.path.abspath(save_path)), exist_ok=True)
@@ -698,16 +725,20 @@ def plot_electron_density_3d(
         )
         element_sym = "H" if abs(q - 1.0) < 0.2 else ("Li" if abs(q - 3.0) < 0.2 else f"Z={int(q)}")
         ax.text(
-            coord[0],
-            coord[1],
+            coord[0] + 0.25,
+            coord[1] + 0.25,
             coord[2] + 0.35,
             f"{element_sym} ($Z={q:.0f}$)",
-            fontsize=10,
+            fontsize=9.5,
             fontweight="bold",
             color="#2c3e50",
-            ha="center",
+            ha="left",
+            va="bottom",
+            bbox=dict(boxstyle="round,pad=0.25", facecolor="white", alpha=0.88, edgecolor="#bdc3c7", linewidth=0.6),
+            zorder=20,
         )
 
+    ax.view_init(elev=20, azim=35)
     ax.set_title("3D Electron Probability Density (Walkers)", pad=15)
     ax.set_xlabel("$x$ (Bohr)")
     ax.set_ylabel("$y$ (Bohr)")
@@ -1209,6 +1240,11 @@ def plot_local_energy_distribution(
         bbox=dict(boxstyle="round,pad=0.5", facecolor="white", alpha=0.92, edgecolor="#bdc3c7"),
     )
 
+    # 预留顶部呼吸空间，防止直方图最高峰贴近右上角图例
+    if len(counts) > 0:
+        max_density = float(np.max(counts))
+        ax.set_ylim(0.0, max_density * 1.25)
+
     ax.set_title("Local Energy Distribution & Error Statistics")
     ax.set_xlabel("Local Energy $E_L(r)$ (Hartree)")
     ax.set_ylabel("Probability Density")
@@ -1277,8 +1313,14 @@ def plot_physical_results_dashboard(
 
         ax2.plot(z_vals, density, color=COLOR_PALETTE["raw_energy"], linewidth=2.0, label=r"$|\Psi(z)|^2$")
         ax2.fill_between(z_vals, 0, density, color=COLOR_PALETTE["sem_band"], alpha=0.4)
-        for n_coord in system.nuclear_coords.detach().cpu().numpy():
-            ax2.axvline(n_coord[2], color=COLOR_PALETTE["cusp_marker"], linestyle="--", linewidth=1.6)
+        for idx_nc, n_coord in enumerate(system.nuclear_coords.detach().cpu().numpy()):
+            ax2.axvline(
+                n_coord[2],
+                color=COLOR_PALETTE["cusp_marker"],
+                linestyle="--",
+                linewidth=1.6,
+                label="Nucleus (Cusp)" if idx_nc == 0 else "",
+            )
         ax2.set_title("Wavefunction Density along Nuclear Axis")
         ax2.set_xlabel("$z$ Coordinate (Bohr)")
         ax2.set_ylabel("Relative Density")
@@ -1288,12 +1330,19 @@ def plot_physical_results_dashboard(
         # 退化为 walkers 轴投影直方图
         z_all = walkers[:, :, 2].detach().cpu().numpy().flatten()
         ax2.hist(z_all, bins=40, density=True, color=COLOR_PALETTE["raw_energy"], alpha=0.6)
-        for n_coord in system.nuclear_coords.detach().cpu().numpy():
-            ax2.axvline(n_coord[2], color=COLOR_PALETTE["cusp_marker"], linestyle="--", linewidth=1.6)
+        for idx_nc, n_coord in enumerate(system.nuclear_coords.detach().cpu().numpy()):
+            ax2.axvline(
+                n_coord[2],
+                color=COLOR_PALETTE["cusp_marker"],
+                linestyle="--",
+                linewidth=1.6,
+                label="Nucleus" if idx_nc == 0 else "",
+            )
         ax2.set_title("Walkers Nuclear Axis Projection")
         ax2.set_xlabel("$z$ Coordinate (Bohr)")
         ax2.set_ylabel("Histogram Density")
         ax2.grid(True, linestyle="--", alpha=0.4)
+        ax2.legend()
 
     # Panel 3: 局域能量直方图与统计偏度
     ax3 = fig.add_subplot(133)

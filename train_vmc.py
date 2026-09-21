@@ -363,18 +363,21 @@ def main() -> None:
             from ferminet_pytorch.visualize import plot_all_visualizations
 
         # 从最终采样器获取当前 walkers 和局域能量
-        final_walkers = result["sampler"].current_positions.detach()
+        final_walkers = result["sampler"].walkers.clone().detach()
         trained_model = result["model"]
         trained_system = result["system"]
 
-        # 计算最终局域能量用于直方图
-        with torch.no_grad():
+        # 计算最终局域能量用于直方图 (动能拉普拉斯需对电子坐标求导，故不能在 torch.no_grad 中执行，且坐标需 requires_grad=True)
+        try:
             from hamiltonian import compute_local_energy
-            e_local, _, _ = compute_local_energy(
-                trained_model, trained_system, final_walkers
-            )
+        except ImportError:
+            from ferminet_pytorch.hamiltonian import compute_local_energy
+        walkers_eval = final_walkers.clone().detach().requires_grad_(True)
+        e_local, _, _ = compute_local_energy(
+            trained_model, trained_system, walkers_eval, create_graph=False
+        )
+        e_local = e_local.detach()
 
-        save_dir = args.plot_dir if args.save_plots else None
         saved = plot_all_visualizations(
             history=result["history"],
             system=trained_system,
