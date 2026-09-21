@@ -1,11 +1,11 @@
-# FermiNet (Fermi Neural Network) PyTorch 工业级实现
+# FermiNet (Fermi Neural Network) PyTorch 研究型实现
 
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
 [![Python](https://img.shields.io/badge/Python-3.9+-3776ab.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-118%20Passed-brightgreen.svg)](#)
 
-本项目提供了一个基于 **PyTorch 原生生态** 的高性能、模块化、工业级 **FermiNet (费米神经网络)** 实现，专门用于量子化学与凝聚态物理中多电子薛定谔方程的从头算 (Ab-initio) 变分求解。
+本项目提供了一个基于 **PyTorch 原生生态** 的模块化 **FermiNet (费米神经网络)** 研究原型，用于量子化学中多电子薛定谔方程的变分求解、数值实验与算法验证。
 
 > 📖 **参考论文**：  
 > **Ab-Initio Solution of the Many-Electron Schrödinger Equation with Deep Neural Networks**  
@@ -29,36 +29,36 @@
 > 2. 泡利不相容原理与费米子反对称性（“撞衫即毁灭”的量子规则）；
 > 3. FermiNet 深度学习 Backflow 机制与数据流架构拆解；
 > 4. 变分量子蒙特卡洛 (VMC) 随机游走采样与有限批次协方差梯度原理；
-> 5. 6 个极速实操演示（含全套学术级训练看板与物理态热力图解析）；
+> 5. 6 个快速实操演示（含学术风格训练看板与物理态可视化解析）；
 > 6. 新手高频问答 FAQ（对数波函数负几百、Hartree 单位制、零方差原理等）。
 
 ---
 
 ## 🌟 项目核心亮点与技术演进
 
-本项目不仅完整复现了 DeepMind 原论文的物理核心，还在 PyTorch 生态下完成了四阶段重大工程与物理性能演进：
+本项目参考 FermiNet 论文与公开实现，在 PyTorch 生态下实现了若干核心结构和数值实验功能；它是研究原型，不等同于官方实现或论文级复现：
 
 1. **严格物理第一性原则 (Ab-Initio)**：
    - 严格满足全同费米子置换反对称性（泡利不相容原理：$\Psi(\dots, r_i, \dots, r_j, \dots) = -\Psi(\dots, r_j, \dots, r_i, \dots)$）；
    - 严格遵循量子力学束缚态渐近衰减边界条件（指数包络衰减，各向同性与各向异性可学习度规）；
-   - 相对几何特征提取，原生满足三维空间平移不变性与旋转等变性。
+   - 相对几何特征提取，满足整体平移不变性；当前普通 MLP 特征通路不提供一般 SO(3) 旋转等变保证。
 2. **端到端变分量子蒙特卡洛 (VMC) 训练闭环**：
    - 全向量化批量 GPU 并行 Metropolis-Hastings MCMC 采样器，支持全电子/逐电子步进与自适应步长控制；
    - 默认使用无截断、带 $B/(B-1)$ 有限批次修正的协方差代理梯度，避免三阶导计算；
    - Tanh/Hard 局域能量截断作为显式稳健模式保留；它能抑制离群点，但会引入训练目标偏差；
    - 训练结束后冻结模型和采样步长，报告自相关时间、有效样本数、split-R-hat 与链相关 SEM。
-3. **突破性动能拉普拉斯求解器 (百倍加速)**：
-   - 集成 **Hutchinson 随机迹估计器**，将二阶导计算复杂度从 $\mathcal{O}(3N)$ 压缩至 $\mathcal{O}(1)$，仅需 1 次方向导数反向传播，在大体系上实现数十倍至数百倍提速；
+3. **动能拉普拉斯求解器（精确与随机估计）**：
+   - 集成 **Hutchinson 随机迹估计器**，默认用少量随机方向估计 Hessian 迹；探针数量近似为常数，但总计算成本、方差和误差仍随体系、网络与 batch 规模变化，不承诺固定倍数加速；
    - 集成基于 `torch.func.jvp` 的前向模式全向量化精确求解器与经典逐分量精确模式。
 4. **PyTorch 2.0+ `torch.compile` JIT 图编译优化**：
-   - 深度兼容 TorchDynamo 与 TorchInductor 算子融合与 CUDA Graphs，实测推断吞吐提升 **3.6x ~ 5.8x**。
+   - 提供 TorchDynamo/TorchInductor 编译路径；吞吐收益依赖硬件、batch、精度和算子图，应通过统一基准测量，不预设固定倍数。
 5. **超大体系与异核分子支持**：
    - 单电子特征注入原子核电荷 $Z_I$，原生支持极性异核分子（如 $LiH, H_2O$ 等）；
-   - 支持 **100 原子超大体系 (H100 晶格链，100 核 + 100 电子)** 的轻量化显存前向推断与物理自洽检验。
-6. **顶刊级别 (Nature / PRR 规范) 综合可视化与物理状态看板**：
+   - 支持 **100 原子超大体系 (H100 晶格链，100 核 + 100 电子)** 的前向可执行性和数值容差测试；这不代表能量精度或训练收敛。
+6. **学术风格综合可视化与物理状态看板**：
    - 独立高内聚可视化模块 [`visualize.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/visualize.py)，强制采用无头服务器安全的 `Agg` 后端；
-   - 全面覆盖训练过程动态（能量收敛、零方差原理演化、MCMC 采样健康度三合一看板）与物理状态诊断（3D 电子几率密度、2D 成键截面热力图、核轴 Cusp 尖峰剖面、局域能量偏度分布）；
-   - 深度集成于 CLI（`--plot`, `--save_plots`, `--plot_dir`），支持训练后全自动导出 10 大专业矢量级图表。
+   - 覆盖训练过程动态（能量/方差趋势、MCMC 采样健康度）与物理状态诊断（采样构型、条件切片、局域能量偏度分布）；这些图用于诊断，不自动证明 cusp、电子密度或收敛性；
+   - 集成于 CLI（`--plot`, `--save_plots`, `--plot_dir`），支持训练后导出多种 PNG/SVG 图表。
 
 ---
 
@@ -72,7 +72,7 @@
 ferminet_pytorch/
 ├── __init__.py           # 包顶层导出与版本定义
 ├── features.py           # 相对几何特征提取 (ElectronFeatureEmbedding, 支持 Z_I 注入)
-├── layers.py             # 自旋等变相互作用层 (FermiInteractionLayer, 自旋分离均值池化)
+├── layers.py             # 自旋分流相互作用层 (FermiInteractionLayer, 自旋分离均值池化)
 ├── envelope.py           # 原子核指数衰减包络 (NuclearEnvelope, 各向同性/各向异性度规)
 ├── model.py              # FermiNet 核心模型 (Backflow 轨道构建与 slogdet / LogSumExp 计算)
 ├── hamiltonian.py        # 分子哈密顿量 (MolecularSystem, 局域动能与全向量化势能计算)
@@ -80,7 +80,7 @@ ferminet_pytorch/
 ├── mcmc_stats.py         # 链自相关、ESS、split-R-hat 与相关性修正 SEM
 ├── loss.py               # 有限批次协方差代理损失与可选局域能截断
 ├── train_vmc.py          # 端到端 VMC 变分优化训练脚本 (支持 H2, LiH 与各拉普拉斯策略)
-├── visualize.py          # 综合数据可视化模块 (Nature/PRR 期刊风格, 10 种训练与物理看板)
+├── visualize.py          # 综合数据可视化模块（学术风格训练与物理诊断看板）
 ├── example_h2.py         # 5 分钟上手演示：氢分子单步推断与局域能量拆解
 ├── benchmark_compile.py  # PyTorch 2.0+ JIT 编译优化加速比评测脚本
 ├── benchmark_100_atoms.py# 100 原子超大规模体系基准测试与物理自洽性校验
@@ -97,15 +97,15 @@ ferminet_pytorch/
 
 | 源码文件 | 核心职责 | 主要类 / 函数 | 物理/工程特性 |
 | :--- | :--- | :--- | :--- |
-| [`features.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/features.py) | 几何特征提取 | `ElectronFeatureEmbedding` | 提取相对位移与欧氏距离，平移旋转不变；支持注入核电荷 $Z_I$ 扩展至 $5M$ 维 |
-| [`layers.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/layers.py) | 自旋等变前馈层 | `FermiInteractionLayer` | 单/双流信息融合，自旋向上与向下分别池化聚合，满足同自旋置换等变性 |
+| [`features.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/features.py) | 几何特征提取 | `ElectronFeatureEmbedding` | 提取相对位移与欧氏距离，保证平移不变；不提供一般旋转等变约束；支持注入核电荷 $Z_I$ |
+| [`layers.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/layers.py) | 自旋分流前馈层 | `FermiInteractionLayer` | 单/双流信息融合，自旋向上与向下分别池化聚合，满足同自旋置换等变性 |
 | [`envelope.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/envelope.py) | 指数衰减基底 | `NuclearEnvelope` | 约束 $r \to \infty$ 时波函数趋零；支持可学习各向异性三维主轴度规 $\Sigma$ |
 | [`model.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/model.py) | 主干波函数网络 | `FermiNet` | 构造 Backflow 轨道，多行列式 `slogdet` 分解与 LogSumExp 稳定求和 |
 | [`hamiltonian.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/hamiltonian.py) | 哈密顿量与动能 | `MolecularSystem`, `compute_local_energy` | 库仑吸引/排斥势能全向量化计算；集成 Exact, JVP, Hutchinson 三大拉普拉斯求解器 |
 | [`mcmc.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/mcmc.py) | 并行构型采样 | `MCMCSampler` | 批量并行 Metropolis-Hastings 抽样，波函数对数缓存，自适应步长微调 |
 | [`loss.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/loss.py) | 变分代理损失 | `VMCLoss`, `vmc_surrogate_loss` | 默认无截断有限批次协方差修正；MAD 截断为显式稳健有偏模式 |
 | [`train_vmc.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/train_vmc.py) | 端到端训练优化 | `train_vmc` | 训练后冻结参数独立复评，报告 ESS、自相关时间、R-hat 与链相关 SEM |
-| [`visualize.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/visualize.py) | 综合可视化分析 | `plot_training_dashboard`, `plot_all_visualizations` 等 10+ 绘图函数 | 学术期刊级绘图体系、无 GUI 隔离后端、1D/2D/3D 物理态与零方差收敛全面诊断 |
+| [`visualize.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/visualize.py) | 综合可视化分析 | `plot_training_dashboard`, `plot_all_visualizations` 等 10+ 绘图函数 | 学术风格绘图工具、无 GUI 隔离后端、训练/采样及条件切片诊断 |
 
 参考能量只在核电荷、自旋电子数和核间几何与登记记录全部匹配时显示。相同核数和电子数不会被用于猜测分子身份；未知体系不绘制参考线。
 
@@ -185,9 +185,9 @@ uv run python train_vmc.py --epochs 50 --walkers 1024 --lr 1e-3
 ```
 
 **训练输出指标通俗解读**：
-- `<E_raw>` (原始局域能均值)：随着训练从约 $-0.8$ Ha 稳步下降并收敛至约 $-1.17$ Ha；
-- `Var(E)` (能量方差)：**量子体系最重要的收敛指标**！当且仅当网络逼近真实薛定谔本征态时，空间各处局域能趋于同一常数，方差自发趋向于 0（零方差原理）；
-- `Acc (%)` (接受率)：内置自适应步长控制器将采样接受率稳定锁定在 $50\%$ 黄金探索平衡点。
+- `<E_raw>` (原始局域能均值)：示例 H₂ 运行中可能下降到约 $-1.17$ Ha；实际轨迹取决于几何、随机种子、采样和 Laplacian 方法；
+- `Var(E)` (能量方差)：零方差原理提供有用诊断，但有限样本下会波动，低方差本身不能单独证明已收敛到基态；
+- `Acc (%)` (接受率)：采样器使用约 $50\%$ 的工程目标进行步长适应；最优接受率取决于提议分布和体系维度。
 
 #### 科研结果的统计口径
 
@@ -215,7 +215,7 @@ H₂ 参考线只在核电荷 `[1, 1]`、自旋 `(1, 1)`、核间距 `1.4 Bohr` 
 ### 演示 3：极性异核分子氢化锂 $LiH$ 变分优化
 
 氢化锂 $LiH$ 是具有非对称电荷分布的经典分子（$Z_{\text{Li}} = 3, Z_{\text{H}} = 1$，4 电子）。
-结合核电荷注入几何特征与 Hutchinson 百倍极速动能求解器，可实现极速优化：
+结合核电荷注入几何特征与 Hutchinson 随机迹估计器，可在特定硬件和误差容忍度下减少单步导数开销；实际收益需按统一基准测量：
 
 ```bash
 python train_vmc.py --system lih --laplacian_method hutchinson --epochs 30 --walkers 512
@@ -231,14 +231,14 @@ uv run python train_vmc.py --system lih --laplacian_method hutchinson --epochs 3
 体验 100 个氢原子组成的一维强关联晶格链（$M=100, N=100$，输入维度高达 300 维）：
 
 ```bash
-# 强烈推荐添加 --double 双精度参数 (获得严格的 100 电子机器级反对称检验)
+# 建议添加 --double 双精度参数（进行 100 电子数值容差测试）
 python benchmark_100_atoms.py --double
 # 或快速模式 (跳过 300 维耗时二阶拉普拉斯求解)：
 python benchmark_100_atoms.py --double --quick
 ```
 **实测特性**：
-- 严格验证 100 电子置换等变性与反对称性：轨道矩阵行置换误差 $< 10^{-14}$，双精度下波函数对数幅值误差 $< 10^{-8}$，符号严格反号，完美物理自洽；
-- 两个电子空间位置重合时，波函数精确归零，完美保持泡利不相容原理；
+- 在给定数值容差内检查 100 电子置换反对称性：轨道矩阵和对数幅值误差取决于 dtype、条件数与测试阈值；
+- 同自旋电子重合时，反对称结构在精确算术下要求波函数为零；浮点实现以小幅值/对数幅值阈值进行数值检查，不宣称机器精确归零；
 - 全向量化计算势能，单次批量计算数万构型仅需数毫秒。
 
 ---
@@ -265,7 +265,7 @@ uv run python benchmark_compile.py
 
 ### 演示 6：一键全自动生成训练过程与物理状态综合可视化看板
 
-在执行 VMC 变分优化时，只需添加 `--save_plots`（或 `--plot`），训练结束后将自动调用 [`visualize.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/visualize.py) 导出 10 张顶刊规格的专业图表到指定目录：
+在执行 VMC 变分优化时，只需添加 `--save_plots`（或 `--plot`），训练结束后将自动调用 [`visualize.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/visualize.py) 导出多种学术风格诊断图表到指定目录：
 
 ```bash
 # 启动 30 轮 VMC 优化并自动导出图表至 assets/plots 目录
@@ -273,19 +273,19 @@ python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_di
 ```
 
 #### 1. 训练全景综合看板 (`h2_training_dashboard.png`)
-直观涵盖能量收敛、零方差原理演化（能量方差 $\text{Var}(E)$ 衰减）以及 MCMC 采样接受率/自适应步长健康度：
+直观涵盖能量和方差趋势（作为零方差诊断）、以及 MCMC 采样接受率/自适应步长健康度：
 <p align="center">
   <img src="assets/plots/h2_training_dashboard.png" alt="VMC Training Process Dashboard" width="100%">
 </p>
 
 #### 2. 量子物理状态综合看板 (`h2_physical_dashboard.png`)
-深度揭示收敛后电子三维空间概率分布（区分 $\alpha/\beta$ 自旋）、沿核轴的一维波函数剖面（Kato Cusp 尖峰条件）以及局域能量分布直方图与偏度分析：
+展示采样或固定构型下的条件切片、沿核轴的一维波函数剖面（不作为精确 Kato cusp 证明），以及局域能量分布直方图与偏度分析：
 <p align="center">
   <img src="assets/plots/h2_physical_dashboard.png" alt="Quantum Physical State Dashboard" width="100%">
 </p>
 
-#### 3. 2D 分子成键截面相对电子密度热力图 (`h2_wavefunction_2d.png`)
-清晰展示氢分子中两原子核之间的共价键电子云重叠通道与空间对称性衰减：
+#### 3. 2D 固定构型下的波函数条件切片热力图 (`h2_wavefunction_2d.png`)
+用于观察固定其余电子构型时的空间条件切片；它不是经过边缘化和归一化的一体电子密度：
 <p align="center">
   <img src="assets/plots/h2_wavefunction_2d.png" alt="2D Wavefunction Bonding Slice" width="70%">
 </p>
@@ -317,8 +317,8 @@ python -m unittest test_mcmc_stats.py # ESS、链相关 SEM 与 split-R-hat 测�
   A: 这是完全正常的！多电子联合概率密度是高维微元几率的连乘，真实验证波函数振幅极小（例如 $10^{-100}$）。取自然对数后落入负几百区间，有效防止单精度下溢为零。
 - **Q: 什么是 Hartree 原子单位制？**  
   A: 在量子化学中令 $\hbar = m_e = e = 1$。能量单位 $1 \text{ Hartree} \approx 27.2114 \text{ eV} \approx 627.51 \text{ kcal/mol}$；长度单位 $1 \text{ Bohr} \approx 0.529177 \text{ \AA}$。
-- **Q: 为什么训练时能量方差 `Var(E)` 是黄金指标？**  
-  A: **零方差原理**！当且仅当试探波函数严格收敛至真实薛定谔方程本征态时，空间任意点处的局域能量处处等于常数基态能 $E_0$，此时空间方差 $\text{Var}(E) \equiv 0$。
+- **Q: 为什么训练时要观察能量方差 `Var(E)`？**
+  A: 零方差原理说明：若试探波函数正好是 Hamiltonian 的本征态，局域能量在非节点处为常数，理论方差为零。实际训练中它只是辅助诊断，不能单独证明基态收敛。
 
 > 更多深度原理解读与详尽问答，请参阅专著指南：[BEGINNER_GUIDE.md](BEGINNER_GUIDE.md)
 

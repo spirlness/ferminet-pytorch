@@ -20,7 +20,7 @@
 3. [🧠 第二章：FermiNet 神经网络核心架构超清晰拆解](#3-第二章ferminet-神经网络核心架构超清晰拆解)
    - 3.1 [整体架构全景数据流 (学术期刊规范架构图)](#31-整体架构全景数据流-学术期刊规范架构图)
    - 3.2 几何特征提取 (`features.py`)：相对位移、距离与核电荷注入
-   - 3.3 自旋等变交互层 (`layers.py`)：单/双电子流与自旋分离池化
+   - 3.3 自旋分流交互层 (`layers.py`)：单/双电子流与自旋分离池化
    - 3.4 原子核指数衰减包络 (`envelope.py`)：物理渐近条件与各向异性度规
    - 3.5 反对称波函数构建 (`model.py`)：Backflow 轨道矩阵构造
    - 3.6 数值稳定性基石：`torch.linalg.slogdet` 与 LogSumExp 技巧
@@ -164,10 +164,10 @@ $$\phi_j(r_i; \{r_{\setminus i}\})$$
 但人工设计复杂的 Backflow 函数极其困难。DeepMind 提出的 **FermiNet** 做出了革命性突破：
 **用多层前馈神经网络直接充当 Backflow 映射！**
 - 神经网络输入所有电子和原子核的相对空间几何；
-- 经过自旋等变图卷积/交互更新，让电子之间充分“对话”与“避让”；
+- 经过自旋分流的图式交互更新，让电子之间充分“对话”与“避让”；
 - 输出动态的广义轨道，再送入 Slater 行列式！
 
-这样，**仅用几个到十几个行列式，就能达到传统量化方法数百万行列式都无法企及的化学极高精度！**
+这样可以用较少的行列式表达复杂的多电子节点结构；是否达到化学精度必须由统一基准、参考体系和多种子误差统计验证，不能由架构本身保证。
 
 ---
 
@@ -198,7 +198,7 @@ $$\phi_j(r_i; \{r_{\setminus i}\})$$
                │   [r_i - R_I, ||r_i - R_I||, Z_I] │   [r_i - r_j, ||r_i - r_j||]    │
                └──────────────────────┬───────┴──────────────┬───────────────┘
                                       │                      │
-                       【自旋等变交互层 FermiInteractionLayer layers.py】
+                       【自旋分流交互层 FermiInteractionLayer layers.py】
                        (重复 L 层，电子之间自旋分离均值池化交互)
                                       │                      │
                                       ▼                      ▼
@@ -246,8 +246,7 @@ $$\phi_j(r_i; \{r_{\setminus i}\})$$
 在 `ElectronFeatureEmbedding` 中，为什么我们**绝不能直接把电子的绝对坐标 $(x, y, z)$ 喂进全连接层**？
 
 #### 物理不变性原理 (Physical Invariance)
-如果我们将整个分子在空间中整体平移 1 米，或者在空中翻转一个角度，分子的内部物理性质（能量、分子键长、相互作用）应该发生改变吗？
-**绝对不会！** 这种性质叫做**平移不变性与旋转等变性**。
+如果我们将整个分子在空间中整体平移，分子的内部物理性质（能量、分子键长、相互作用）不应改变。旋转也应保持物理等价，但这需要专门的旋转不变量或 SO(3)/E(3) 等变结构；当前实现不能仅凭相对位移输入保证这一点。
 如果直接把绝对坐标丢给 MLP，神经网络必须死记硬背每个坐标位置，泛化能力极差。
 
 因此，FermiNet 只提取两类**相对几何特征**：
@@ -264,7 +263,7 @@ $$\phi_j(r_i; \{r_{\setminus i}\})$$
 > 💡 **核心代码亮点**：
 > 全部采用 PyTorch 高阶广播机制（Broadcasting），如 `r.unsqueeze(2) - nuclei.unsqueeze(0).unsqueeze(0)`，零 Python 显式循环，原生 GPU 全并行向量化！
 
-### 3.3 自旋等变交互层 (`layers.py`)：单/双电子流与自旋分离池化
+### 3.3 自旋分流交互层 (`layers.py`)：单/双电子流与自旋分离池化
 
 分子中有两种自旋状态的电子：自旋向上 ($\uparrow$) 和自旋向下 ($\downarrow$)。
 量子力学规定：**打乱两个同自旋电子的输入顺序，网络的输出特征也应该仅仅对应打乱顺序，特征内容不能发生不可控突变（置换等变性，Permutation Equivariance）**。
@@ -315,7 +314,7 @@ $$\text{Envelope}(r_i) = \sum_{m=1}^M \pi_{m} \exp\left(-\sqrt{\sum_{d \in \{x, 
    根据分块对角矩阵性质，这样构成的整体波函数：
    - 交换两个自旋向上电子，$\det(D^\uparrow)$ 严格反号，$\det(D^\downarrow)$ 不变，整体反号；
    - 交换两个自旋向下电子，$\det(D^\uparrow)$ 不变，$\det(D^\downarrow)$ 严格反号，整体反号；
-   **100% 严格满足泡利不相容原理！**
+行列式结构在精确算术下保证同自旋交换反对称；实际 float32/float64 计算仍受舍入误差和条件数影响，应以数值容差验证。
 
 ### 3.6 数值稳定性基石：`torch.linalg.slogdet` 与 LogSumExp 技巧
 
@@ -388,28 +387,27 @@ $$E_L(r) \equiv \frac{\hat{H} \Psi(r)}{\Psi(r)}$$
 
 ### 4.4 变分原理：为什么能量越低越逼近真理？
 
-量子力学有一个神圣不可侵犯的公理——**变分原理 (Variational Principle)**：
-对于任意给定的试探波函数 $\Psi_\theta$（不论你的神经网络参数是什么），只要满足反对称性和边界条件，它的能量期望值永远**大于或等于真实基态能量 $E_0$**：
+量子力学中的**变分原理 (Variational Principle)** 适用于属于目标 Hamiltonian 定义域、平方可积且具有有限能量的试探波函数。对满足这些条件并处于同一粒子数/自旋扇区的 $\Psi_\theta$，能量期望值满足：
 
 $$\langle E \rangle_{\theta} = \frac{\langle \Psi_\theta | \hat{H} | \Psi_\theta \rangle}{\langle \Psi_\theta | \Psi_\theta \rangle} \ge E_0$$
 
 当且仅当 $\Psi_\theta$ 与真实基态波函数完全一致时，等号才成立！
 **这意味着什么？**
 这意味着我们可以把**能量期望值 $\langle E \rangle$ 直接当做神经网络的优化目标（Loss 函数）！**
-只要我们通过梯度下降不断降低能量，神经网络就会自发地向微观物理的最深真实收敛！
+降低能量是有用的优化目标，但有限步数、采样误差、局部极小值和表达能力都会影响结果；能量下降不自动保证已收敛到真实基态。
 
 ### 4.5 核心物理公式纠偏：有限批次协方差代理损失与求导真相
 
 > ⚠️ **新手极易犯的严重物理错误**：
 > 既然优化目标是 $\langle E \rangle = \mathbb{E}[E_L(r)]$，那能不能写成 `loss = torch.mean(e_local)` 然后直接调用 `loss.backward()`？
 > 
-> **绝对不行！这是完全错误的！**
+> **不建议直接这样做。**
 
 为什么？
 因为局域能量 $E_L(r)$ 本身就包含了波函数对电子坐标 $r$ 的二阶导数 $\nabla_r^2 \Psi$。如果你直接对 $E_L(r)$ 关于网络参数 $\theta$ 执行反向传播求导：
 $$\frac{\partial}{\partial \theta} \left( \nabla_r^2 \Psi_\theta \right)$$
 PyTorch 将被迫构建极度昂贵的三阶导数计算图（Third-order gradients），显存直接爆仓！
-更致命的是，数学上可以证明：**直接对采样点的 $E_L$ 反向传播得到的梯度是有偏的，方差极大，无法收敛到真实的变分基态！**
+这种路径会把局域能量中的坐标二阶导数继续连接到参数导数，产生昂贵的高阶导数，并且不能直接替代考虑采样分布导数的 VMC 得分函数估计器；“必然有偏且无法收敛”不是对所有实现和采样方案都成立的普遍定理。
 
 #### 正确的变分梯度定理 (Variational Gradient Theorem)
 对能量期望值求关于参数 $\theta$ 的严格数学导数：
@@ -452,14 +450,14 @@ loss.backward()
 
 ## 5. 🗺️ 第四章：阶段 0、1、2 核心演进与模块全景导览
 
-本项目代码经过三轮严谨迭代，形成了完整的工业级高可靠架构：
+本项目代码经过多轮迭代，形成了便于实验和复现的研究型模块架构：
 
 ### 5.1 源码文件与核心职责对照表
 
 | 源码文件 | 核心职责 | 主要类 / 函数 | 输入与输出 |
 | :--- | :--- | :--- | :--- |
 | [`features.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/features.py) | 相对几何特征嵌入 | `ElectronFeatureEmbedding` | 输入电子坐标 `(B, N, 3)` 与核坐标/电荷；输出单电子特征 `(B, N, 5M)` 与双电子特征 `(B, N, N, 4)` |
-| [`layers.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/layers.py) | 自旋等变前馈交互 | `FermiInteractionLayer` | 输入单/双电子流；按自旋分别平均池化交互，输出更新后的表征 |
+| [`layers.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/layers.py) | 自旋分流前馈交互 | `FermiInteractionLayer` | 输入单/双电子流；按自旋分别平均池化交互，输出更新后的表征 |
 | [`envelope.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/envelope.py) | 束缚态指数衰减包络 | `NuclearEnvelope` | 保证波函数在远离核时指数衰减；支持各向同性标量与各向异性三维主轴度规 |
 | [`model.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/model.py) | FermiNet 主干网络 | `FermiNet` | 组装 Backflow 轨道，调用 `slogdet` 分解计算多行列式对数波函数 `log|Psi|` 与符号 `sign` |
 | [`hamiltonian.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/hamiltonian.py) | 分子哈密顿量与动能 | `MolecularSystem`, `compute_local_energy` | 全向量化计算势能 $V(r)$ 与动能 $T_L(r)$，集成三大拉普拉斯求解器 |
@@ -468,9 +466,9 @@ loss.backward()
 | [`mcmc_stats.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/mcmc_stats.py) | MCMC 统计 | `estimate_mcmc_statistics` | 由 walker 时间序列估计自相关时间、ESS、split-R-hat 与链相关 SEM |
 | [`train_vmc.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/train_vmc.py) | 端到端训练脚本 | `train_vmc`, `main` | 串联 MCMC 采样、局域能量求解与 Adam 参数优化的完整训练闭环 |
 | [`example_h2.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/example_h2.py) | 极简推断与能量演示 | `run_h2_demo` | 5 分钟上手脚本，单步前向推断 $H_2$ 波函数与局域能量拆解 |
-| [`benchmark_compile.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/benchmark_compile.py) | JIT 图编译基准评测 | `benchmark_compilation` | 测试 PyTorch 2.0 `torch.compile` 对 FermiNet 的算子融合与 5.8x 加速比 |
+| [`benchmark_compile.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/benchmark_compile.py) | JIT 图编译基准评测 | `benchmark_compilation` | 测试 PyTorch 2.0 `torch.compile` 对 FermiNet 的算子融合；具体收益依赖硬件和配置 |
 | [`benchmark_100_atoms.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/benchmark_100_atoms.py) | 100 原子超大体系基准 | `run_benchmark` | 评测 100 核 100 电子链在超大规模下的显存占用、吞吐与物理反对称性 |
-| [`visualize.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/visualize.py) | 学术级综合可视化库 | `plot_training_dashboard`, `plot_physical_results_dashboard` | 顶刊规范、包含 10 种训练动态与量子物理状态看板，无 GUI 隔离后端 |
+| [`visualize.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/visualize.py) | 学术风格综合可视化库 | `plot_training_dashboard`, `plot_physical_results_dashboard` | 提供训练、采样和条件切片诊断，无 GUI 隔离后端 |
 
 ### 5.2 三大高性能动能拉普拉斯求解器对比
 
@@ -485,24 +483,24 @@ loss.backward()
              │ 经典逐分量精确模式   │    │ JVP 前向模式    │    │ Hutchinson 随机迹估计│
              │   ("exact")         │    │ ("exact_jvp")   │    │   ("hutchinson")    │
              ├─────────────────────┤    ├─────────────────┤    ├─────────────────────┤
-             │ 时间复杂度: O(3N)   │    │ 时间复杂度: O(1)│    │ 时间复杂度: O(1)    │
-             │ 反向传播次数: 3N 次 │    │ 采用 vmap 向量化│    │ 仅需 1 次方向导数   │
-             │ 绝对机器精度        │    │ 依赖 PyTorch JVP│    │ 无偏估计，极速百倍  │
+             │ 时间复杂度: 随 3N 增长│    │ 批量计算 3N 方向 │    │ 探针数近似 O(1)     │
+             │ 反向传播次数: 3N 次 │    │ 采用 vmap 向量化│    │ 少量方向导数       │
+             │ 数值精度最高        │    │ 依赖 PyTorch JVP│    │ 条件无偏，方差可变  │
              └─────────────────────┘    └─────────────────┘    └─────────────────────┘
 ```
 
 1. **`exact` (经典高精度反向微分模式)**：
    - 原理：针对 $3N$ 个空间坐标分量，循环调用 $3N$ 次 `torch.autograd.grad`，逐一提取二阶对角元素。
-   - 优点：具备严格的机器精度，单/双电子极小体系首选。
+   - 优点：在给定 dtype 和条件数下数值精度最高，适合小体系对照；仍受浮点误差影响。
    - 缺点：体系变大后（例如 100 个电子，300 维），需要执行 300 次反向传播，耗时随电子数线性增长。
 2. **`exact_jvp` (JVP 前向模式向量化精确求解)**：
    - 原理：基于 `torch.func.jvp` (Jacobian-Vector Product) 与 `torch.func.vmap`，在批次和坐标维度上全部展开为硬件级并行。
    - 优点：全向量化，无显式 Python 循环。
-3. **`hutchinson` (Hutchinson 随机迹估计器，百倍极速神器)**：
+3. **`hutchinson` (Hutchinson 随机迹估计器，成本-方差折中)**：
    - 原理：根据随机线性代数定理，对于任意对称矩阵 $H$ 和满足 $\mathbb{E}[v v^T] = I$ 的随机向量 $v$（如 Rademacher 分布，分量以 0.5 概率取 $+1$ 或 $-1$）：
      $$\text{Tr}(H) = \mathbb{E}_v \left[ v^T H v \right]$$
    - 绝妙之处：计算 $v^T H v = v^T \nabla_r (v^T \nabla_r \ln|\Psi|)$ **只需要 1 次方向导数反向传播！**
-   - 性能飞跃：对于 100 个原子的超大体系，将耗时从原本的 300 次反向传播压缩至 **1 次**，在保持能量无偏估计的前提下，获得 **数十倍至数百倍** 的性能狂飙！
+   - 成本与误差：默认少量随机方向可减少方向导数调用；迹估计在探针分布条件下无偏，但单次方差可能很大，整体成本仍随体系、网络和 batch 变化。是否加速必须在统一硬件、精度和误差目标下实测。
 
 ### 5.3 PyTorch 2.0+ `torch.compile` JIT 图编译加速秘籍
 
@@ -605,7 +603,7 @@ python train_vmc.py --epochs 50 --walkers 256 \
 ### 6.3 演示 3：极性异核分子氢化锂 $LiH$ 变分优化
 
 氢化锂 $LiH$ 是一个典型的极性共价键分子：锂核电荷 $Z=3$，氢核电荷 $Z=1$，总电子数 $N=4$。
-这里验证了阶段 2 的核电荷注入与各向异性包络能力，结合 Hutchinson 极速求解器可以秒级完成训练：
+这里验证了阶段 2 的核电荷注入与各向异性包络能力；Hutchinson 是否降低端到端训练时间，应结合具体硬件和误差目标单独测量：
 
 ```bash
 python train_vmc.py --system lih --laplacian_method hutchinson --epochs 30 --walkers 512
@@ -619,13 +617,13 @@ uv run python train_vmc.py --system lih --laplacian_method hutchinson --epochs 3
 体验 100 个氢原子（100 个质子 + 100 个电子，输入维度高达 300 维）的一维强关联晶格链基准：
 
 ```bash
-# 强烈推荐添加 --double 双精度参数 (获得严格的 100 电子机器级反对称检验)
+# 建议添加 --double 双精度参数（进行 100 电子数值容差测试）
 python benchmark_100_atoms.py --double
 # 或快速体验 (跳过 300 维耗时二阶拉普拉斯求解)：
 python benchmark_100_atoms.py --double --quick
 ```
 **关键评测指标亮点**：
-- **物理性质严格自洽**：白盒轨道置换等变性误差 $< 10^{-14}$，双精度下对数幅值误差 $< 10^{-8}$，符号严格反号，严格保持反对称；两个电子重叠时，波函数精确归零！
+- **数值性质检查**：在指定 dtype 和阈值下检查轨道置换与符号反号；同自旋电子重叠在精确算术下应为零，浮点实现只报告小幅值或对数幅值阈值，不宣称精确归零。
 - **显存极致轻量**：在 100 电子超大规模下，模型参数量仅为数十万，全向量化势能计算吞吐高达每秒上万个构型。
 
 ### 6.5 演示 5：PyTorch 编译加速基准评测 (`benchmark_compile.py`)
@@ -645,7 +643,7 @@ uv run python benchmark_compile.py
 为此，我们提供了**一键可视化导出功能**！在运行 `train_vmc.py` 时只需加上 `--save_plots` 参数：
 
 ```bash
-# 运行 30 轮 VMC 优化并自动生成 10 张顶刊级学术可视化图表
+# 运行 30 轮 VMC 优化并自动生成诊断可视化图表
 python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_dir assets/plots
 ```
 
@@ -659,13 +657,13 @@ python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_di
 
 小白如何读懂这三张图？
 1. **左图：能量收敛曲线（小球滚入量子基态）**
-   - **蓝色实线（原始能量）** 与 **绿色实线（截断能量）**：从初期的约 $-0.57\,\text{Ha}$ 一路下滑，平稳收敛到贴近红色虚线（$H_2$ 真实理论基态能量 $-1.17447\,\text{Ha}$）；
+   - **蓝色实线（原始能量）** 与 **绿色实线（截断能量）**：示例运行可能从较高能量下降；曲线会随随机种子、采样和数值设置变化。红色参考线只适用于登记的 H₂ 电荷、自旋和几何；不应把短曲线视为收敛证明；
    - 训练曲线不再绘制误导性的 IID 误差带；可信误差来自训练后冻结参数采集的时间序列，并单独报告 ESS 与链相关 SEM。
-2. **中图：零方差原理对数衰减（检验波函数是否完美的终极试金石）**
+2. **中图：能量方差趋势（零方差辅助诊断）**
    - **紫色实线（能量方差）** 与 **橙色点划线（IID 批次 SEM 代理量）**只用于训练诊断；最终误差必须查看冻结参数复评产生的相关 SEM、ESS 和 R-hat。
 3. **右图：MCMC 采样器健康度与自适应步长（算法的“恒温器”）**
    - **青色折线（接受率）**：围绕着灰色水平虚线（50% 目标线）小幅振荡，说明采样器既没有盲目乱跳（接受率太低），也没有原地踏步（接受率太高）；
-   - **棕色点划线（提议移动步长）**：控制器像一个自动温度计，随着波函数越来越聚焦，步长自适应调节收敛到约 $0.47\,\text{Bohr}$。
+   - **棕色点划线（提议移动步长）**：控制器根据接受率调整步长；稳定值取决于体系、初始化和目标接受率，不应预期固定为某个 Bohr 数。
 
 ---
 
@@ -675,27 +673,26 @@ python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_di
   <img src="assets/plots/h2_physical_dashboard.png" alt="Quantum Physical State Dashboard" width="100%">
 </p>
 
-这三幅图揭示了微观分子的真实物理空间分布：
-1. **左图：3D 电子几率密度空间散点（看见微观电子云）**
+这些图展示采样构型或固定构型下的可视化诊断，不等同于经过边缘化和归一化的一体电子密度：
+1. **左图：3D 采样构型/条件切片散点**
    - 中间两个黑色大球是两颗氢原子核（$z = \pm 0.7\,\text{Bohr}$）；
    - 浅蓝色散点是自旋向上电子（$\alpha$），浅粉色散点是自旋向下电子（$\beta$）；
    - 电子并非固定在轨道上打转，而是像一团有弹性的“棉花糖云雾”，在两颗核周围形成高密度的空间概率弥散，这正是量子力学玻恩几率诠释 $|\Psi(r)|^2$ 的真实写照！
-2. **中图：沿核间键轴的一维密度剖面（共价键成键的秘密）**
-   - 蓝色实线是沿穿过两颗核的轴线（$z$ 轴）测得的电子相对几率密度 $|\Psi(z)|^2$；
-   - 观察最高峰：它正好稳稳地坐落在两颗核（两条橙色虚线）的正中间！这生动地向你展示了化学键的本质——**两个电子在两个原子核之间积聚负电荷，同时吸引两侧带正电的原子核，把它们紧紧粘合在一起！**
+2. **中图：沿核间轴的一维条件切片**
+   - 蓝色实线是固定其余电子构型后沿轴线扫描得到的条件量；它不是对其余电子积分得到的一体电子密度，也不能单独证明成键机制。
 3. **右图：局域能量直方图与统计偏度（防御奇异点）**
    - 展示了各个空间构型处算出来的局域能量 $E_L(r)$ 的分布直方图；
    - 浅蓝色区域代表 MAD 平滑截断窗口，它有效地将靠近节点面或靠近原子核可能出现的极端离群值柔和截断，左上角信息卡片记录了均值、标准差、偏度与峰度。
 
 ---
 
-#### 🖼️ 看板 3：2D 分子成键截面相对几率密度热力图 (`h2_wavefunction_2d.png`)
+#### 🖼️ 看板 3：2D 固定构型下的波函数条件切片热力图 (`h2_wavefunction_2d.png`)
 
 <p align="center">
   <img src="assets/plots/h2_wavefunction_2d.png" alt="2D Wavefunction Bonding Slice" width="70%">
 </p>
 
-这是量子化学中最经典的分子成键轨道等高线图：
+这是固定构型下的波函数条件切片示意图，不是经过边缘化的一体电子密度图：
 - 两个带白边的红圈标出了原子核的位置 $(0, \pm 0.7)$；
 - 亮黄色和翠绿色代表高电子概率区域，可以清晰看到两核之间有一条宽阔的**高几率绿色通道**，这就是大名鼎鼎的 **$\sigma_g$ 分子成键轨道**！外围深紫色逐渐衰减至零，体现了指数衰减包络的物理约束。
 
@@ -710,12 +707,12 @@ python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_di
 | `Epoch` | 迭代轮数 | 优化器完成了一次参数更新循环 | 正常递增 |
 | `<E_raw>` | 原始局域能量均值 | 当前批次所有 Walker 局域能量的原始算术平均值（单位：Hartree） | **随着训练逐渐下降**，逐步逼近理论基态能量 |
 | `<E_clip>` | 截断后局域能量均值 | 经过 Umrigar tanh 过滤掉奇异离群点后的能量均值 | 与 `<E_raw>` 极其接近，若两者差巨大说明节点奇异点较多 |
-| `Var(E)` | 能量方差 | 局域能量在空间中的波动方差 $\text{Var}(E_L)$ | **黄金指标！随着训练必须逐渐变小**，越小说明波函数越完美 |
+| `Var(E)` | 能量方差 | 局域能量在空间中的波动方差 $\text{Var}(E_L)$ | 重要辅助诊断；有限样本下会波动，低方差不能单独证明基态收敛 |
 | `IID SEM*` | 单批次 IID 代理量 | 暂时忽略链自相关的训练诊断值，不是可信置信区间 | 仅观察趋势；最终结论使用复评的相关 SEM、ESS 与 R-hat |
 | `evaluation.energy_sem` | 链相关均值标准误 | 使用 walker 时间序列与有效样本数修正的最终误差条 | 与 ESS、`tau_int`、`R-hat` 一起报告 |
 | `ESS` | 有效样本数 | 把自相关链折算为等价独立样本数 | 越大越好，但必须结合采样预算解释 |
 | `R-hat` | 链间收敛诊断 | 比较拆分 walker 链的方差与链内方差 | 接近 1 才适合解释 SEM |
-| `Acc (%)` | MCMC 接受率 | 采样器提议移动并被接受的百分比 | **应稳定在 45% ~ 55% 附近**，若过高或过低步长会自动调节 |
+| `Acc (%)` | MCMC 接受率 | 采样器提议移动并被接受的百分比 | 默认约 50% 的工程目标；合理范围取决于维度和提议分布 |
 | `Step` | MCMC 空间移动步长 | 高斯提议分布的标准差 $\sigma$ | 自适应微调，大分子通常在 0.1 ~ 0.5 之间 |
 
 ---
@@ -756,12 +753,12 @@ python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_di
 > 这是一个经典的采样探索 (Exploration) 与利用 (Exploitation) 的权衡：
 > - **如果接受率极高 (如 95%)**：说明你提议的移动步长 `step_size` 太小了！电子每次只移动极其微小的距离，虽然容易被接受，但粒子被困在原地，成千上万步都探索不到新的空间构型，样本自相关性极强，统计严重失真；
 > - **如果接受率极低 (如 5%)**：说明提议步长太大了！电子一步直接跳到了概率几乎为零的荒漠或者直接撞到了原子核内部，导致绝大多数移动全被拒绝，采样器原地踏步；
-> - **50% 黄金平衡**：在随机游走理论（特别是高维 Metropolis-Hastings）中，理论最优接受率在 0.234 到 0.5 之间。保持在 50% 左右能确保采样器既迈得开步子，又保持合理的接受效率。本项目内置了自适应调节控制器，会自动帮你将步长收敛至这一目标！
+> - **约 50% 的工程目标**：接受率过高通常意味着步长过小，过低通常意味着步长过大；理论最优值随维度、提议分布和移动策略变化。项目控制器会尝试靠近默认目标，但这不是采样收敛的充分条件。
 
 ### Q5: 为什么训练时能量方差 `Var(E)` 会越来越小？(神奇的零方差原理)
 
 > **答**：
-> 这是量子蒙特卡洛中最具数学美感、最神奇的物理特性——**零方差原理 (Zero Variance Principle)**！
+> 这是量子蒙特卡洛中的**零方差原理 (Zero Variance Principle)**，但它是一个理想极限性质：
 > 
 > 观察薛定谔方程：
 > $$\hat{H} \Psi_0(r) = E_0 \Psi_0(r)$$
@@ -774,8 +771,7 @@ python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_di
 > 
 > **结论**：
 > 在普通深度学习分类或回归任务中，Loss 往往很难降到严格的 0。但在量子变分蒙特卡洛中：
-> **能量方差 $\text{Var}(E_L)$ 是检验波函数质量的终极黄金试金石！**
-> 训练过程中方差越来越小，不仅说明网络收敛了，更在数学上严格证明了你的神经网络正在逼近真实的物理本征态！
+> 能量方差可以作为波函数质量的辅助诊断。训练过程中方差变小是有用信号，但有限采样、截断、软化势和优化噪声都可能影响它；它不能单独严格证明网络正在逼近真实基态。
 
 ---
 
