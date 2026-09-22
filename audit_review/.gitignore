@@ -1,0 +1,4 @@
+# 生成物：由 build_report_docx.py 与渲染流程产出，不入版本控制
+__pycache__/
+rendered/
+*.docx

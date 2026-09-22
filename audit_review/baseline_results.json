@@ -1,0 +1,17 @@
+{
+  "repository_commit": "5c41c06138af5cd3dfddb850ff4a238aac4e93a2",
+  "command": "F:\\conda\\envs\\torch\\python.exe -m unittest discover -s . -p test_*.py -v",
+  "python": "3.13.15",
+  "torch": "2.14.0",
+  "cuda_runtime": "13.0",
+  "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+  "tests_run": 109,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "elapsed_seconds": 42.768,
+  "warnings": [
+    "100-electron float32 precision warning in test_phase2",
+    "torch.jit.script deprecation warning while exercising torch.func JVP"
+  ]
+}
