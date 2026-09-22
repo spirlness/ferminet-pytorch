@@ -476,8 +476,10 @@ class TestR6R9Behaviour(unittest.TestCase):
                 device=device, dtype=torch.float64,
             )
         self.assertEqual(log_psi.device.type, "cuda")
-        self.assertTrue(torch.allclose(first[:, 0, 0], torch.ones(2, device=device)))
-        self.assertTrue(torch.allclose(third[:, 0, 0], torch.full((2,), 2.0, device=device)))
+        self.assertTrue(torch.allclose(first[:, 0, 0], torch.ones_like(first[:, 0, 0])))
+        self.assertTrue(
+            torch.allclose(third[:, 0, 0], torch.full_like(third[:, 0, 0], 2.0))
+        )
         self.assertTrue(torch.isfinite(energy).all())
         self.assertEqual(sampler.current_log_abs_psi.device.type, "cuda")
 
