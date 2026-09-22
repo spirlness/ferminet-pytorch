@@ -250,6 +250,10 @@ def train_vmc(
     else:
         model = model.to(device=target_device, dtype=dtype)
 
+    # 校验模型几何缓冲与体系一致 (审查报告 D10)：若调用方在构造模型后更新过体系
+    # 几何，波函数会使用旧几何而哈密顿量使用新几何，且不会报错。这里显式拦截。
+    model.check_system_consistency(system)
+
     # 2. 损失函数与采样器构建
     vmc_loss = VMCLoss(
         clip_factor=clip_factor,

@@ -16,6 +16,7 @@
 """
 
 from typing import Any, Dict, Optional, Tuple, Union
+import warnings
 import torch
 import torch.nn as nn
 
@@ -66,7 +67,19 @@ def clip_local_energy(
     mad = torch.median(torch.abs(finite_energies - e_median))
 
     if method == "none" or clip_factor <= 0:
-        # 若非有限值存在，仍进行平滑填补以防梯度图崩溃
+        # method='none' 的语义是"不截断"，但非有限值必须被填充才能继续计算。
+        # 该替换会静默改变数据，因此在**确实发生替换时**发出警告 (审查报告 D8)，
+        # 而不是无声地 nan_to_num。训练主路径 vmc_surrogate_loss 在
+        # clip_method='none' 且存在非有限值时会直接抛 FloatingPointError。
+        num_nonfinite = int((~torch.isfinite(e_local)).sum())
+        if num_nonfinite:
+            warnings.warn(
+                f"clip_local_energy(method='none') 收到 {num_nonfinite} 个非有限局域能量，"
+                f"已替换为中位数 {e_median.item():.6f} 附近的值。这会静默改变数据——"
+                f"若需要严格行为，请改用 vmc_surrogate_loss (它在 clip_method='none' 下抛错)。",
+                UserWarning,
+                stacklevel=2,
+            )
         e_safe = torch.nan_to_num(
             e_local,
             nan=e_median.item(),

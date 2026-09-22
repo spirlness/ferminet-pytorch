@@ -318,39 +318,39 @@ class FermiNet(nn.Module):
         sign_det_k = sign_up * sign_down          # (B, K)
 
         # 4. 多行列式带权重线性组合: Psi = sum_k w_k * Det_k
+        #
+        # 数值稳定化只对**行列式**提出最大值，权重保持线性因子:
+        #     Psi = exp(max_log_det) * sum_k w_k * sign(Det_k) * exp(log|Det_k| - max_log_det)
+        # 这样既保留了 log-sum-exp 的稳定性，又让 w_k 的梯度直接来自线性项——
+        # d(log|Psi|)/dw_k = Det_k / Psi 在 w_k = 0 处仍然非零，零权重分支可以恢复。
+        #
+        # 反之，若把 w_k 也折进 log (即用 log|w_k|)，则 w_k = 0 时 sign(0) = 0 且
+        # log|0| = -inf，该分支被掩码移出求和、梯度路径完全断裂，一旦跨过零点
+        # 便永久失效 (审查报告 D7)。
         w = self.det_weights.unsqueeze(0)  # (1, K)
-        sign_w = torch.sign(w)
-        abs_w = torch.abs(w)
 
-        w_nonzero = abs_w > 0
-        log_abs_w = torch.where(
-            w_nonzero,
-            torch.log(abs_w.clamp(min=1e-38)),
-            torch.full_like(abs_w, -float("inf")),
+        # 行列式的 log 幅值有限性掩码 (行列式可能精确为零 → slogdet 给出 -inf)
+        det_finite = ~torch.isneginf(log_abs_det_k)
+        safe_log_det = torch.where(
+            det_finite, log_abs_det_k, torch.full_like(log_abs_det_k, -1e30)
         )
+        max_log_det, _ = torch.max(safe_log_det, dim=1, keepdim=True)  # (B, 1)
 
-        sign_total_k = sign_det_k * sign_w
-        log_abs_total_k = log_abs_det_k + log_abs_w
-
-        is_finite = ~torch.isneginf(log_abs_total_k)
-        safe_log_abs = torch.where(
-            is_finite, log_abs_total_k, torch.full_like(log_abs_total_k, -1e30)
+        exp_diff = torch.where(
+            det_finite,
+            torch.exp(log_abs_det_k - max_log_det),
+            torch.zeros_like(log_abs_det_k),
         )
-        max_log, _ = torch.max(safe_log_abs, dim=1, keepdim=True)  # (B, 1)
+        # 权重作为线性因子: 零权重贡献 0, 但梯度非零 (可恢复)
+        summed = torch.sum(w * sign_det_k * exp_diff, dim=1)  # (B,)
 
-        diff = log_abs_total_k - max_log
-        exp_diff = torch.where(is_finite, torch.exp(diff), torch.zeros_like(diff))
-        scaled_terms = sign_total_k * exp_diff
-        summed = torch.sum(scaled_terms, dim=1)  # (B,)
-
-        has_nonzero_det = torch.any(is_finite, dim=1)
-        is_strictly_zero = (~has_nonzero_det) | (summed == 0)
+        is_strictly_zero = (~torch.any(det_finite, dim=1)) | (summed == 0)
 
         sign_psi = torch.where(is_strictly_zero, torch.zeros_like(summed), torch.sign(summed))
         log_abs_psi = torch.where(
             is_strictly_zero,
             torch.full_like(summed, -float("inf")),
-            max_log.squeeze(1) + torch.log(torch.abs(summed).clamp(min=1e-38)),
+            max_log_det.squeeze(1) + torch.log(torch.abs(summed).clamp(min=1e-38)),
         )
 
         return log_abs_psi, sign_psi
@@ -510,4 +510,37 @@ class FermiNet(nn.Module):
             mode=mode,
             options=options,
         )
+
+    def check_system_consistency(self, system: "MolecularSystem") -> None:
+        """
+        校验模型几何缓冲与给定 MolecularSystem 是否一致。
+
+        `FermiNet` 在构造时把核坐标与核电荷**拷贝**为自己的 buffer，而
+        `MolecularSystem.update_geometry()` 只更新体系对象自身。因此若在构造模型
+        之后更新了体系几何，波函数会使用旧几何、哈密顿量使用新几何，且**不会报错**
+        (审查报告 D10)。本方法把这一隐患变成显式检查。
+
+        Args:
+            system (MolecularSystem): 待比对的分子体系。
+
+        Raises:
+            ValueError: 核数目、核坐标或核电荷不一致。
+        """
+        to_np64 = lambda t: t.detach().to(device="cpu", dtype=torch.float64)  # noqa: E731
+        model_coords, system_coords = to_np64(self.nuclear_coords), to_np64(system.nuclear_coords)
+        if model_coords.shape != system_coords.shape:
+            raise ValueError(
+                f"模型核坐标形状 {tuple(model_coords.shape)} 与体系 "
+                f"{tuple(system_coords.shape)} 不一致"
+            )
+        if not torch.allclose(model_coords, system_coords, atol=1e-8, rtol=0.0):
+            raise ValueError(
+                "模型几何缓冲与 MolecularSystem 不一致：波函数会使用旧几何而哈密顿量"
+                "使用新几何。更新体系几何后请重建模型。"
+            )
+        model_z, system_z = to_np64(self.nuclear_charges), to_np64(system.nuclear_charges)
+        if model_z.shape != system_z.shape or not torch.allclose(
+            model_z, system_z, atol=1e-12, rtol=0.0
+        ):
+            raise ValueError("模型核电荷缓冲与 MolecularSystem 不一致。")
 

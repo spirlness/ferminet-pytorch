@@ -276,9 +276,17 @@ def _compute_laplacian_jvp(
     ones: Optional[torch.Tensor] = None,
 ) -> torch.Tensor:
     """
-    基于 torch.func.jvp 与 torch.func.vmap 前向模式微分的全向量化精确求解。
-    批次维度与坐标维度均采用 vmap 向量化映射，严格无显式 Python 循环。
-    若当前算子或环境限制无法支持，平滑回退至经典 exact 逆向微分模式。
+    基于 torch.func.jvp 与 torch.func.vmap 前向模式微分的批量化解算。
+
+    实现方式: 构造 3N x 3N 单位阵, 对**全部 3N 个基方向**做 vmap 的 JVP,
+    取 v^T (H v) 后求和。这消除了 Python 循环, 但**仍然计算全部对角方向**,
+    因此时间与峰值显存都随电子数 N 增长。
+
+    准确称谓: "批量化的逐基方向精确 Hessian 对角计算"。
+    它**不是**论文所述的 Forward Laplacian (后者在网络前向过程中以算子级传播
+    拉普拉斯, 无需逐方向求导), 因此不具备 O(1) 复杂度 (审查报告 D11)。
+
+    若当前算子或环境限制无法支持, 回退至经典 exact 逆向微分模式。
     """
     batch_size, num_electrons, _ = r.shape
     dim_total = num_electrons * 3
@@ -304,9 +312,13 @@ def _compute_laplacian_jvp(
             return func.vmap(_diag_elem)(eye).sum()
 
         return func.vmap(_compute_single_walker)(r)
-    except Exception as e:
+    except (ImportError, RuntimeError, NotImplementedError) as e:
+        # 只捕获"能力/环境不支持"这一类的异常 (torch.func 不可用、vmap 不支持该算子等)，
+        # 不再用裸 Exception 吞掉一切——形状错误之类的真实 bug 应当向上抛出 (审查报告 D9)。
         warnings.warn(
-            f"torch.func.jvp 向量化求解遇到异常 ({e})，平滑回退至经典 exact 逆向模式。",
+            f"torch.func.jvp 前向模式求解不可用 ({type(e).__name__}: {e})，"
+            f"已回退至经典 exact 逆向微分模式。结果数值正确，但**没有**走 JVP 快速路径；"
+            f"若本警告在批量训练中反复出现，说明该环境并不支持 JVP，性能预期需要相应下调。",
             UserWarning,
             stacklevel=2,
         )
