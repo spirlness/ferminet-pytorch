@@ -239,6 +239,19 @@ def train_vmc(
         target_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     else:
         target_device = torch.device(device)
+        if target_device.type == "cuda":
+            if not torch.cuda.is_available():
+                raise RuntimeError(
+                    "CUDA was requested but this PyTorch installation has no available CUDA device"
+                )
+            if (
+                target_device.index is not None
+                and target_device.index >= torch.cuda.device_count()
+            ):
+                raise ValueError(
+                    f"CUDA device index {target_device.index} is unavailable; "
+                    f"device_count={torch.cuda.device_count()}"
+                )
 
     # 1. 体系与模型构建
     if system is None:

@@ -60,41 +60,87 @@ def _determinant_polynomial(matrix: torch.Tensor) -> torch.Tensor:
 
 
 def _scaled_determinant(matrix: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-    """Return a determinant normalized per walker and its detached log scale.
+    """Return division-free determinant mantissas and per-branch log scales.
 
-    Small blocks retain the polynomial path so their coordinate derivatives are
-    valid at a singular branch.  Larger blocks use ``slogdet`` directly: a
-    raw determinant may underflow in float32 long before the *combined*
-    wavefunction is evaluated, which must never turn a nonzero state into a
-    node.  The scale is detached only as a numerical representation; the
-    normalized determinant keeps its full linear gradient path.
+    Each row is divided by its own detached maximum magnitude before evaluating
+    the determinant polynomial.  This keeps the polynomial in a safe numerical
+    range even when different orbitals have very different magnitudes.  A zero
+    row uses a scale of one: its determinant remains zero while its cofactor
+    derivative remains available.  The identity
+
+    ``det(A) = det(A / row_scale) * prod(row_scale)``
+
+    is exact, and detaching the representation scale preserves all derivatives
+    of the determinant polynomial, including at singular matrices.  Unlike an
+    LU/SVD backward pass, this path never divides by a singular value and works
+    with reverse-mode autograd, ``torch.func.jvp`` and ``vmap`` on CPU or CUDA.
+
+    Non-finite matrix entries deliberately remain non-finite in the mantissa so
+    callers cannot silently discard a corrupted determinant branch.
     """
-    if matrix.shape[-1] <= 4:
-        determinant = _determinant_polynomial(matrix)
-        scale = torch.amax(torch.abs(determinant).detach(), dim=1, keepdim=True)
-        valid = scale > 0
-        safe_scale = torch.where(valid, scale, torch.ones_like(scale))
-        normalized = determinant / safe_scale
-        log_scale = torch.where(
-            valid.squeeze(1), torch.log(safe_scale.squeeze(1)),
-            torch.full_like(safe_scale.squeeze(1), -float("inf")),
-        )
-        return normalized, log_scale
+    if matrix.shape[-1] != matrix.shape[-2]:
+        raise ValueError(f"determinant requires square matrices, got {tuple(matrix.shape)}")
 
-    sign, log_abs = torch.linalg.slogdet(matrix)
-    finite = torch.isfinite(log_abs)
-    masked_log = torch.where(finite, log_abs, torch.full_like(log_abs, -float("inf")))
-    log_scale = torch.amax(masked_log.detach(), dim=1)
-    valid = torch.isfinite(log_scale)
-    safe_log_scale = torch.where(valid, log_scale, torch.zeros_like(log_scale))
-    normalized = torch.where(
-        finite,
-        sign * torch.exp(log_abs - safe_log_scale.unsqueeze(1)),
-        torch.zeros_like(sign),
+    row_scale = torch.amax(torch.abs(matrix).detach(), dim=-1)
+    usable_scale = torch.isfinite(row_scale) & (row_scale > 0)
+    safe_row_scale = torch.where(usable_scale, row_scale, torch.ones_like(row_scale))
+    scaled_matrix = matrix / safe_row_scale.unsqueeze(-1)
+    row_log_scale = torch.sum(torch.log(safe_row_scale), dim=-1)
+
+    # LU gives a stable magnitude for regular matrices, but its backward uses an
+    # inverse and is undefined on a singular branch.  Rank classification is
+    # deliberately outside autograd: no singular vectors or singular values are
+    # differentiated.  This also catches repeated rows that an LU determinant can
+    # report as a tiny nonzero number because of roundoff.  Replacing each inactive
+    # branch by identity prevents a zero upstream gradient from still entering a
+    # singular LU solve or an unnecessarily ill-conditioned polynomial.
+    with torch.no_grad():
+        finite_matrix = torch.isfinite(scaled_matrix).all(dim=(-2, -1))
+        probe_sign, _ = torch.linalg.slogdet(scaled_matrix)
+    eye = torch.eye(
+        matrix.shape[-1], dtype=matrix.dtype, device=matrix.device
+    ).expand_as(scaled_matrix)
+    with torch.no_grad():
+        rank_probe = torch.where(finite_matrix[..., None, None], scaled_matrix, eye)
+        exact_zero_row = (scaled_matrix == 0).all(dim=-1).any(dim=-1)
+        exact_zero_column = (scaled_matrix == 0).all(dim=-2).any(dim=-1)
+        exact_singular = (probe_sign == 0) | exact_zero_row | exact_zero_column
+        # Rank tolerances are useful for float64 repeated-row matrices, but the
+        # default float32 tolerance would incorrectly turn well-resolved small
+        # determinants in large systems into nodes.  For small float32 blocks,
+        # also recognize literal duplicate rows/columns without an SVD.
+        if matrix.dtype == torch.float64 and matrix.shape[-1] <= 64:
+            singular = finite_matrix & (
+                torch.linalg.matrix_rank(rank_probe) < matrix.shape[-1]
+            )
+        elif matrix.shape[-1] <= 16:
+            row_equal = (
+                scaled_matrix.unsqueeze(-3) == scaled_matrix.unsqueeze(-2)
+            ).all(dim=-1)
+            column_equal = (
+                scaled_matrix.transpose(-1, -2).unsqueeze(-3)
+                == scaled_matrix.transpose(-1, -2).unsqueeze(-2)
+            ).all(dim=-1)
+            duplicate = row_equal.triu(diagonal=1).any(dim=(-1, -2)) | column_equal.triu(
+                diagonal=1
+            ).any(dim=(-1, -2))
+            singular = finite_matrix & (exact_singular | duplicate)
+        else:
+            singular = finite_matrix & exact_singular
+    singular_matrix = torch.where(singular[..., None, None], scaled_matrix, eye)
+    regular_matrix = torch.where(singular[..., None, None], eye, scaled_matrix)
+
+    singular_determinant = _determinant_polynomial(singular_matrix)
+    # A numerically classified singular matrix represents an exact node in the
+    # floating-point model.  Force the forward value to zero while retaining the
+    # polynomial's cofactor and higher-order derivatives.
+    singular_determinant = singular_determinant - singular_determinant.detach()
+    regular_sign, regular_log_abs = torch.linalg.slogdet(regular_matrix)
+    determinant = torch.where(singular, singular_determinant, regular_sign)
+    log_scale = torch.where(
+        singular, row_log_scale, row_log_scale + regular_log_abs
     )
-    return normalized, torch.where(
-        valid, log_scale, torch.full_like(log_scale, -float("inf"))
-    )
+    return determinant, log_scale
 
 
 class FermiNet(nn.Module):
@@ -389,20 +435,20 @@ class FermiNet(nn.Module):
         batch_size = r.shape[0]
         d_up, d_down = self.forward_orbitals(r)
 
-        # 1. Preserve singular small-block derivatives and retain a log scale
-        # for large blocks before any raw determinant can underflow.
+        # 1. Division-free determinants retain derivatives at singular branches.
+        # Each determinant gets its own detached row-wise representation scale.
         if d_up is not None:
             det_up, log_scale_up = _scaled_determinant(d_up)
         else:
             det_up = torch.ones(batch_size, self.num_determinants, device=r.device, dtype=r.dtype)
-            log_scale_up = torch.zeros(batch_size, device=r.device, dtype=r.dtype)
+            log_scale_up = torch.zeros_like(det_up)
 
         # 2. 计算自旋向下块行列式的对数绝对值与符号
         if d_down is not None:
             det_down, log_scale_down = _scaled_determinant(d_down)
         else:
             det_down = torch.ones(batch_size, self.num_determinants, device=r.device, dtype=r.dtype)
-            log_scale_down = torch.zeros(batch_size, device=r.device, dtype=r.dtype)
+            log_scale_down = torch.zeros_like(det_down)
 
         # 3. Det_k = Det_up_k * Det_down_k.  Do not take a branch log here:
         # log(0) would discard the valid derivative of a zero determinant.
@@ -416,14 +462,19 @@ class FermiNet(nn.Module):
         w = self.det_weights.unsqueeze(0)  # (1, K)
         weight_scale = torch.amax(torch.abs(w).detach())
         weight_scale_safe = torch.where(weight_scale > 0, weight_scale, torch.ones_like(weight_scale))
-        summed = torch.sum((w / weight_scale_safe) * det_k, dim=1)
-        is_strictly_zero = torch.isneginf(log_det_scale) | (weight_scale == 0) | (summed == 0)
+        # Scale only after the up/down determinant product has been represented.
+        # Per-spin normalization would erase reciprocal scales such as
+        # (1e200 * 1e-200), incorrectly creating a wavefunction node.
+        common_log_scale = torch.amax(log_det_scale.detach(), dim=1, keepdim=True)
+        branch_scale = torch.exp(log_det_scale - common_log_scale)
+        summed = torch.sum((w / weight_scale_safe) * det_k * branch_scale, dim=1)
+        is_strictly_zero = (weight_scale == 0) | (summed == 0)
 
         sign_psi = torch.where(is_strictly_zero, torch.zeros_like(summed), torch.sign(summed))
         log_abs_psi = torch.where(
             is_strictly_zero,
             torch.full_like(summed, -float("inf")),
-            log_det_scale
+            common_log_scale.squeeze(1)
             + torch.log(weight_scale_safe)
             + torch.log(torch.abs(summed)),
         )
@@ -612,7 +663,7 @@ class FermiNet(nn.Module):
                     f"checkpoint has {charges.numel()} nuclear charges but {name} expects "
                     f"{envelope.num_nuclei}; construct a matching model before loading"
                 )
-            if envelope.tied:
+            if self.tie_nuclear_envelope:
                 _, expected_index = torch.unique(charges, sorted=True, return_inverse=True)
             else:
                 expected_index = torch.arange(envelope.num_nuclei, device=charges.device)

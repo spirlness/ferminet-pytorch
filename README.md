@@ -3,7 +3,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
 [![Python](https://img.shields.io/badge/Python-3.9+-3776ab.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-173%20Passed-brightgreen.svg)](#)
+[![Tests](https://img.shields.io/badge/Tests-197%20Passed-brightgreen.svg)](#)
 
 本项目提供了一个基于 **PyTorch 原生生态** 的模块化 **FermiNet (费米神经网络)** 研究原型，用于量子化学中多电子薛定谔方程的变分求解、数值实验与算法验证。
 
@@ -187,6 +187,15 @@ python train_vmc.py --epochs 50 --walkers 1024 --lr 1e-3 --rotation_invariant
 uv run python train_vmc.py --epochs 50 --walkers 1024 --lr 1e-3 --rotation_invariant
 ```
 
+有 CUDA 的环境会自动选择第一块 GPU；也可以显式指定设备。模型、体系、walker、行列式缩放和精确/JVP 拉普拉斯路径会保持在同一设备上：
+
+```bash
+uv run python train_vmc.py --device cuda --epochs 5 --walkers 256
+uv run python benchmark_compile.py
+```
+
+请使用与本机驱动匹配的 CUDA 版 PyTorch。没有 CUDA 的主机应显式使用 `--device cpu`，CUDA 回归会自动跳过；本项目不会把 CPU 运行结果冒充 GPU 验证。
+
 **训练输出指标通俗解读**：
 - `<E_raw>` (原始局域能均值)：示例 H₂ 运行中可能下降到约 $-1.17$ Ha；实际轨迹取决于几何、随机种子、采样和 Laplacian 方法；
 - `Var(E)` (能量方差)：零方差原理提供有用诊断，但有限样本下会波动，低方差本身不能单独证明已收敛到基态；
@@ -296,7 +305,7 @@ python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_di
 本项目包含 5 套覆盖核心物理性质、VMC 训练、链相关统计、阶段 2 求解器以及综合可视化的自动化测试：
 
 ```bash
-# 1. 一键运行全部 173 项单元测试：
+# 1. 一键运行全部 197 项单元测试：
 python -m unittest discover -s . -p "test_*.py" -v
 
 # 2. 或分别运行专项测试：
@@ -306,7 +315,7 @@ python -m unittest test_phase2.py     # 阶段 2 动能求解器与物理特征�
 python -m unittest test_visualize.py  # 综合可视化分析模块专项测试 (54 项)
 python -m unittest test_mcmc_stats.py # ESS、链相关 SEM 与 split-R-hat 测试 (4 项)
 ```
-当前基线为 **173 项测试通过**。测试覆盖实现性质与数值回归，但不能替代长时间、多种子、独立复评的科学收敛验证。（在 torch 早于 2.14.0 的环境中，`torch.compile` 相关的一项测试会显式跳过；详见 [AGENTS.md](AGENTS.md)。）
+当前基线为 **197 项测试通过，CUDA 回归在无 CUDA 主机上自动跳过**。测试覆盖实现性质与数值回归，但不能替代长时间、多种子、独立复评的科学收敛验证。（在 torch 早于 2.14.0 的环境中，`torch.compile` 相关的一项测试会显式跳过；详见 [AGENTS.md](AGENTS.md)。）
 
 ---
 

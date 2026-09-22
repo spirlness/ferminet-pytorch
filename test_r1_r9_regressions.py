@@ -12,8 +12,8 @@ import torch.nn as nn
 from features import ElectronFeatureEmbedding
 from hamiltonian import MolecularSystem, compute_local_energy
 from mcmc import MCMCSampler
-from model import FermiNet, _determinant_polynomial
-from train_vmc import evaluate_trained_model
+from model import FermiNet, _determinant_polynomial, _scaled_determinant
+from train_vmc import build_lih_system, evaluate_trained_model, train_vmc
 
 
 def _permutation_determinant(matrix: torch.Tensor) -> torch.Tensor:
@@ -105,6 +105,34 @@ class TestR2SingularDeterminants(unittest.TestCase):
         self.assertTrue(torch.isfinite(jvp).all())
         self.assertTrue(torch.allclose(value, mapped))
 
+    def test_scaled_general_determinant_handles_repeated_and_near_singular_rows(self) -> None:
+        for size in (5, 8):
+            with self.subTest(size=size, kind="repeated"):
+                matrix = torch.eye(size, dtype=torch.float64)
+                matrix[-1] = matrix[0]
+                matrix = matrix.reshape(1, 1, size, size).requires_grad_()
+
+                def reconstructed(value):
+                    mantissa, log_scale = _scaled_determinant(value)
+                    return mantissa * torch.exp(log_scale)
+
+                determinant = reconstructed(matrix)
+                gradient = torch.autograd.grad(determinant.sum(), matrix)[0]
+                tangent = torch.zeros_like(matrix)
+                tangent[..., -1, -1] = 1.0
+                _, directional = torch.func.jvp(reconstructed, (matrix.detach(),), (tangent,))
+                self.assertEqual(determinant.item(), 0.0)
+                self.assertAlmostEqual(gradient[0, 0, -1, -1].item(), 1.0, delta=1e-10)
+                self.assertAlmostEqual(directional.item(), 1.0, delta=1e-10)
+
+            with self.subTest(size=size, kind="near_singular"):
+                diagonal = torch.ones(size, dtype=torch.float64)
+                diagonal[-1] = 1e-12
+                matrix = torch.diag(diagonal).reshape(1, 1, size, size)
+                mantissa, log_scale = _scaled_determinant(matrix)
+                self.assertNotEqual(mantissa.item(), 0.0)
+                self.assertAlmostEqual(log_scale.item(), math.log(1e-12), delta=1e-12)
+
     def test_local_energy_solvers_remain_finite_when_one_branch_is_singular(self) -> None:
         system = MolecularSystem(
             torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float64),
@@ -131,6 +159,69 @@ class TestR2SingularDeterminants(unittest.TestCase):
         with self.assertRaisesRegex(FloatingPointError, "wavefunction node"):
             compute_local_energy(_ConstantLogWavefunction(float("-inf")), system, r)
 
+    def test_five_by_five_singular_model_branch_has_correct_third_order_derivatives(self) -> None:
+        model = FermiNet(
+            torch.zeros(1, 3, dtype=torch.float64),
+            torch.ones(1, dtype=torch.float64),
+            5,
+            0,
+            num_determinants=2,
+            hidden_dim_one=4,
+            hidden_dim_two=2,
+            num_layers=1,
+        ).double()
+
+        def orbitals(r):
+            x = r[:, 0, 0]
+            ones = torch.ones_like(x)
+            singular = torch.diag_embed(torch.stack((x, ones, ones, ones, ones), dim=-1))
+            regular = torch.eye(5, dtype=r.dtype, device=r.device).expand(r.shape[0], -1, -1)
+            return torch.stack((singular, regular), dim=1), None
+
+        r = torch.zeros(1, 5, 3, dtype=torch.float64, requires_grad=True)
+        with torch.no_grad():
+            model.det_weights.fill_(1.0)
+        with mock.patch.object(model, "forward_orbitals", side_effect=orbitals):
+            log_psi, sign = model.forward_log_psi(r)
+            first = torch.autograd.grad(log_psi.sum(), r, create_graph=True)[0]
+            second = torch.autograd.grad(first[0, 0, 0], r, create_graph=True)[0]
+            third = torch.autograd.grad(second[0, 0, 0], r)[0]
+
+        self.assertEqual(sign.item(), 1.0)
+        self.assertAlmostEqual(log_psi.item(), 0.0, delta=1e-12)
+        self.assertAlmostEqual(first[0, 0, 0].item(), 1.0, delta=1e-12)
+        self.assertAlmostEqual(second[0, 0, 0].item(), -1.0, delta=1e-12)
+        self.assertAlmostEqual(third[0, 0, 0].item(), 2.0, delta=1e-12)
+
+    def test_actual_singular_model_reaches_all_laplacian_solvers(self) -> None:
+        model = FermiNet(
+            torch.zeros(1, 3, dtype=torch.float64), torch.ones(1, dtype=torch.float64),
+            5, 0, num_determinants=2, hidden_dim_one=4, hidden_dim_two=2,
+            num_layers=1,
+        ).double()
+        with torch.no_grad():
+            model.det_weights.fill_(1.0)
+
+        def orbitals(r):
+            x = r[:, 0, 0]
+            ones = torch.ones_like(x)
+            singular = torch.diag_embed(torch.stack((x, ones, ones, ones, ones), dim=-1))
+            regular = torch.eye(5, dtype=r.dtype, device=r.device).expand(r.shape[0], -1, -1)
+            return torch.stack((singular, regular), dim=1), None
+
+        system = MolecularSystem(model.nuclear_coords, model.nuclear_charges, 5, 0)
+        for method in ("exact", "exact_jvp", "hutchinson"):
+            with self.subTest(method=method):
+                r = torch.zeros(2, 5, 3, dtype=torch.float64, requires_grad=True)
+                with mock.patch.object(model, "forward_orbitals", side_effect=orbitals):
+                    with mock.patch("hamiltonian.warnings.warn"):
+                        energy, kinetic, potential = compute_local_energy(
+                            model, system, r, create_graph=True, laplacian_method=method
+                        )
+                self.assertTrue(torch.isfinite(energy).all())
+                self.assertTrue(torch.isfinite(kinetic).all())
+                self.assertTrue(torch.isfinite(potential).all())
+
 
 class TestR4R5StateAndSystemGuards(unittest.TestCase):
     def _model(self, charges=(1.0, 3.0, 1.0), spins=(2, 1)) -> FermiNet:
@@ -153,6 +244,35 @@ class TestR4R5StateAndSystemGuards(unittest.TestCase):
         checkpoint["envelope_up.nucleus_group_index"] = torch.tensor([0, 0, 0])
         with self.assertRaisesRegex(RuntimeError, "conflicts"):
             self._model().load_state_dict(checkpoint)
+
+    def test_lih_checkpoint_round_trip_and_legacy_migration_preserve_output(self) -> None:
+        torch.manual_seed(941)
+        system = build_lih_system(dtype=torch.float64)
+        kwargs = dict(
+            num_determinants=2, hidden_dim_one=8, hidden_dim_two=4, num_layers=1
+        )
+        source = FermiNet(
+            system.nuclear_coords, system.nuclear_charges, 2, 2, **kwargs
+        ).double()
+        r = torch.randn(3, 4, 3, dtype=torch.float64)
+        expected = source.forward_log_psi(r)
+
+        for legacy in (False, True):
+            with self.subTest(legacy=legacy):
+                checkpoint = OrderedDict(source.state_dict())
+                if legacy:
+                    checkpoint.pop("envelope_up.nucleus_group_index")
+                    checkpoint.pop("envelope_down.nucleus_group_index")
+                receiver = FermiNet(
+                    system.nuclear_coords, system.nuclear_charges, 2, 2, **kwargs
+                ).double()
+                receiver.load_state_dict(checkpoint)
+                actual = receiver.forward_log_psi(r)
+                self.assertTrue(torch.equal(
+                    receiver.envelope_up.nucleus_group_index, torch.tensor([1, 0])
+                ))
+                self.assertTrue(torch.allclose(actual[0], expected[0], rtol=0.0, atol=0.0))
+                self.assertTrue(torch.equal(actual[1], expected[1]))
 
     def test_spin_mismatch_fails_before_sampling(self) -> None:
         model = self._model(spins=(2, 1))
@@ -271,6 +391,100 @@ class TestR6R9Behaviour(unittest.TestCase):
         with mock.patch("torch.randn_like", side_effect=lambda x: torch.ones_like(x)):
             self.assertEqual(sampler.step(), 1.0)
         self.assertTrue(torch.all(sampler.current_log_abs_psi == 0.0))
+
+    def test_small_and_large_orbital_scales_remain_finite(self) -> None:
+        model = FermiNet(
+            torch.zeros(1, 3, dtype=torch.float64), torch.ones(1, dtype=torch.float64),
+            4, 0, num_determinants=2, hidden_dim_one=4, hidden_dim_two=2,
+            num_layers=1,
+        ).double()
+        r = torch.ones(1, 4, 3, dtype=torch.float64)
+        for scale in (1e-100, 1e100):
+            with self.subTest(scale=scale):
+                matrices = (torch.eye(4, dtype=torch.float64) * scale).reshape(1, 1, 4, 4)
+                matrices = matrices.expand(1, 2, 4, 4)
+                with mock.patch.object(model, "forward_orbitals", return_value=(matrices, None)):
+                    with torch.no_grad():
+                        model.det_weights.fill_(1.0)
+                    log_psi, sign = model.forward_log_psi(r)
+                expected = 4.0 * math.log(scale) + math.log(2.0)
+                self.assertTrue(torch.isfinite(log_psi).all())
+                self.assertAlmostEqual(log_psi.item(), expected, delta=1e-10)
+                self.assertEqual(sign.item(), 1.0)
+
+    def test_opposite_spin_scales_are_combined_before_normalization(self) -> None:
+        model = FermiNet(
+            torch.zeros(1, 3, dtype=torch.float64), torch.ones(1, dtype=torch.float64),
+            1, 1, num_determinants=2, hidden_dim_one=4, hidden_dim_two=2,
+            num_layers=1,
+        ).double()
+        up = torch.tensor([1e200, 1e-200], dtype=torch.float64).reshape(1, 2, 1, 1)
+        down = torch.tensor([1e-200, 1e200], dtype=torch.float64).reshape(1, 2, 1, 1)
+        with mock.patch.object(model, "forward_orbitals", return_value=(up, down)):
+            with torch.no_grad():
+                model.det_weights.fill_(1.0)
+            log_psi, sign = model.forward_log_psi(torch.ones(1, 2, 3, dtype=torch.float64))
+        self.assertAlmostEqual(log_psi.item(), math.log(2.0), delta=1e-12)
+        self.assertEqual(sign.item(), 1.0)
+
+    def test_nonfinite_orbital_branch_reaches_sampler_guard(self) -> None:
+        model = FermiNet(
+            torch.zeros(1, 3, dtype=torch.float64), torch.ones(1, dtype=torch.float64),
+            5, 0, num_determinants=2, hidden_dim_one=4, hidden_dim_two=2,
+            num_layers=1,
+        ).double()
+        invalid = torch.diag(torch.tensor(
+            [float("nan"), 1.0, 1.0, 1.0, 1.0], dtype=torch.float64
+        ))
+        matrices = torch.stack((invalid, torch.eye(5, dtype=torch.float64))).unsqueeze(0)
+        system = MolecularSystem(model.nuclear_coords, model.nuclear_charges, 5, 0)
+        with mock.patch.object(model, "forward_orbitals", return_value=(matrices, None)):
+            with self.assertRaisesRegex(FloatingPointError, "NaN/\\+inf"):
+                MCMCSampler(model, system, num_walkers=1, dtype=torch.float64)
+
+    @unittest.skipUnless(torch.cuda.is_available(), "CUDA is not available")
+    def test_cuda_forward_third_derivative_and_sampler_cache(self) -> None:
+        device = torch.device("cuda")
+        model = FermiNet(
+            torch.zeros(1, 3, dtype=torch.float64, device=device),
+            torch.ones(1, dtype=torch.float64, device=device),
+            5, 0, num_determinants=2, hidden_dim_one=4, hidden_dim_two=2,
+            num_layers=1,
+        ).to(device=device, dtype=torch.float64)
+
+        def orbitals(r):
+            x = r[:, 0, 0]
+            ones = torch.ones_like(x)
+            singular = torch.diag_embed(torch.stack((x, ones, ones, ones, ones), dim=-1))
+            regular = torch.eye(5, dtype=r.dtype, device=r.device).expand(r.shape[0], -1, -1)
+            return torch.stack((singular, regular), dim=1), None
+
+        r = torch.zeros(2, 5, 3, dtype=torch.float64, device=device, requires_grad=True)
+        system = MolecularSystem(model.nuclear_coords, model.nuclear_charges, 5, 0)
+        with torch.no_grad():
+            model.det_weights.fill_(1.0)
+        with mock.patch.object(model, "forward_orbitals", side_effect=orbitals):
+            log_psi, _ = model.forward_log_psi(r)
+            first = torch.autograd.grad(log_psi.sum(), r, create_graph=True)[0]
+            second = torch.autograd.grad(first[:, 0, 0].sum(), r, create_graph=True)[0]
+            third = torch.autograd.grad(second[:, 0, 0].sum(), r)[0]
+            energy, _, _ = compute_local_energy(
+                model, system, r, create_graph=True, laplacian_method="exact_jvp"
+            )
+            sampler = MCMCSampler(
+                model, system, num_walkers=2, initial_walkers=r.detach(),
+                device=device, dtype=torch.float64,
+            )
+        self.assertEqual(log_psi.device.type, "cuda")
+        self.assertTrue(torch.allclose(first[:, 0, 0], torch.ones(2, device=device)))
+        self.assertTrue(torch.allclose(third[:, 0, 0], torch.full((2,), 2.0, device=device)))
+        self.assertTrue(torch.isfinite(energy).all())
+        self.assertEqual(sampler.current_log_abs_psi.device.type, "cuda")
+
+    @unittest.skipIf(torch.cuda.is_available(), "only checks the unavailable-device error")
+    def test_explicit_cuda_request_fails_with_actionable_error(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "CUDA was requested"):
+            train_vmc(num_epochs=0, device="cuda", verbose=False)
 
 
 if __name__ == "__main__":
