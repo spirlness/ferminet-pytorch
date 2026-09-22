@@ -344,6 +344,8 @@ test_default_compile_disabled_and_mode
 
 **结果：全套件绿灯**（`OK (skipped=1)`），跳过项带可读原因，不再是一行红色错误。
 
+**根因可以完全规避，但手段在环境层。** 实测确认：该失败源于 `locale.getpreferredencoding()` 为 `cp936`；设置 `PYTHONUTF8=1` 后它变为 `utf-8`，`compile_model()` **正常工作**，该测试**通过**（不再跳过），全套件 `OK`（**零跳过**）。根因在 torch 侧——inductor 读取 CuteDSL 模板时未指定 `encoding='utf-8'`——因此无法从本仓库修复；且 `PYTHONUTF8` 必须在解释器启动前生效，代码层也无补救。规避方法与原因已写入 `AGENTS.md` 的构建/测试一节。
+
 ---
 
 ## 四、测试覆盖缺口与已补回归测试

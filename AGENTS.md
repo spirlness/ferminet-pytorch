@@ -30,6 +30,12 @@ Documentation is in `README.md` and `BEGINNER_GUIDE.md`. Reviewed audit reports,
 
 GPU-heavy benchmarks are optional; use `uv run python benchmark_100_atoms.py --double --quick` for the reduced path.
 
+**Windows / non-UTF-8 locales:** set `PYTHONUTF8=1` before running anything that touches `torch.compile` (including the full test suite). Torch's inductor reads its CuteDSL kernel templates without specifying an encoding, so on a machine whose locale default is `cp936` the import fails with `UnicodeDecodeError: 'gbk' codec can't decode byte 0x94`. The bug is torch's and cannot be fixed from this repository — `PYTHONUTF8` has to be set before the interpreter starts. With it set, the whole suite passes with no skips; without it, `test_compile_model_disables_internal_compile` skips itself with that reason and `compile_model()` is unusable:
+
+```bash
+PYTHONUTF8=1 uv run python -m unittest discover -s . -p "test_*.py"
+```
+
 ## Coding Style & Naming Conventions
 
 Use Python 3.9+ and four-space indentation. Follow the existing PEP 8-like layout: `snake_case` for functions, variables, and modules; `PascalCase` for classes; and `UPPER_CASE` for constants. Add type annotations to public APIs and document tensor shapes, dtypes, and physical units where relevant. Preserve the established `(B, N, 3)` electron-coordinate convention. No formatter or linter is configured, so keep imports grouped, lines readable, and changes narrowly scoped.
