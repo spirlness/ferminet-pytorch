@@ -30,11 +30,19 @@ Documentation is in `README.md` and `BEGINNER_GUIDE.md`. Reviewed audit reports,
 
 GPU-heavy benchmarks are optional; use `uv run python benchmark_100_atoms.py --double --quick` for the reduced path.
 
-**Windows / non-UTF-8 locales:** set `PYTHONUTF8=1` before running anything that touches `torch.compile` (including the full test suite). Torch's inductor reads its CuteDSL kernel templates without specifying an encoding, so on a machine whose locale default is `cp936` the import fails with `UnicodeDecodeError: 'gbk' codec can't decode byte 0x94`. The bug is torch's and cannot be fixed from this repository — `PYTHONUTF8` has to be set before the interpreter starts. With it set, the whole suite passes with no skips; without it, `test_compile_model_disables_internal_compile` skips itself with that reason and `compile_model()` is unusable:
+**Windows / non-UTF-8 locales and `torch.compile`:** if importing the inductor backend fails with `UnicodeDecodeError: 'gbk' codec can't decode byte 0x94`, your torch predates the fix that makes inductor read its CuteDSL templates with `encoding="utf-8"`. Torch 2.14.0 (the version pinned in `uv.lock`) has that fix; 2.13.0 does not. Setting `PYTHONUTF8=1` works around it on older torch — the variable only takes effect before the interpreter starts, so it cannot be set from code:
 
 ```bash
-PYTHONUTF8=1 uv run python -m unittest discover -s . -p "test_*.py"
+PYTHONUTF8=1 python -m unittest test_ferminet.py   # bash / Git Bash
 ```
+```powershell
+$env:PYTHONUTF8='1'; python -m unittest test_ferminet.py   # PowerShell
+```
+```cmd
+set PYTHONUTF8=1 && python -m unittest test_ferminet.py   :: cmd.exe
+```
+
+This affects only the `torch.compile` path. With the pinned environment the suite is green either way; on older torch the single test that exercises `compile_model()` skips itself with that reason.
 
 ## Coding Style & Naming Conventions
 

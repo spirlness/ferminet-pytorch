@@ -306,7 +306,7 @@ python -m unittest test_phase2.py     # 阶段 2 动能求解器与物理特征�
 python -m unittest test_visualize.py  # 综合可视化分析模块专项测试 (54 项)
 python -m unittest test_mcmc_stats.py # ESS、链相关 SEM 与 split-R-hat 测试 (4 项)
 ```
-当前基线为 **173 项测试通过**（1 项按环境能力显式跳过）。测试覆盖实现性质与数值回归，但不能替代长时间、多种子、独立复评的科学收敛验证。
+当前基线为 **173 项测试通过**。测试覆盖实现性质与数值回归，但不能替代长时间、多种子、独立复评的科学收敛验证。（在 torch 早于 2.14.0 的环境中，`torch.compile` 相关的一项测试会显式跳过；详见 [AGENTS.md](AGENTS.md)。）
 
 ---
 

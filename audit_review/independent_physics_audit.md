@@ -342,9 +342,23 @@ test_default_compile_disabled_and_mode
 - `test_default_compile_flags` — 只检查标志位与 `enable/disable_compile` 链式行为，**任何环境都通过**；
 - `test_compile_model_disables_internal_compile` — 调用 `compile_model()`，仅捕获 `UnicodeDecodeError` 与 `ImportError` 这两类**能力/环境**异常并 `skipTest` 并附明确原因；其他异常照常失败，因此真实回归不会被跳过掩盖。
 
-**结果：全套件绿灯**（`OK (skipped=1)`），跳过项带可读原因，不再是一行红色错误。
+**结果：文档所述工作流下全套件绿灯**——`uv run python -m unittest discover -s . -p "test_*.py"` 给出 **173 项 `OK`，零跳过**。在 torch 较旧的环境（如 2.13.0）中，`test_compile_model_disables_internal_compile` 会带可读原因显式跳过，同样不再是红色错误。详见下方更正。
 
-**根因可以完全规避，但手段在环境层。** 实测确认：该失败源于 `locale.getpreferredencoding()` 为 `cp936`；设置 `PYTHONUTF8=1` 后它变为 `utf-8`，`compile_model()` **正常工作**，该测试**通过**（不再跳过），全套件 `OK`（**零跳过**）。根因在 torch 侧——inductor 读取 CuteDSL 模板时未指定 `encoding='utf-8'`——因此无法从本仓库修复；且 `PYTHONUTF8` 必须在解释器启动前生效，代码层也无补救。规避方法与原因已写入 `AGENTS.md` 的构建/测试一节。
+**根因与规避（本节初稿有误，现已更正）。**
+
+初稿把该失败归因于「torch 读模板未指定编码」，并声称「设 `PYTHONUTF8=1` 后全套件零跳过」。**这两条都是在错误的解释器里测得的**（系统 python，而非文档所述的 `uv` 环境），已更正：
+
+| | 系统 python | `uv run`（`.venv`，`AGENTS.md` 所用） |
+|---|---|---|
+| torch | 2.13.0+cpu | **2.14.0**（`uv.lock` 固定） |
+| numpy | 2.5.2 | 修复前**缺失** |
+| 套件 | 173 项 `OK (skipped=1)` | 修复前 **117 项 `FAILED`**（`test_visualize.py:16` 导入 numpy 失败） |
+
+- **编码问题只存在于旧版 torch。** torch 2.14.0 的 `_inductor/utils.py` 中 `load_template` 已写成 `open(path, encoding="utf-8")`；2.13.0 则是裸 `open(...)`，在 `cp936` 下解码失败（错误位置 618 可在 2.13.0 精确复现）。因此 `PYTHONUTF8=1` 对旧版是有效规避，对 `uv.lock` 固定的 2.14.0 则**无关**——那里该测试本就通过，不跳过。
+- **真正的阻塞是依赖声明缺失。** `visualize.py` 与 `test_visualize.py` 都导入 `numpy` 与 `matplotlib`，而 `pyproject.toml` 只声明了 `torch`；于是 `uv sync` 产出的环境里可视化模块与约 56 项测试**无法导入**，套件在文档所述工作流下从未真正全绿——先前「1 项失败」的记录掩盖了这一点。已在 `pyproject.toml` 补声明两个依赖；`uv sync` 后 `uv run python -m unittest discover -s . -p "test_*.py"` 给出 **173 项 `OK`、零跳过**。
+- 规避方法、适用版本与 PowerShell / cmd 语法已写入 `AGENTS.md`。
+
+**这个更正本身值得留在审计记录里。** 它说明一条通用教训：**测量环境必须与文档面向的环境一致**——同一段命令在系统解释器与 `uv` 虚拟环境中会给出不同结论（torch 版本不同、依赖有无不同），据前者写后者会得到看似实测、实则不可复现的结论。
 
 ---
 
@@ -364,7 +378,7 @@ test_default_compile_disabled_and_mode
 
 **附带修复。** `test_mcmc_stats.py` 原先缺少 `sys.path` 引导，依赖其他测试模块在 discovery 时先修补路径，独立运行（`python -m unittest test_mcmc_stats`）会 `ModuleNotFoundError`。已补齐引导，与 `test_ferminet.py` / `test_vmc.py` / `test_phase2.py` 保持一致。
 
-**当前套件状态。** 173 项，**全绿**（`OK (skipped=1)`）。跳过项是 `test_compile_model_disables_internal_compile`——D12 的 GBK/inductor 环境问题，现按能力不可用显式跳过并附原因，不再是红色错误。D7–D12 的修复新增 `test_robustness_guards.py`（12 项），详见 §3.7–§3.12。
+**当前套件状态。** 文档所述工作流下 **173 项，全绿、零跳过**（`uv run python -m unittest discover -s . -p "test_*.py"`，torch 2.14.0）。在 torch 较旧的环境（如 2.13.0）中为 `OK (skipped=1)`，跳过项是 `test_compile_model_disables_internal_compile`，按能力不可用显式跳过并附原因。D7–D12 的修复新增 `test_robustness_guards.py`（12 项），详见 §3.7–§3.12。
 
 ---
 
