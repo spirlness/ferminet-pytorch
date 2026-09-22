@@ -165,8 +165,14 @@ class MCMCSampler:
         """
         with torch.no_grad():
             log_abs_psi, _ = self.model.forward_log_psi(self.walkers)
-            # 处理可能的负无穷或非法非数
-            log_abs_psi = torch.nan_to_num(log_abs_psi, nan=-1e20, neginf=-1e20)
+            invalid = torch.isnan(log_abs_psi) | torch.isposinf(log_abs_psi)
+            if invalid.any():
+                raise FloatingPointError(
+                    f"current walker log|Psi| contains {int(invalid.sum())} NaN/+inf values; "
+                    "cache was not updated"
+                )
+            # -inf is a valid nodal value.  Retaining it lets a finite proposal
+            # leave the node with unit Metropolis acceptance probability.
             self.current_log_abs_psi = log_abs_psi.clone().detach()
         return self.current_log_abs_psi
 

@@ -63,8 +63,8 @@ class TestFermiNet(unittest.TestCase):
         r = torch.randn(self.batch_size, self.total_electrons, 3)
         num_nuclei = self.nuclear_coords.shape[0]
 
-        # 默认旋转不变模式: 单电子流每核 1 维 [d_{iI}]，双电子流 1 维 [d_{ij}]
-        invariant = ElectronFeatureEmbedding()
+        # 显式纯距离模式: 单电子流每核 1 维 [d_{iI}]，双电子流 1 维 [d_{ij}]
+        invariant = ElectronFeatureEmbedding(rotation_invariant=True)
         h1, h2 = invariant(r, self.nuclear_coords)
         self.assertEqual(
             h1.shape, (self.batch_size, self.total_electrons, 1 * num_nuclei)
@@ -74,9 +74,9 @@ class TestFermiNet(unittest.TestCase):
             (self.batch_size, self.total_electrons, self.total_electrons, 1),
         )
 
-        # 旧笛卡尔模式: 每核 4 维 [r_{iI}, d_{iI}]，双电子流 4 维
-        legacy = ElectronFeatureEmbedding(rotation_invariant=False)
-        h1_legacy, h2_legacy = legacy(r, self.nuclear_coords)
+        # 公共默认的笛卡尔模式: 每核 4 维 [r_{iI}, d_{iI}]，双电子流 4 维
+        cartesian = ElectronFeatureEmbedding()
+        h1_legacy, h2_legacy = cartesian(r, self.nuclear_coords)
         self.assertEqual(
             h1_legacy.shape, (self.batch_size, self.total_electrons, 4 * num_nuclei)
         )
@@ -508,10 +508,8 @@ class TestFermiNet(unittest.TestCase):
         self.assertTrue(torch.all(sign_det_swap == -sign_det_orig))
         self.assertTrue(torch.allclose(log_det_orig, log_det_swap, rtol=1e-4, atol=1e-5))
 
-    def test_underflow_warning_on_scalar_forward(self) -> None:
-        """
-        验证当标量波函数幅值浮点下溢为 0.0 时，模型自动产生友好警告提示改用 forward_log_psi。
-        """
+    def test_large_float32_underflow_keeps_finite_log_wavefunction(self) -> None:
+        """R8: scalar underflow must not turn a nonzero state into a node."""
         # 针对 50 电子大体系，单精度下乘积波函数幅值约为 exp(-200) 发生真实物理浮点下溢
         coords = torch.zeros(50, 3, dtype=torch.float32)
         charges = torch.ones(50, dtype=torch.float32)
@@ -529,15 +527,14 @@ class TestFermiNet(unittest.TestCase):
             )
 
         r = torch.randn(2, 50, 3, dtype=torch.float32)
-        with warnings.catch_warnings(record=True) as w:
+        log_abs, sign = model.forward_log_psi(r)
+        self.assertTrue(torch.all(torch.isfinite(log_abs)))
+        self.assertTrue(torch.all(sign != 0.0))
+        with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
             psi = model(r)
-            self.assertTrue(torch.all(psi == 0.0))
-            warning_msgs = [str(item.message) for item in w if issubclass(item.category, UserWarning)]
-            self.assertTrue(
-                any("下溢" in msg or "forward_log_psi" in msg for msg in warning_msgs),
-                f"标量下溢为 0.0 时未发出引导使用 forward_log_psi 的警告: 捕获到的警告列表: {warning_msgs}",
-            )
+        self.assertTrue(torch.all(psi == 0.0))
+        self.assertTrue(any("下溢" in str(item.message) for item in caught))
 
     def test_benchmark_compile_helpers(self) -> None:
         """

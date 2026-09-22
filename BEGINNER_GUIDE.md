@@ -248,13 +248,13 @@ $$\phi_j(r_i; \{r_{\setminus i}\})$$
 #### 物理不变性原理 (Physical Invariance)
 如果我们将整个分子在空间中整体平移，分子的内部物理性质（能量、分子键长、相互作用）不应改变。**旋转同样应保持物理等价**——哈密顿量本身是旋转不变的，因此基态波函数也必须满足这一点。
 
-做法有两种：**只用旋转不变量**，或者引入专门的 SO(3)/E(3) 等变结构。本项目采用前者：默认 `rotation_invariant=True` 时，特征中**不含任何笛卡尔位移向量**，只由标量不变量构成，因此整体旋转下前向计算**逐位相同**（实测 $\Delta \log|\Psi| = 0$，不是"近似很小"而是精确为零）。
+做法有两种：**只用旋转不变量**，或者引入专门的 SO(3)/E(3) 等变结构。本项目的公共默认保留相对笛卡尔位移，以表达一般空间态；它保持平移不变，但不保证旋转不变。需要纯距离历史对照时，显式传入 `rotation_invariant=True`，此时特征中**不含任何笛卡尔位移向量**，整体旋转下前向计算逐位相同。
 
 对本仓库的体系（H2、LiH、H100 链）全部是**线性分子**，到各原子核的距离已经完整确定了电子在分子标架下的位置（轴向坐标 + 垂直距离），所以这个特征集**不损失表达力**——H2 收敛对照：不变模式 $-1.17397$ Ha vs 笛卡尔模式 $-1.17416$ Ha，差异落在统计误差之内。
 
 如果直接把绝对坐标丢给 MLP，神经网络必须死记硬背每个坐标位置，泛化能力极差。
 
-因此，FermiNet 提取两类**相对几何特征**。默认（旋转不变）模式下：
+因此，FermiNet 提取两类**相对几何特征**。显式纯距离（旋转不变）模式下：
 1. **单电子-核几何特征 ($h_i^0$)**：
    - 相对欧氏距离：$d_{iI} = \sqrt{\operatorname{clamp}(\|r_i - R_I\|^2,\ \min=\epsilon)}$（1 维，旋转不变）
    - 原子核电荷：$Z_I$（1 维标度，标识当前原子核的元素种类）
@@ -263,7 +263,7 @@ $$\phi_j(r_i; \{r_{\setminus i}\})$$
    - 相对欧氏距离：$d_{ij} = \sqrt{\operatorname{clamp}(\|r_i - r_j\|^2,\ \min=\epsilon)}$（1 维）
    - 即 **1 维**特征。
 
-> **另一种模式（`rotation_invariant=False`，仅供复现与消融）**：额外拼接笛卡尔位移向量——单电子流每核 5 维 $[r_{iI}, d_{iI}, Z_I]$（不注入电荷时 4 维），双电子流 4 维 $[r_{ij}, d_{ij}]$。方向信息更丰富，但**不具备旋转不变性**（实测整体旋转使 $\Delta\log|\Psi| = 2.22$）。该模式为复现历史结果保留，**不得**据此作任何"等变"声明。
+> **默认模式（`rotation_invariant=False`）**：额外拼接笛卡尔位移向量——单电子流每核 5 维 $[r_{iI}, d_{iI}, Z_I]$（不注入电荷时 4 维），双电子流 4 维 $[r_{ij}, d_{ij}]$。方向信息更丰富，但**不具备旋转不变性**。它不自动保证特定角动量、宇称或纯总自旋态，也不构成基态收敛证明。
 
 > **为什么用 `clamp` 而不是 $\sqrt{r^2 + \epsilon}$？**
 > 两者都避免 $r = 0$ 处梯度为 `NaN`，但代价不同。加性 $\epsilon$ 在**每一个**距离上都引入相对偏差 $\epsilon / (2r^2)$，处处不为零；而 `clamp(r², min=ε)` 在**所有** $r^2 \ge \epsilon$ 处是恒等变换，因此距离与未软化时**逐位相同**，偏置精确为零。只有 $r^2 < \epsilon$ 时距离才被限制为 $\sqrt{\epsilon}$，以保证重合点的数值稳定。默认 $\epsilon = 10^{-24}$，软化半径仅 $10^{-12}$ Bohr。
@@ -480,7 +480,7 @@ loss.backward()
 
 | 源码文件 | 核心职责 | 主要类 / 函数 | 输入与输出 |
 | :--- | :--- | :--- | :--- |
-| [`features.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/features.py) | 相对几何特征嵌入 | `ElectronFeatureEmbedding` | 输入电子坐标 `(B, N, 3)` 与核坐标/电荷；默认输出旋转不变的单电子特征 `(B, N, 2M)` 与双电子特征 `(B, N, N, 1)`；`rotation_invariant=False` 时为 `(B, N, 5M)` / `(B, N, N, 4)` |
+| [`features.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/features.py) | 相对几何特征嵌入 | `ElectronFeatureEmbedding` | 输入电子坐标 `(B, N, 3)` 与核坐标/电荷；默认输出包含方向信息的笛卡尔特征 `(B, N, 5M)` / `(B, N, N, 4)`；`rotation_invariant=True` 时为严格旋转不变的 `(B, N, 2M)` / `(B, N, N, 1)` |
 | [`layers.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/layers.py) | 自旋分流前馈交互 | `FermiInteractionLayer` | 输入单/双电子流；按自旋分别平均池化交互，输出更新后的表征 |
 | [`envelope.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/envelope.py) | 束缚态指数衰减包络 | `NuclearEnvelope` | 保证波函数在远离核时指数衰减；支持各向同性标量与各向异性三维主轴度规 |
 | [`model.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/model.py) | FermiNet 主干网络 | `FermiNet` | 组装 Backflow 轨道，调用 `slogdet` 分解计算多行列式对数波函数 `log|Psi|` 与符号 `sign` |
@@ -589,9 +589,9 @@ uv run python example_h2.py
 
 ```bash
 # 启动 50 轮训练，使用 1024 个采样 Walkers
-python train_vmc.py --epochs 50 --walkers 1024 --lr 1e-3
+python train_vmc.py --epochs 50 --walkers 1024 --lr 1e-3 --rotation_invariant
 # 或使用 uv 运行：
-uv run python train_vmc.py --epochs 50 --walkers 1024 --lr 1e-3
+uv run python train_vmc.py --epochs 50 --walkers 1024 --lr 1e-3 --rotation_invariant
 ```
 
 **训练实时输出展示**：
@@ -632,9 +632,9 @@ python train_vmc.py --epochs 50 --walkers 256 \
 这里验证了阶段 2 的核电荷注入与各向异性包络能力；Hutchinson 是否降低端到端训练时间，应结合具体硬件和误差目标单独测量：
 
 ```bash
-python train_vmc.py --system lih --laplacian_method hutchinson --epochs 30 --walkers 512
+python train_vmc.py --system lih --laplacian_method hutchinson --epochs 30 --walkers 512 --rotation_invariant
 # 或使用 uv 运行：
-uv run python train_vmc.py --system lih --laplacian_method hutchinson --epochs 30 --walkers 512
+uv run python train_vmc.py --system lih --laplacian_method hutchinson --epochs 30 --walkers 512 --rotation_invariant
 ```
 只有核电荷、自旋电子数与核间距 `3.015 Bohr` 同时匹配登记记录时，才会显示 $\approx -8.070$ Hartree 参考线；短训练只能检查链路和趋势。
 

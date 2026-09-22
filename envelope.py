@@ -98,9 +98,9 @@ class NuclearEnvelope(nn.Module):
             self.num_groups = num_nuclei
             group_index = torch.arange(num_nuclei, dtype=torch.long)
 
-        # persistent=False 的整数 buffer: 随 .to() 迁移 (整数 buffer 不会被 dtype cast)、
-        # 不进 state_dict，旧 checkpoint 仍可加载；每次构造时由电荷确定性重建。
-        self.register_buffer("nucleus_group_index", group_index, persistent=False)
+        # 分组决定参数如何映射回核轴，属于模型物理状态，必须进 checkpoint。
+        # FermiNet.load_state_dict 对缺少该 buffer 的旧 checkpoint 做受控迁移。
+        self.register_buffer("nucleus_group_index", group_index)
         # tied: 是否存在实际的参数共享 (同电荷核多于一个)
         self.tied = self.num_groups < num_nuclei
 

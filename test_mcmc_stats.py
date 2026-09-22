@@ -93,23 +93,44 @@ class TestMCMCStatistics(unittest.TestCase):
             delta=0.01,
         )
 
-    def test_ar1_tau_int_is_underestimated_on_short_chains_known_limitation(self) -> None:
-        """D1 已知限制：默认 evaluation_steps 量级的链长下 tau_int 被系统性低估。
-
-        rho=0.95 的真实 tau_int = 19.5。Geyer 初始正序列在样本不足时过早截断，
-        导致自相关被低估、ESS 被高估、误差棒偏窄。本测试固定当前（已知不理想）行为；
-        若将来修复短链偏差，应改为更严格的断言。
-        """
+    def test_short_chain_is_unresolved_before_positive_rho_zero_pair_is_trusted(self) -> None:
+        """R1: a positive (rho_0, rho_1) pair cannot certify a short chain."""
         rho = 0.95
         expected_tau = _true_tau_int(rho)
-        for time, max_fraction in ((32, 0.30), (128, 0.70)):
+        for time, max_fraction in ((32, None), (128, 0.70)):
             with self.subTest(time=time):
-                stats = estimate_mcmc_statistics(
-                    _ar1_chains(time=time, walkers=256, rho=rho, seed=0)
-                )
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", UserWarning)
+                    stats = estimate_mcmc_statistics(_ar1_chains(time=time, walkers=256, rho=rho, seed=0))
+                if max_fraction is None:
+                    self.assertEqual(stats["autocorrelation_status"], "unresolved")
+                    self.assertTrue(math.isnan(stats["tau_int"]))
+                    continue
                 self.assertLess(stats["tau_int"], max_fraction * expected_tau)
                 # ESS 相应被高估：远高于真实比值 1/(1+2*tau)
                 self.assertGreater(stats["ess"] / (time * 256), 1.5 / (1.0 + 2.0 * expected_tau))
+
+    def test_mixed_reversible_modes_use_rho_zero_first_geyer_pair(self) -> None:
+        """R1 regression: mixed positive/negative modes have g=5.0556 analytically."""
+        positive, negative = 0.8, -0.5
+        target_g = 5.0556
+        weight = (target_g - (1 + negative) / (1 - negative)) / (
+            (1 + positive) / (1 - positive) - (1 + negative) / (1 - negative)
+        )
+        generator = torch.Generator().manual_seed(917)
+        time, walkers, burn_in = 16000, 16, 1000
+        def ar1(rho: float) -> torch.Tensor:
+            noise = (1.0 - rho ** 2) ** 0.5 * torch.randn(
+                time + burn_in, walkers, generator=generator, dtype=torch.float64
+            )
+            values = torch.zeros_like(noise)
+            for index in range(1, time + burn_in):
+                values[index] = rho * values[index - 1] + noise[index]
+            return values[burn_in:]
+        chains = (weight ** 0.5) * ar1(positive) + ((1 - weight) ** 0.5) * ar1(negative)
+        stats = estimate_mcmc_statistics(chains)
+        self.assertEqual(stats["autocorrelation_status"], "ok")
+        self.assertAlmostEqual(stats["statistical_inefficiency"], target_g, delta=0.1 * target_g)
 
     def test_unresolvable_autocorrelation_is_reported_as_nan_not_full_efficiency(self) -> None:
         """D1 已修复：链长不足时必须显式报告无法解析，而不是静默返回 ESS = N。

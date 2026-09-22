@@ -67,6 +67,7 @@ def setup_benchmark_system(num_atoms: int = 10, spacing: float = 1.8, device: Op
         nuclear_charges=system.nuclear_charges,
         n_up=system.n_up,
         n_down=system.n_down,
+        rotation_invariant=True,
         num_determinants=8,
         hidden_dim_one=64,
         hidden_dim_two=16,

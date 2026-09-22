@@ -119,6 +119,7 @@ def run_benchmark(
         nuclear_charges=system.nuclear_charges,
         n_up=system.n_up,
         n_down=system.n_down,
+        rotation_invariant=True,
         num_determinants=num_determinants,
         hidden_dim_one=hidden_dim_one,
         hidden_dim_two=hidden_dim_two,

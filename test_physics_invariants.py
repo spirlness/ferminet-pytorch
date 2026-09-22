@@ -28,7 +28,8 @@ from ferminet_pytorch.loss import vmc_surrogate_loss
 
 def _build_model(seed: int = 3, n_up: int = 1, n_down: int = 1,
                  num_layers: int = 2, hidden_dim_one: int = 16,
-                 hidden_dim_two: int = 8, num_determinants: int = 3) -> FermiNet:
+                 hidden_dim_two: int = 8, num_determinants: int = 3,
+                 rotation_invariant: bool = False) -> FermiNet:
     """构造双原子 H2 几何下的双精度小模型，随机种子固定以保证可复现。"""
     torch.manual_seed(seed)
     coords = torch.tensor([[-0.7, 0.0, 0.0], [0.7, 0.0, 0.0]], dtype=torch.float64)
@@ -42,6 +43,7 @@ def _build_model(seed: int = 3, n_up: int = 1, n_down: int = 1,
         hidden_dim_one=hidden_dim_one,
         hidden_dim_two=hidden_dim_two,
         num_layers=num_layers,
+        rotation_invariant=rotation_invariant,
     ).double()
 
 
@@ -96,22 +98,23 @@ class TestWavefunctionSymmetry(unittest.TestCase):
     def test_rotation_invariance_holds(self) -> None:
         """D4 修复：核与电子同时旋转时 log|Psi| 必须不变。
 
-        机制：默认 `rotation_invariant=True` 时，特征只由标量不变量构成
+        机制：显式 `rotation_invariant=True` 时，特征只由标量不变量构成
         (电子-核距离 d_{iI}、电子-电子距离 d_{ij}、核电荷 Z_I)，不含任何笛卡尔
         位移向量，因此整个前向计算在整体旋转下逐位相同——不是"近似不变"，是精确不变。
         对本仓库的线性分子，到各核的距离已完整确定电子在分子标架下的位置
         (轴向 + 垂直距离)，故该特征集不损失表达力 (H2 收敛对照见提交信息)。
         """
+        invariant_model = _build_model(seed=3, rotation_invariant=True)
         rotation = torch.tensor(
             [[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], dtype=torch.float64
         )
         rotated = _clone_with_geometry(
-            self.model,
-            self.model.nuclear_coords @ rotation.T,
-            self.model.nuclear_charges,
+            invariant_model,
+            invariant_model.nuclear_coords @ rotation.T,
+            invariant_model.nuclear_charges,
         )
         with torch.no_grad():
-            base, _ = self.model.forward_log_psi(self.r)
+            base, _ = invariant_model.forward_log_psi(self.r)
             turned, _ = rotated.forward_log_psi(torch.einsum("ij,bnj->bni", rotation, self.r))
         self.assertLess(float((base - turned).abs().max()), 1e-12)
 

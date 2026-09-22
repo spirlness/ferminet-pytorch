@@ -46,8 +46,8 @@ class TestPhase2Features(unittest.TestCase):
         coords = torch.tensor([[0.0, 0.0, -1.0], [0.0, 0.0, 1.0]])
         charges = torch.tensor([3.0, 1.0])
 
-        # A. 默认旋转不变模式: 每核 [d_{iI}, Z_I] -> 2 * M，双电子流 1 维
-        invariant = ElectronFeatureEmbedding()
+        # A. 显式旋转不变模式: 每核 [d_{iI}, Z_I] -> 2 * M，双电子流 1 维
+        invariant = ElectronFeatureEmbedding(rotation_invariant=True)
         h1_inv, h2_inv = invariant(r, coords, charges)
         self.assertEqual(h1_inv.shape, (b, n, 2 * m))
         self.assertEqual(h2_inv.shape, (b, n, n, 1))
@@ -91,7 +91,7 @@ class TestPhase2Features(unittest.TestCase):
         self.assertTrue(torch.allclose(h1_1d, h1_row))
 
         # 旋转不变模式下同样接受三种形状
-        invariant = ElectronFeatureEmbedding()
+        invariant = ElectronFeatureEmbedding(rotation_invariant=True)
         h1_inv, _ = invariant(r, coords, torch.tensor([[3.0, 1.0]]))
         self.assertEqual(h1_inv.shape, (b, n, 2 * m))
 
@@ -497,6 +497,7 @@ class TestPhase2Features(unittest.TestCase):
             hidden_dim_two=8,
             num_layers=1,
             use_nuclear_charges=True,
+            rotation_invariant=True,
         )
 
         res = train_vmc(
@@ -538,6 +539,7 @@ class TestPhase2Features(unittest.TestCase):
             hidden_dim_two=8,
             num_layers=1,
             use_nuclear_charges=True,
+            rotation_invariant=True,
         )
         model100.disable_compile()
 

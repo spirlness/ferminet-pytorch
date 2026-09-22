@@ -52,9 +52,16 @@ def _statistical_inefficiency(chains: torch.Tensor) -> Tuple[float, str]:
     time = int(chains.shape[0])
     if rho.numel() < 3:
         return float("nan"), "insufficient_samples"
+    # The first pair contains rho_0=1, so a positive value alone cannot show
+    # that a short chain has resolved its autocorrelation scale.
+    if time < MIN_TIME_FOR_AUTOCORRELATION:
+        return float("nan"), "unresolved"
 
+    # Geyer's sequence is Gamma_k = rho_(2k) + rho_(2k+1), hence the
+    # first pair is (rho_0 + rho_1), not (rho_1 + rho_2). Starting at lag
+    # one invalidates the positivity theorem for reversible chains.
     paired_sums = []
-    for lag in range(1, rho.numel() - 1, 2):
+    for lag in range(0, rho.numel() - 1, 2):
         pair = float(rho[lag] + rho[lag + 1])
         if not math.isfinite(pair) or pair <= 0.0:
             break
@@ -64,14 +71,14 @@ def _statistical_inefficiency(chains: torch.Tensor) -> Tuple[float, str]:
         # Truncated at the first pair. For a long chain this is a legitimate
         # "no detectable autocorrelation" result; for a short one it is the
         # mean-subtraction artifact and carries no information.
-        if time < MIN_TIME_FOR_AUTOCORRELATION:
-            return float("nan"), "unresolved"
         return 1.0, "ok"
 
     # Initial monotone sequence prevents noisy late pairs from increasing again.
     for index in range(1, len(paired_sums)):
         paired_sums[index] = min(paired_sums[index], paired_sums[index - 1])
-    return max(1.0, 1.0 + 2.0 * sum(paired_sums)), "ok"
+    # g = -1 + 2 * sum_k Gamma_k.  The lower bound is conservative: this
+    # estimator never reports super-efficient samples from negative correlation.
+    return max(1.0, -1.0 + 2.0 * sum(paired_sums)), "ok"
 
 
 def _split_r_hat(chains: torch.Tensor) -> tuple[float, str]:

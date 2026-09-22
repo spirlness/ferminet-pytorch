@@ -410,6 +410,17 @@ def compute_local_energy(
     try:
         # 1. 计算对数波函数幅值 log|Psi(r)|
         log_abs_psi, _ = model.forward_log_psi(r)  # (B,)
+        if torch.isneginf(log_abs_psi).any():
+            node_count = int(torch.isneginf(log_abs_psi).sum().item())
+            raise FloatingPointError(
+                f"local energy is undefined at {node_count} wavefunction node(s); "
+                "evaluate a finite-amplitude configuration instead"
+            )
+        if not torch.isfinite(log_abs_psi).all():
+            invalid_count = int((~torch.isfinite(log_abs_psi)).sum().item())
+            raise FloatingPointError(
+                f"local energy received {invalid_count} non-finite log|Psi| value(s)"
+            )
 
         # 2. 计算一阶梯度: g = nabla_{r} log|Psi(r)|, shape (B, N, 3)
         ones = torch.ones_like(log_abs_psi)

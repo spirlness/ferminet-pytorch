@@ -87,15 +87,15 @@ class TestNuclearEnvelopeGroupSharing(unittest.TestCase):
         self.assertEqual(tuple(env.decay_rates_raw.shape), (k, n_orb, m))
         self.assertEqual(env.nucleus_group_index.tolist(), [0, 1, 2])
 
-    def test_group_index_excluded_from_state_dict(self) -> None:
-        """persistent=False 保证 nucleus_group_index 不进 state_dict (旧 checkpoint 兼容)。"""
+    def test_group_index_is_saved_in_state_dict(self) -> None:
+        """R4: the grouping is physical checkpoint state, not disposable metadata."""
         env = NuclearEnvelope(
             num_determinants=2,
             num_orbitals=1,
             num_nuclei=2,
             nuclear_charges=torch.tensor([1.0, 1.0]),
         )
-        self.assertNotIn("nucleus_group_index", env.state_dict())
+        self.assertIn("nucleus_group_index", env.state_dict())
 
     def test_charges_numel_must_match_num_nuclei(self) -> None:
         """提供 nuclear_charges 时元素数必须与 num_nuclei 一致。"""

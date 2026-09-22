@@ -13,6 +13,90 @@ except (ImportError, ValueError):
     from envelope import NuclearEnvelope
 
 
+def _determinant_polynomial(matrix: torch.Tensor) -> torch.Tensor:
+    """Compute a determinant with Berkowitz's division-free recurrence.
+
+    The result is a polynomial in the matrix entries, so its higher
+    derivatives are defined at singular matrices.  LU/slogdet derivatives use
+    an inverse and therefore fail when a single FermiNet determinant branch is
+    zero although the full determinant sum is nonzero.
+    """
+    n = matrix.shape[-1]
+    if n == 1:
+        return matrix[..., 0, 0]
+
+    coefficients: Optional[torch.Tensor] = None
+    for size in range(1, n + 1):
+        block = matrix[..., n - size:n, n - size:n]
+        if size == 1:
+            coefficients = torch.stack(
+                [torch.ones_like(block[..., 0, 0]), -block[..., 0, 0]], dim=-1
+            )
+            continue
+
+        assert coefficients is not None
+        a00, row, column = block[..., 0, 0], block[..., 0, 1:], block[..., 1:, 0]
+        trailing = block[..., 1:, 1:]
+        first_column = [torch.ones_like(a00), -a00]
+        power_column = column
+        for _ in range(size - 1):
+            first_column.append(
+                -(row.unsqueeze(-2) @ power_column.unsqueeze(-1)).squeeze((-1, -2))
+            )
+            power_column = (trailing @ power_column.unsqueeze(-1)).squeeze(-1)
+
+        zero = torch.zeros_like(a00)
+        toeplitz = torch.stack(
+            [
+                torch.stack(
+                    [first_column[i - j] if i >= j else zero for j in range(size)], dim=-1
+                )
+                for i in range(size + 1)
+            ],
+            dim=-2,
+        )
+        coefficients = (toeplitz @ coefficients.unsqueeze(-1)).squeeze(-1)
+    return ((-1) ** n) * coefficients[..., -1]
+
+
+def _scaled_determinant(matrix: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Return a determinant normalized per walker and its detached log scale.
+
+    Small blocks retain the polynomial path so their coordinate derivatives are
+    valid at a singular branch.  Larger blocks use ``slogdet`` directly: a
+    raw determinant may underflow in float32 long before the *combined*
+    wavefunction is evaluated, which must never turn a nonzero state into a
+    node.  The scale is detached only as a numerical representation; the
+    normalized determinant keeps its full linear gradient path.
+    """
+    if matrix.shape[-1] <= 4:
+        determinant = _determinant_polynomial(matrix)
+        scale = torch.amax(torch.abs(determinant).detach(), dim=1, keepdim=True)
+        valid = scale > 0
+        safe_scale = torch.where(valid, scale, torch.ones_like(scale))
+        normalized = determinant / safe_scale
+        log_scale = torch.where(
+            valid.squeeze(1), torch.log(safe_scale.squeeze(1)),
+            torch.full_like(safe_scale.squeeze(1), -float("inf")),
+        )
+        return normalized, log_scale
+
+    sign, log_abs = torch.linalg.slogdet(matrix)
+    finite = torch.isfinite(log_abs)
+    masked_log = torch.where(finite, log_abs, torch.full_like(log_abs, -float("inf")))
+    log_scale = torch.amax(masked_log.detach(), dim=1)
+    valid = torch.isfinite(log_scale)
+    safe_log_scale = torch.where(valid, log_scale, torch.zeros_like(log_scale))
+    normalized = torch.where(
+        finite,
+        sign * torch.exp(log_abs - safe_log_scale.unsqueeze(1)),
+        torch.zeros_like(sign),
+    )
+    return normalized, torch.where(
+        valid, log_scale, torch.full_like(log_scale, -float("inf"))
+    )
+
+
 class FermiNet(nn.Module):
     """
     FermiNet (Fermi Neural Network) 深度波函数模型。
@@ -53,7 +137,7 @@ class FermiNet(nn.Module):
         use_nuclear_charges: bool = True,
         anisotropic_envelope: bool = False,
         tie_nuclear_envelope: bool = True,
-        rotation_invariant: bool = True,
+        rotation_invariant: bool = False,
         compile: bool = False,
         compile_mode: str = "default",
         compile_backend: str = "inductor",
@@ -82,10 +166,11 @@ class FermiNet(nn.Module):
             tie_nuclear_envelope (bool): 是否向 NuclearEnvelope 传入核电荷向量，使同电荷核
                 共享包络参数 (核置换等变)；默认 True。置为 False 时包络按核索引独立参数化
                 (旧行为)。
-            rotation_invariant (bool): 是否使用旋转不变特征 (默认 True)。开启时特征只由
+            rotation_invariant (bool): 是否使用旋转不变特征 (默认 False)。开启时特征只由
                 标量不变量 (距离与核电荷) 构成，波函数对整体旋转**严格不变**；关闭时
-                额外拼接笛卡尔位移向量，方向信息更丰富但不具备旋转不变性 (仅供复现与
-                消融对照)。
+                额外拼接笛卡尔位移向量，方向信息更丰富但不具备旋转不变性。笛卡尔模式
+                是公共默认，用于表示一般空间态；它不自动保证
+                特定角动量、宇称或纯总自旋态，也不构成基态收敛证明。
             compile (bool): 是否启用 PyTorch 2.0+ JIT 图编译优化 (默认为 False，按需显式启用)。
             compile_mode (str): 默认编译优化模式 (默认为 'default'，也可选 'reduce-overhead' 等)。
             compile_backend (str): 编译后端 (默认为 'inductor')。
@@ -93,6 +178,11 @@ class FermiNet(nn.Module):
         super().__init__()
         assert n_up >= 0 and n_down >= 0, "电子数必须非负"
         assert n_up + n_down > 0, "体系必须包含至少一个电子"
+        if rotation_invariant and anisotropic_envelope:
+            raise ValueError(
+                "rotation_invariant=True 与 anisotropic_envelope=True 不可同时使用："
+                "实验室坐标轴各向异性包络会破坏整体旋转不变性。"
+            )
 
         self.n_up = n_up
         self.n_down = n_down
@@ -299,58 +389,43 @@ class FermiNet(nn.Module):
         batch_size = r.shape[0]
         d_up, d_down = self.forward_orbitals(r)
 
-        # 1. 计算自旋向上块行列式的对数绝对值与符号
+        # 1. Preserve singular small-block derivatives and retain a log scale
+        # for large blocks before any raw determinant can underflow.
         if d_up is not None:
-            sign_up, log_det_up = torch.linalg.slogdet(d_up)  # 各 (B, K)
+            det_up, log_scale_up = _scaled_determinant(d_up)
         else:
-            sign_up = torch.ones(batch_size, self.num_determinants, device=r.device, dtype=r.dtype)
-            log_det_up = torch.zeros(batch_size, self.num_determinants, device=r.device, dtype=r.dtype)
+            det_up = torch.ones(batch_size, self.num_determinants, device=r.device, dtype=r.dtype)
+            log_scale_up = torch.zeros(batch_size, device=r.device, dtype=r.dtype)
 
         # 2. 计算自旋向下块行列式的对数绝对值与符号
         if d_down is not None:
-            sign_down, log_det_down = torch.linalg.slogdet(d_down)  # 各 (B, K)
+            det_down, log_scale_down = _scaled_determinant(d_down)
         else:
-            sign_down = torch.ones(batch_size, self.num_determinants, device=r.device, dtype=r.dtype)
-            log_det_down = torch.zeros(batch_size, self.num_determinants, device=r.device, dtype=r.dtype)
+            det_down = torch.ones(batch_size, self.num_determinants, device=r.device, dtype=r.dtype)
+            log_scale_down = torch.zeros(batch_size, device=r.device, dtype=r.dtype)
 
-        # 3. 乘积行列式的对数与符号: Det_k = Det_up_k * Det_down_k
-        log_abs_det_k = log_det_up + log_det_down  # (B, K)
-        sign_det_k = sign_up * sign_down          # (B, K)
+        # 3. Det_k = Det_up_k * Det_down_k.  Do not take a branch log here:
+        # log(0) would discard the valid derivative of a zero determinant.
+        det_k = det_up * det_down
+        log_det_scale = log_scale_up + log_scale_down
 
         # 4. 多行列式带权重线性组合: Psi = sum_k w_k * Det_k
         #
-        # 数值稳定化只对**行列式**提出最大值，权重保持线性因子:
-        #     Psi = exp(max_log_det) * sum_k w_k * sign(Det_k) * exp(log|Det_k| - max_log_det)
-        # 这样既保留了 log-sum-exp 的稳定性，又让 w_k 的梯度直接来自线性项——
-        # d(log|Psi|)/dw_k = Det_k / Psi 在 w_k = 0 处仍然非零，零权重分支可以恢复。
-        #
-        # 反之，若把 w_k 也折进 log (即用 log|w_k|)，则 w_k = 0 时 sign(0) = 0 且
-        # log|0| = -inf，该分支被掩码移出求和、梯度路径完全断裂，一旦跨过零点
-        # 便永久失效 (审查报告 D7)。
+        # 4. Detached common scales prevent under/overflow without changing the
+        # represented nonzero wavefunction or blocking gradients at zero weights.
         w = self.det_weights.unsqueeze(0)  # (1, K)
-
-        # 行列式的 log 幅值有限性掩码 (行列式可能精确为零 → slogdet 给出 -inf)
-        det_finite = ~torch.isneginf(log_abs_det_k)
-        safe_log_det = torch.where(
-            det_finite, log_abs_det_k, torch.full_like(log_abs_det_k, -1e30)
-        )
-        max_log_det, _ = torch.max(safe_log_det, dim=1, keepdim=True)  # (B, 1)
-
-        exp_diff = torch.where(
-            det_finite,
-            torch.exp(log_abs_det_k - max_log_det),
-            torch.zeros_like(log_abs_det_k),
-        )
-        # 权重作为线性因子: 零权重贡献 0, 但梯度非零 (可恢复)
-        summed = torch.sum(w * sign_det_k * exp_diff, dim=1)  # (B,)
-
-        is_strictly_zero = (~torch.any(det_finite, dim=1)) | (summed == 0)
+        weight_scale = torch.amax(torch.abs(w).detach())
+        weight_scale_safe = torch.where(weight_scale > 0, weight_scale, torch.ones_like(weight_scale))
+        summed = torch.sum((w / weight_scale_safe) * det_k, dim=1)
+        is_strictly_zero = torch.isneginf(log_det_scale) | (weight_scale == 0) | (summed == 0)
 
         sign_psi = torch.where(is_strictly_zero, torch.zeros_like(summed), torch.sign(summed))
         log_abs_psi = torch.where(
             is_strictly_zero,
             torch.full_like(summed, -float("inf")),
-            max_log_det.squeeze(1) + torch.log(torch.abs(summed).clamp(min=1e-38)),
+            log_det_scale
+            + torch.log(weight_scale_safe)
+            + torch.log(torch.abs(summed)),
         )
 
         return log_abs_psi, sign_psi
@@ -511,6 +586,49 @@ class FermiNet(nn.Module):
             options=options,
         )
 
+    def load_state_dict(self, state_dict, strict: bool = True, assign: bool = False):
+        """Load a checkpoint and migrate pre-R4 envelope group buffers.
+
+        Earlier checkpoints did not serialize ``nucleus_group_index``.  Rebuild
+        it from the checkpoint nuclear charges, not the receiving model, so a
+        load cannot silently retain a stale nuclear ordering.
+        """
+        upgraded = state_dict.copy()
+        checkpoint_charges = upgraded.get("nuclear_charges")
+        for name in ("envelope_up", "envelope_down"):
+            envelope = getattr(self, name, None)
+            key = f"{name}.nucleus_group_index"
+            if envelope is None:
+                continue
+            if checkpoint_charges is None:
+                if key not in upgraded:
+                    raise RuntimeError(
+                        f"cannot migrate legacy checkpoint without nuclear_charges for {key}"
+                    )
+                continue
+            charges = checkpoint_charges.detach().reshape(-1)
+            if charges.numel() != envelope.num_nuclei:
+                raise RuntimeError(
+                    f"checkpoint has {charges.numel()} nuclear charges but {name} expects "
+                    f"{envelope.num_nuclei}; construct a matching model before loading"
+                )
+            if envelope.tied:
+                _, expected_index = torch.unique(charges, sorted=True, return_inverse=True)
+            else:
+                expected_index = torch.arange(envelope.num_nuclei, device=charges.device)
+            expected_index = expected_index.to(dtype=torch.long)
+            if key not in upgraded:
+                upgraded[key] = expected_index
+            elif not torch.equal(
+                upgraded[key].detach().reshape(-1).to(dtype=torch.long, device="cpu"),
+                expected_index.detach().reshape(-1).to(dtype=torch.long, device="cpu"),
+            ):
+                raise RuntimeError(
+                    f"checkpoint {key} conflicts with its nuclear_charges; refusing to load "
+                    "a physically inconsistent envelope grouping"
+                )
+        return super().load_state_dict(upgraded, strict=strict, assign=assign)
+
     def check_system_consistency(self, system: "MolecularSystem") -> None:
         """
         校验模型几何缓冲与给定 MolecularSystem 是否一致。
@@ -543,4 +661,9 @@ class FermiNet(nn.Module):
             model_z, system_z, atol=1e-12, rtol=0.0
         ):
             raise ValueError("模型核电荷缓冲与 MolecularSystem 不一致。")
+        if self.n_up != system.n_up or self.n_down != system.n_down:
+            raise ValueError(
+                "模型自旋分区与 MolecularSystem 不一致："
+                f"model=({self.n_up}, {self.n_down}), system=({system.n_up}, {system.n_down})"
+            )
 

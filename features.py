@@ -10,22 +10,22 @@ class ElectronFeatureEmbedding(nn.Module):
     提取两类物理几何特征：
     1. 单电子-原子核相对位移及欧几里得距离特征 (One-electron stream inputs)，
        支持可选注入原子核电荷标度 Z_I：
-       - 旋转不变模式 (默认)：单核特征为 [d_{iI}] 或 [d_{iI}, Z_I]，
-         总维度为 1 * M 或 2 * M；
-       - 笛卡尔模式 (rotation_invariant=False)：单核特征为 [r_{iI}, d_{iI}] 或
+       - 笛卡尔模式 (默认)：单核特征为 [r_{iI}, d_{iI}] 或
          [r_{iI}, d_{iI}, Z_I]，总维度为 4 * M 或 5 * M。
+       - 旋转不变模式 (rotation_invariant=True)：单核特征为 [d_{iI}] 或
+         [d_{iI}, Z_I]，总维度为 1 * M 或 2 * M；
     2. 电子-电子相对位移及欧几里得距离特征 (Two-electron stream inputs)。
 
     全量计算采用广播张量操作，严格无显式 Python 循环。
 
     已知限制 (如实声明，勿作更强声明)：
     ------------------------------------------------
-    1. **旋转不变性由 `rotation_invariant` 开关控制，默认开启**。开启时只使用标量
+    1. **旋转不变性由 `rotation_invariant` 开关控制，默认关闭**。开启时只使用标量
        不变量 (电子-核距离 d_{iI}、电子-电子距离 d_{ij} 与核电荷 Z_I)，波函数对整体
        旋转**严格不变**。对本仓库的线性分子 (H2 / LiH / H100 链)，到各核的距离已完整
-       确定电子在分子标架下的位置 (轴向 + 垂直距离)，因此该特征集对目标体系不损失
-       表达力。关闭该开关会额外拼接笛卡尔位移向量 r_{iI} / r_{ij}，方向信息更丰富，
-       但**破坏旋转不变性** (整体旋转会改变输出)——仅供复现历史结果与消融对照。
+       确定电子在分子标架下的位置 (轴向 + 垂直距离)，因此该特征集可用于历史对照。
+       默认会拼接笛卡尔位移向量 r_{iI} / r_{ij}，以保留方向信息；该模式不具备旋转
+       不变性，且不会自动保证特定角动量、宇称或纯总自旋态。
     2. **不具备核置换不变性**。单电子特征按原子核顺序拼接后送入
        普通密集层，而密集层对核块并不对称，因此交换两个同种原子核会改变网络输出。
        注：这一项**无法**通过"按距离排序后再拼接"来修复——排序在电子穿越两同核的
@@ -38,7 +38,7 @@ class ElectronFeatureEmbedding(nn.Module):
        test_physics_invariants.py 的已知限制测试。
     """
 
-    def __init__(self, eps: float = 1e-24, rotation_invariant: bool = True) -> None:
+    def __init__(self, eps: float = 1e-24, rotation_invariant: bool = False) -> None:
         """
         初始化特征嵌入模块。
 
@@ -50,12 +50,12 @@ class ElectronFeatureEmbedding(nn.Module):
                 距离与未软化时逐位相同；仅在 r^2 < eps 的重合邻域内距离被限制为
                 sqrt(eps)，有限且梯度为零。不能直接删除 eps：裸 sqrt(r^2) 在
                 r = 0 处梯度为 inf * 0 = NaN (见 test_geometry_invariants.py)。
-            rotation_invariant (bool): 是否使用**旋转不变**特征集 (默认 True)。
+            rotation_invariant (bool): 是否使用**旋转不变**特征集 (默认 False)。
                 - True: 只使用标量不变量——电子-核距离 d_{iI} 与核电荷 Z_I
                   (每核 2 维)，双电子流只用 d_{ij} (1 维)。波函数对整体旋转严格不变。
                 - False: 额外拼接笛卡尔位移向量 r_{iI} (每核 5 维) 与 r_{ij} (4 维)，
                   方向信息更丰富，但**不具备旋转不变性** (整体旋转会改变输出)。
-                  保留该模式用于复现历史结果与消融对照。
+                  这是公共默认，用于表达一般空间态；它不构成任何特定物理态或收敛保证。
         """
         super().__init__()
         self.eps = eps
@@ -65,7 +65,7 @@ class ElectronFeatureEmbedding(nn.Module):
     def feature_dims(
         num_nuclei: int,
         use_nuclear_charges: bool,
-        rotation_invariant: bool = True,
+        rotation_invariant: bool = False,
     ) -> Tuple[int, int]:
         """返回 (单电子流输入维度, 双电子流输入维度)，供 FermiNet 装配使用。"""
         if rotation_invariant:

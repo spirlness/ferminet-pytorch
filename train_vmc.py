@@ -127,6 +127,16 @@ def evaluate_trained_model(
     if evaluation_burn_in_steps < 0:
         raise ValueError("evaluation_burn_in_steps must be non-negative")
 
+    if not hasattr(model, "check_system_consistency"):
+        raise TypeError("evaluation model must implement check_system_consistency")
+    model.check_system_consistency(system)
+    if sampler.model is not model or sampler.system is not system:
+        raise ValueError("sampler must use the exact model and MolecularSystem supplied for evaluation")
+    expected_shape = (sampler.num_walkers, system.total_electrons, 3)
+    if tuple(sampler.walkers.shape) != expected_shape:
+        raise ValueError(f"sampler walkers must have shape {expected_shape}, got {tuple(sampler.walkers.shape)}")
+    sampler.recompute_log_psi()
+
     was_training = model.training
     previous_adaptation = sampler.adapt_step_size
     parameter_versions = [parameter.detach().clone() for parameter in model.parameters()]
@@ -183,6 +193,7 @@ def train_vmc(
     evaluation_laplacian_method: str = "exact",
     device: Optional[str] = None,
     dtype: torch.dtype = torch.float32,
+    rotation_invariant: bool = False,
     seed: int = 42,
     verbose: bool = True,
 ) -> Dict[str, Any]:
@@ -246,6 +257,7 @@ def train_vmc(
             hidden_dim_two=16,
             num_layers=2,
             use_nuclear_charges=True,
+            rotation_invariant=rotation_invariant,
         ).to(device=target_device, dtype=dtype)
     else:
         model = model.to(device=target_device, dtype=dtype)
@@ -438,6 +450,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--evaluation_laplacian_method", type=str, default="exact", choices=["exact", "exact_jvp", "jvp"], help="独立复评的 Laplacian 方法 (仅确定性方法；hutchinson 因随机噪声不适用于对外报告能量)")
     parser.add_argument("--grad_clip", type=float, default=1.0, help="梯度范数裁剪阈值 (默认: 1.0)")
     parser.add_argument("--device", type=str, default=None, help="运行设备 (cuda 或 cpu)")
+    parser.add_argument(
+        "--rotation_invariant", action="store_true",
+        help="使用仅距离的旋转不变特征（限制可表示的角动量和宇称）",
+    )
     parser.add_argument("--seed", type=int, default=42, help="随机数种子 (默认: 42)")
     # 可视化参数
     parser.add_argument("--plot", action="store_true", default=False, help="训练完成后自动生成并展示全部可视化图表")
@@ -473,6 +489,7 @@ def main() -> None:
         evaluation_burn_in_steps=args.evaluation_burn_in,
         evaluation_laplacian_method=args.evaluation_laplacian_method,
         device=args.device,
+        rotation_invariant=args.rotation_invariant,
         seed=args.seed,
         verbose=True,
     )
