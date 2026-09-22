@@ -2,7 +2,21 @@
 
 ## Project Structure & Module Organization
 
-This repository is a flat Python package. Core neural-network components live in `features.py`, `layers.py`, `envelope.py`, and `model.py`; physics and optimization code is in `hamiltonian.py`, `mcmc.py`, `loss.py`, and `train_vmc.py`. Runnable examples and performance checks are `example_h2.py`, `benchmark_compile.py`, and `benchmark_100_atoms.py`. Tests remain beside the source as `test_*.py`. Documentation is in `README.md` and `BEGINNER_GUIDE.md`, while checked-in figures belong under `assets/` or `assets/plots/`.
+This repository is a flat Python package. Core neural-network components live in `features.py`, `layers.py`, `envelope.py`, and `model.py`; physics and optimization code is in `hamiltonian.py`, `mcmc.py`, `mcmc_stats.py`, `loss.py`, and `train_vmc.py`; plotting and diagnostics live in `visualize.py`. Runnable examples and performance checks are `example_h2.py`, `benchmark_compile.py`, and `benchmark_100_atoms.py`.
+
+Tests remain beside the source as `test_*.py`:
+
+- `test_ferminet.py` — core physics properties and network architecture
+- `test_vmc.py` — MCMC sampling, gradient estimation, and energy clipping
+- `test_phase2.py` — kinetic-energy solvers, nuclear-charge injection, and the anisotropic envelope
+- `test_visualize.py` — visualization module
+- `test_mcmc_stats.py` — chain autocorrelation statistics, checked against analytic AR(1) results
+- `test_physics_invariants.py` — physical invariants and the limitations that are knowingly not met (symmetry, cusp, parameter reachability, estimator behaviour)
+- `test_geometry_invariants.py` — geometry-feature invariants and numerical stability
+- `test_estimator_invariants.py` — energy-estimator and potential numerical invariants
+- `test_cli_guards.py` — CLI guards that keep random estimators off the reported-energy path
+
+Documentation is in `README.md` and `BEGINNER_GUIDE.md`. Reviewed audit reports, their reproduction scripts, and their measured JSON outputs live in `audit_review/`; `audit_review/README.md` indexes them and records the current fix status. Checked-in figures belong under `assets/` or `assets/plots/`.
 
 ## Build, Test, and Development Commands
 
