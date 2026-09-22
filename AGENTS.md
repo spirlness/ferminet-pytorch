@@ -15,6 +15,7 @@ Tests remain beside the source as `test_*.py`:
 - `test_geometry_invariants.py` — geometry-feature invariants and numerical stability
 - `test_estimator_invariants.py` — energy-estimator and potential numerical invariants
 - `test_cli_guards.py` — CLI guards that keep random estimators off the reported-energy path
+- `test_robustness_guards.py` — boundary behaviours and guards: determinant-weight recovery, non-finite handling, solver fallback visibility, geometry consistency
 
 Documentation is in `README.md` and `BEGINNER_GUIDE.md`. Reviewed audit reports, their reproduction scripts, and their measured JSON outputs live in `audit_review/`; `audit_review/README.md` indexes them and records the current fix status. Checked-in figures belong under `assets/` or `assets/plots/`.
 

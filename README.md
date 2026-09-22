@@ -3,7 +3,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
 [![Python](https://img.shields.io/badge/Python-3.9+-3776ab.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-134%20Passed-brightgreen.svg)](#)
+[![Tests](https://img.shields.io/badge/Tests-173%20Passed-brightgreen.svg)](#)
 
 本项目提供了一个基于 **PyTorch 原生生态** 的模块化 **FermiNet (费米神经网络)** 研究原型，用于量子化学中多电子薛定谔方程的变分求解、数值实验与算法验证。
 
@@ -296,7 +296,7 @@ python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_di
 本项目包含 5 套覆盖核心物理性质、VMC 训练、链相关统计、阶段 2 求解器以及综合可视化的自动化测试：
 
 ```bash
-# 1. 一键运行全部 134 项单元测试：
+# 1. 一键运行全部 173 项单元测试：
 python -m unittest discover -s . -p "test_*.py" -v
 
 # 2. 或分别运行专项测试：
@@ -306,7 +306,7 @@ python -m unittest test_phase2.py     # 阶段 2 动能求解器与物理特征�
 python -m unittest test_visualize.py  # 综合可视化分析模块专项测试 (54 项)
 python -m unittest test_mcmc_stats.py # ESS、链相关 SEM 与 split-R-hat 测试 (4 项)
 ```
-当前基线为 **134 项测试通过**。测试覆盖实现性质与数值回归，但不能替代长时间、多种子、独立复评的科学收敛验证。
+当前基线为 **173 项测试通过**（1 项按环境能力显式跳过）。测试覆盖实现性质与数值回归，但不能替代长时间、多种子、独立复评的科学收敛验证。
 
 ---
 
