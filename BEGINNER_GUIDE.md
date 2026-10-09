@@ -32,17 +32,17 @@
    - 4.5 核心物理公式纠偏：有限批次协方差代理损失与求导真相
    - 4.6 局域能量平滑截断 (Umrigar Tanh Clipping)：防止优化器“炸飞”
 5. [🗺️ 第四章：阶段 0、1、2 核心演进与模块全景导览](#5-第四章阶段-012-核心演进与模块全景导览)
-   - 5.1 源码文件与核心职责对照表
-   - 5.2 三大高性能动能拉普拉斯求解器对比 (Exact / JVP / Hutchinson)
-   - 5.3 PyTorch 2.0+ `torch.compile` JIT 图编译加速秘籍
+   - 5.1 核心源码文件与职责对照表
+   - 5.2 动能拉普拉斯自动微分求解机制
+
 6. [🚀 第五章：5 分钟上手极速实操 (含输出物理指标通俗解读)](#6-第五章5-分钟上手极速实操-含输出物理指标通俗解读)
    - 6.1 演示 1：氢分子 $H_2$ 基础波函数推断与局域能量 (`example_h2.py`)
    - 6.2 演示 2：氢分子 $H_2$ 端到端 VMC 变分训练 (`train_vmc.py`)
    - 6.3 演示 3：极性异核分子氢化锂 $LiH$ 变分优化
-   - 6.4 演示 4：100 原子超大规模体系基准测试 (`benchmark_100_atoms.py`)
-   - 6.5 演示 5：PyTorch 编译加速基准评测 (`benchmark_compile.py`)
-   - 6.6 演示 6：一键生成训练与物理状态诊断看板 (`visualize.py`)
-   - 6.7 训练输出物理指标白话对照表 (解读 `<E_raw>`, `Var(E)`, `Acc (%)` 等)
+   - 6.4 训练输出物理指标白话对照表 (解读 `<E_raw>`, `<E_clip>`, `Var(E)`, `Acc (%)`, `Step`)
+
+
+
 7. [❓ 第六章：新手高频问答 FAQ](#7-第六章新手高频问答-faq)
    - Q1: 为什么波函数的对数值 `log|Psi|` 经常是负几百？
    - Q2: 什么是 Hartree 原子单位制？怎么换算成熟悉的单位？
@@ -279,7 +279,7 @@ $$\phi_j(r_i; \{r_{\setminus i}\})$$
 >
 > 一个自然的想法是「按距离排序后再拼接」：把同核块按电子到核的距离排好序，顺序就只取决于几何而与标签无关。**这个方案是错误的，已被否决**。原因是排序在电子穿越两同核的**垂直平分面**时会翻转核块顺序，而两个块在该面上并不相等（位移向量 $r_{iI}$ 方向不同），于是波函数在该余维 1 曲面上出现**不连续跳变**（实测 $\ln|\Psi|$ 跳变约 0.044）。$\nabla^2 \ln|\Psi|$ 在不连续处失去意义，局域动能被污染——实测训练能量从 $-1.174$ Ha 退化到 $-1.162$ Ha，并一度跌破变分下界（低于精确值，物理上不可能）。
 >
-> 要做到既**不变**又**连续**，必须放弃「有序拼接」而改为对核做**对称聚合**（例如把每个核的块过同一个网络后求和）。那是一次架构改写，不在本阶段范围内。因此当前只保证**包络部分**不变（见 3.4 节）。回归测试见 `test_physics_invariants.py` 的 `test_wavefunction_is_continuous_across_nuclear_bisector`。
+> 要做到既**不变**又**连续**，必须放弃「有序拼接」而改为对核做**对称聚合**（例如把每个核的块过同一个网络后求和）。那是一次架构改写，不在本阶段范围内。因此当前只保证**包络部分**不变（见 3.4 节）。反对称性与数值稳定性等核心物理约束见 `test_ferminet.py`。
 
 ### 3.3 自旋分流交互层 (`layers.py`)：单/双电子流与自旋分离池化
 
@@ -487,16 +487,16 @@ loss.backward()
 | [`hamiltonian.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/hamiltonian.py) | 分子哈密顿量与动能 | `MolecularSystem`, `compute_local_energy` | 全向量化计算势能 $V(r)$ 与动能 $T_L(r)$，集成三大拉普拉斯求解器 |
 | [`mcmc.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/mcmc.py) | 批量 GPU MCMC 采样器 | `MCMCSampler` | 并行 Metropolis-Hastings 拒绝抽样，自适应调节步长趋向默认目标；实际接受率依赖体系和提议分布 |
 | [`loss.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/loss.py) | 协方差代理损失 | `VMCLoss`, `vmc_surrogate_loss`, `clip_local_energy` | 默认有限批次修正；Tanh/Hard 截断为显式稳健有偏模式 |
-| [`mcmc_stats.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/mcmc_stats.py) | MCMC 统计 | `estimate_mcmc_statistics` | 由 walker 时间序列估计自相关时间、ESS、split-R-hat 与链相关 SEM |
+
 | [`train_vmc.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/train_vmc.py) | 端到端训练脚本 | `train_vmc`, `main` | 串联 MCMC 采样、局域能量求解与 Adam 参数优化的完整训练闭环 |
 | [`example_h2.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/example_h2.py) | 极简推断与能量演示 | `run_h2_demo` | 5 分钟上手脚本，单步前向推断 $H_2$ 波函数与局域能量拆解 |
-| [`benchmark_compile.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/benchmark_compile.py) | JIT 图编译基准评测 | `benchmark_compilation` | 测试 PyTorch 2.0 `torch.compile` 对 FermiNet 的算子融合；具体收益依赖硬件和配置 |
-| [`benchmark_100_atoms.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/benchmark_100_atoms.py) | 100 原子超大体系基准 | `run_benchmark` | 评测 100 核 100 电子链在超大规模下的显存占用、吞吐与物理反对称性 |
-| [`visualize.py`](file:///C:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/visualize.py) | 学术风格综合可视化库 | `plot_training_dashboard`, `plot_physical_results_dashboard` | 提供训练、采样和条件切片诊断，无 GUI 隔离后端 |
 
-### 5.2 三大高性能动能拉普拉斯求解器对比
 
-动能拉普拉斯算子 $\nabla_r^2 \ln|\Psi| = \sum_{i=1}^{3N} \frac{\partial^2}{\partial r_i^2} \ln|\Psi|$ 是量子神经网络中最耗时的计算瓶颈。本代码库提供了三种求解策略：
+
+
+### 5.2 动能拉普拉斯自动微分求解机制
+
+局域动能项 $T_L(r) = -\frac{1}{2} (\nabla^2 \ln|\Psi| + |\nabla \ln|\Psi||^2)$，在精简教学版中通过 PyTorch 自动微分精确求解：
 
 ```text
                ┌─────────────────────────────────────────────────────────────────┐
@@ -638,93 +638,7 @@ uv run python train_vmc.py --system lih --laplacian_method hutchinson --epochs 3
 ```
 只有核电荷、自旋电子数与核间距 `3.015 Bohr` 同时匹配登记记录时，才会显示 $\approx -8.070$ Hartree 参考线；短训练只能检查链路和趋势。
 
-### 6.4 演示 4：100 原子超大规模体系基准测试 (`benchmark_100_atoms.py`)
-
-体验 100 个氢原子（100 个质子 + 100 个电子，输入维度高达 300 维）的一维强关联晶格链基准：
-
-```bash
-# 建议添加 --double 双精度参数（进行 100 电子数值容差测试）
-python benchmark_100_atoms.py --double
-# 或快速体验 (跳过 300 维耗时二阶拉普拉斯求解)：
-python benchmark_100_atoms.py --double --quick
-```
-**关键评测指标亮点**：
-- **数值性质检查**：在指定 dtype 和阈值下检查轨道置换与符号反号；同自旋电子重叠在精确算术下应为零，浮点实现只报告小幅值或对数幅值阈值，不宣称精确归零。
-- **资源与吞吐需实测**：模型参数量和势能批处理耗时取决于 dtype、batch、硬件及是否包含完整局域能量；本示例只验证可执行性和数值容差。
-
-### 6.5 演示 5：PyTorch 编译加速基准评测 (`benchmark_compile.py`)
-
-运行原生 Eager 模式与 PyTorch 2.0+ `torch.compile` 的加速对比：
-
-```bash
-python benchmark_compile.py
-# 或使用 uv 运行：
-uv run python benchmark_compile.py
-```
-- **评测方法**：脚本比较 Eager 与 `torch.compile` 的稳态耗时；应同时记录硬件、版本、首次编译成本、dtype、batch 和误差，不能把单次结果推广为固定加速比。
-
-### 6.6 演示 6：一键生成训练与物理状态诊断看板 (`visualize.py`)
-
-在前面的训练中，我们在终端只看到了刷屏的数字，初学者往往很难建立空间几何与物理收敛的直观感觉。
-为此，我们提供了**一键可视化导出功能**！在运行 `train_vmc.py` 时只需加上 `--save_plots` 参数：
-
-```bash
-# 运行 30 轮 VMC 优化并自动生成诊断可视化图表
-python train_vmc.py --system h2 --epochs 30 --walkers 512 --save_plots --plot_dir assets/plots
-```
-
-脚本将自动在 `assets/plots/` 目录下生成包含**训练全景三合一看板**、**物理状态三合一看板**、**2D 成键热力图**在内的全套高清图表：
-
-#### 🖼️ 看板 1：训练过程动力学全景看板 (`h2_training_dashboard.png`)
-
-<p align="center">
-  <img src="assets/plots/h2_training_dashboard.png" alt="VMC Training Process Dashboard" width="100%">
-</p>
-
-小白如何读懂这三张图？
-1. **左图：能量收敛曲线（小球滚入量子基态）**
-   - **蓝色实线（原始能量）** 与 **绿色实线（截断能量）**：示例运行可能从较高能量下降；曲线会随随机种子、采样和数值设置变化。红色参考线只适用于登记的 H₂ 电荷、自旋和几何；不应把短曲线视为收敛证明；
-   - 训练曲线不再绘制误导性的 IID 误差带；可信误差来自训练后冻结参数采集的时间序列，并单独报告 ESS 与链相关 SEM。
-2. **中图：能量方差趋势（零方差辅助诊断）**
-   - **紫色实线（能量方差）** 与 **橙色点划线（IID 批次 SEM 代理量）**只用于训练诊断；最终误差必须查看冻结参数复评产生的相关 SEM、ESS 和 R-hat。
-3. **右图：MCMC 采样器健康度与自适应步长（算法的“恒温器”）**
-   - **青色折线（接受率）**：围绕着灰色水平虚线（50% 目标线）小幅振荡，说明采样器既没有盲目乱跳（接受率太低），也没有原地踏步（接受率太高）；
-   - **棕色点划线（提议移动步长）**：控制器根据接受率调整步长；稳定值取决于体系、初始化和目标接受率，不应预期固定为某个 Bohr 数。
-
----
-
-#### 🖼️ 看板 2：量子物理状态全景看板 (`h2_physical_dashboard.png`)
-
-<p align="center">
-  <img src="assets/plots/h2_physical_dashboard.png" alt="Quantum Physical State Dashboard" width="100%">
-</p>
-
-这些图展示采样构型或固定构型下的可视化诊断，不等同于经过边缘化和归一化的一体电子密度：
-1. **左图：3D 采样构型/条件切片散点**
-   - 中间两个黑色大球是两颗氢原子核（$z = \pm 0.7\,\text{Bohr}$）；
-   - 浅蓝色散点是自旋向上电子（$\alpha$），浅粉色散点是自旋向下电子（$\beta$）；
-   - 电子并非固定在轨道上打转，而是像一团有弹性的“棉花糖云雾”，在两颗核周围形成高密度的空间概率弥散，这正是量子力学玻恩几率诠释 $|\Psi(r)|^2$ 的真实写照！
-2. **中图：沿核间轴的一维条件切片**
-   - 蓝色实线是固定其余电子构型后沿轴线扫描得到的条件量；它不是对其余电子积分得到的一体电子密度，也不能单独证明成键机制。
-3. **右图：局域能量直方图与统计偏度（防御奇异点）**
-   - 展示了各个空间构型处算出来的局域能量 $E_L(r)$ 的分布直方图；
-   - 浅蓝色区域代表 MAD 平滑截断窗口，它有效地将靠近节点面或靠近原子核可能出现的极端离群值柔和截断，左上角信息卡片记录了均值、标准差、偏度与峰度。
-
----
-
-#### 🖼️ 看板 3：2D 固定构型下的波函数条件切片热力图 (`h2_wavefunction_2d.png`)
-
-<p align="center">
-  <img src="assets/plots/h2_wavefunction_2d.png" alt="2D Wavefunction Bonding Slice" width="70%">
-</p>
-
-这是固定构型下的波函数条件切片示意图，不是经过边缘化的一体电子密度图：
-- 两个带白边的红圈标出了原子核的位置 $(0, \pm 0.7)$；
-- 亮黄色和翠绿色代表高电子概率区域，可以清晰看到两核之间有一条宽阔的**高几率绿色通道**，这就是大名鼎鼎的 **$\sigma_g$ 分子成键轨道**！外围深紫色逐渐衰减至零，体现了指数衰减包络的物理约束。
-
----
-
-### 6.7 训练输出物理指标白话对照表
+### 6.4 训练输出物理指标白话对照表
 
 初学者在看训练日志时，常常不知道各项指标代表什么含义，请参考下表：
 

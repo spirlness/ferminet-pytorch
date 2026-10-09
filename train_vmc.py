@@ -23,15 +23,13 @@ for p in [current_dir, parent_dir]:
 
 try:
     from ferminet_pytorch.model import FermiNet
-    from ferminet_pytorch.hamiltonian import MolecularSystem, compute_local_energy
+    from ferminet_pytorch.hamiltonian import MolecularSystem
     from ferminet_pytorch.mcmc import MCMCSampler
-    from ferminet_pytorch.mcmc_stats import estimate_mcmc_statistics
     from ferminet_pytorch.loss import VMCLoss
 except ImportError:
     from model import FermiNet
-    from hamiltonian import MolecularSystem, compute_local_energy
+    from hamiltonian import MolecularSystem
     from mcmc import MCMCSampler
-    from mcmc_stats import estimate_mcmc_statistics
     from loss import VMCLoss
 
 
@@ -101,134 +99,51 @@ def build_lih_system(
     )
 
 
-def evaluate_trained_model(
-    model: nn.Module,
-    system: MolecularSystem,
-    sampler: MCMCSampler,
-    evaluation_steps: int = 32,
-    evaluation_mcmc_steps: int = 5,
-    evaluation_burn_in_steps: int = 20,
-    laplacian_method: str = "exact",
-) -> Dict[str, Any]:
-    """在冻结模型参数和采样步长后采集链时间序列并计算相关性统计。"""
-    if laplacian_method == "hutchinson":
-        # 守卫: Hutchinson 单探针随机迹估计的重复间标准差约为信号本身的 1.5 倍，
-        # 仅供训练期方差缩减，绝不能用于对外报告的能量。
-        raise ValueError(
-            "evaluation laplacian_method must not be 'hutchinson': single-probe "
-            "Hutchinson trace estimates carry inter-replicate noise about 1.5x the "
-            "signal and are only valid for training-time variance reduction; "
-            "use 'exact', 'exact_jvp' or 'jvp' for reported energies"
-        )
-    if evaluation_steps < 2:
-        raise ValueError(f"evaluation_steps must be >= 2, got {evaluation_steps}")
-    if evaluation_mcmc_steps < 1:
-        raise ValueError(f"evaluation_mcmc_steps must be >= 1, got {evaluation_mcmc_steps}")
-    if evaluation_burn_in_steps < 0:
-        raise ValueError("evaluation_burn_in_steps must be non-negative")
-
-    if not hasattr(model, "check_system_consistency"):
-        raise TypeError("evaluation model must implement check_system_consistency")
-    model.check_system_consistency(system)
-    if sampler.model is not model or sampler.system is not system:
-        raise ValueError("sampler must use the exact model and MolecularSystem supplied for evaluation")
-    expected_shape = (sampler.num_walkers, system.total_electrons, 3)
-    if tuple(sampler.walkers.shape) != expected_shape:
-        raise ValueError(f"sampler walkers must have shape {expected_shape}, got {tuple(sampler.walkers.shape)}")
-    sampler.recompute_log_psi()
-
-    was_training = model.training
-    previous_adaptation = sampler.adapt_step_size
-    parameter_versions = [parameter.detach().clone() for parameter in model.parameters()]
-    energy_series: List[torch.Tensor] = []
-    try:
-        model.eval()
-        sampler.adapt_step_size = False
-        if evaluation_burn_in_steps:
-            sampler.sample(num_steps=evaluation_burn_in_steps)
-        for _ in range(evaluation_steps):
-            walkers = sampler.sample(num_steps=evaluation_mcmc_steps)
-            walkers = walkers.detach().requires_grad_(True)
-            local_energy, _, _ = compute_local_energy(
-                model=model,
-                system=system,
-                r=walkers,
-                create_graph=False,
-                laplacian_method=laplacian_method,
-            )
-            energy_series.append(local_energy.detach().to(device="cpu", dtype=torch.float64))
-    finally:
-        sampler.adapt_step_size = previous_adaptation
-        model.train(was_training)
-
-    for before, after in zip(parameter_versions, model.parameters()):
-        if not torch.equal(before, after.detach()):
-            raise RuntimeError("model parameters changed during frozen evaluation")
-
-    statistics = estimate_mcmc_statistics(torch.stack(energy_series, dim=0))
-    statistics["laplacian_method"] = laplacian_method
-    return statistics
 
 
 def train_vmc(
     system: Optional[MolecularSystem] = None,
     model: Optional[FermiNet] = None,
-    num_walkers: int = 1024,
-    num_epochs: int = 100,
+    num_walkers: int = 512,
+    num_epochs: int = 50,
     mcmc_steps_per_epoch: int = 10,
-    burn_in_steps: int = 100,
+    burn_in_steps: int = 50,
     lr: float = 1e-3,
     step_size: float = 0.5,
     target_acceptance: float = 0.5,
     move_mode: str = "all",
     clip_factor: float = 5.0,
-    clip_method: str = "none",
-    laplacian_method: str = "exact",
-    num_hutchinson_samples: int = 1,
-    hutchinson_distribution: str = "rademacher",
+    clip_method: str = "tanh",
     grad_clip: float = 1.0,
-    evaluation_steps: int = 32,
-    evaluation_mcmc_steps: int = 5,
-    evaluation_burn_in_steps: int = 20,
-    evaluation_laplacian_method: str = "exact",
     device: Optional[str] = None,
     dtype: torch.dtype = torch.float32,
-    rotation_invariant: bool = False,
     seed: int = 42,
     verbose: bool = True,
 ) -> Dict[str, Any]:
     """
-    执行完整的 VMC 优化迭代闭环。
+    执行简洁明了的 VMC 变分优化循环。
 
     Args:
-        system (Optional[MolecularSystem]): 目标分子体系 (默认自动创建 H2)。
-        model (Optional[FermiNet]): 预先初始化的 FermiNet (默认按系统尺寸自动创建)。
-        num_walkers (int): 并行 MCMC Walker 数量。
-        num_epochs (int): 训练迭代步数。
-        mcmc_steps_per_epoch (int): 每一轮参数更新之间进行的 MCMC 抽样步数。
-        burn_in_steps (int): 初始 MCMC 预热步数。
-        lr (float): 优化器学习率。
-        step_size (float): MCMC 提议高斯位移初值。
-        target_acceptance (float): MCMC 目标接受率 (默认 0.5)。
-        move_mode (str): MCMC 步进模式 ('all' 或 'one_by_one')。
-        clip_factor (float): 局域能量平滑截断阈值因子 (MAD 倍数)。
-        clip_method (str): 截断方式；默认 'none' 使用有限批次修正估计器。
-        laplacian_method (str): 局域动能拉普拉斯求解策略 ('exact', 'hutchinson', 'exact_jvp', 'jvp')。
-        num_hutchinson_samples (int): Hutchinson 随机迹估计采样次数 (默认为 1)。
-        hutchinson_distribution (str): Hutchinson 探测向量分布 ('rademacher' 或 'gaussian'，默认 'rademacher')。
-        grad_clip (float): 梯度范数裁剪阈值。
-        evaluation_steps (int): 冻结参数后的能量时间序列长度，必须至少为 2。
-        evaluation_mcmc_steps (int): 相邻复评样本之间的 MCMC 步数。
-        evaluation_burn_in_steps (int): 最终参数下重新平衡的步数。
-        evaluation_laplacian_method (str): 独立复评使用的 Laplacian 方法，默认精确反向模式。
-            仅接受确定性方法 ('exact', 'exact_jvp', 'jvp')；'hutchinson' 会抛出 ValueError。
-        device (Optional[str]): 运行设备 ('cuda' 或 'cpu'，若为 None 自动检测)。
-        dtype (torch.dtype): 浮点运算精度。
-        seed (int): 随机数种子。
-        verbose (bool): 是否打印日志与进度。
+        system: 目标分子体系 (默认自动创建 H2)
+        model: FermiNet 模型 (若为 None 则自动创建轻量模型)
+        num_walkers: MCMC 并行构型数
+        num_epochs: 训练迭代轮数
+        mcmc_steps_per_epoch: 每轮参数更新前执行的 MCMC 步数
+        burn_in_steps: 训练开始前的 MCMC 预热步数
+        lr: Adam 优化器学习率
+        step_size: MCMC 初始移动步长
+        target_acceptance: 目标接受率 (用于自适应步长调节)
+        move_mode: MCMC 移动模式 ('all' 或 'one_by_one')
+        clip_factor: 局域能量 MAD 截断因子
+        clip_method: 截断方式 ('tanh', 'hard', 'none')
+        grad_clip: 梯度范数裁剪阈值
+        device: 运行设备 ('cpu' 或 'cuda')
+        dtype: 浮点精度
+        seed: 随机数种子
+        verbose: 是否打印训练日志
 
     Returns:
-        Dict[str, Any]: 训练结果字典，包含模型、体系、历史能量与方差序列等。
+        包含训练历史、模型、体系和采样器的结果字典
     """
     torch.manual_seed(seed)
     if torch.cuda.is_available():
@@ -253,7 +168,7 @@ def train_vmc(
                     f"device_count={torch.cuda.device_count()}"
                 )
 
-    # 1. 体系与模型构建
+    # 1. 体系与模型
     if system is None:
         system = build_h2_system(bond_length=1.4, device=target_device, dtype=dtype)
     else:
@@ -269,24 +184,12 @@ def train_vmc(
             hidden_dim_one=64,
             hidden_dim_two=16,
             num_layers=2,
-            use_nuclear_charges=True,
-            rotation_invariant=rotation_invariant,
         ).to(device=target_device, dtype=dtype)
     else:
         model = model.to(device=target_device, dtype=dtype)
 
-    # 校验模型几何缓冲与体系一致 (审查报告 D10)：若调用方在构造模型后更新过体系
-    # 几何，波函数会使用旧几何而哈密顿量使用新几何，且不会报错。这里显式拦截。
-    model.check_system_consistency(system)
-
-    # 2. 损失函数与采样器构建
-    vmc_loss = VMCLoss(
-        clip_factor=clip_factor,
-        clip_method=clip_method,
-        laplacian_method=laplacian_method,
-        num_hutchinson_samples=num_hutchinson_samples,
-        hutchinson_distribution=hutchinson_distribution,
-    )
+    # 2. 损失函数与采样器
+    vmc_loss = VMCLoss(clip_factor=clip_factor, clip_method=clip_method)
     sampler = MCMCSampler(
         model=model,
         system=system,
@@ -299,36 +202,33 @@ def train_vmc(
         dtype=dtype,
     )
 
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+
     # 3. 预热 (Burn-in)
     if verbose:
-        print("=" * 75)
-        print("         FermiNet 变分量子蒙特卡洛 (VMC) 训练优化启动")
-        print("=" * 75)
-        print(f"[*] 运行设备: {target_device} | 浮点精度: {dtype}")
-        print(f"[*] 体系信息: 原子核数 = {system.num_nuclei}, 总电子数 = {system.total_electrons}")
-        print(f"[*] 采样配置: Walkers = {num_walkers}, 移动模式 = {move_mode}")
-        print(f"[*] 预热阶段: 正在执行 {burn_in_steps} 步 MCMC 预热...")
+        print("=" * 72)
+        print("         FermiNet 变分量子蒙特卡洛 (VMC) 教学训练")
+        print("=" * 72)
+        print(f"[*] 设备: {target_device} | 精度: {dtype}")
+        print(f"[*] 体系: 核数 = {system.num_nuclei}, 电子数 = {system.total_electrons} (up={system.n_up}, down={system.n_down})")
+        print(f"[*] 采样: Walkers = {num_walkers}, 移动模式 = {move_mode}")
+        print(f"[*] 预热: 正在执行 {burn_in_steps} 步 MCMC 预热...")
 
     start_burn_in = time.time()
     burn_in_acc = sampler.burn_in(num_steps=burn_in_steps)
     burn_in_time = time.time() - start_burn_in
 
     if verbose:
-        print(f"    预热完成 (耗时: {burn_in_time:.2f}s, 最终平均接受率: {burn_in_acc * 100:.1f}%, 步长: {sampler.step_size:.4f})")
-        print("-" * 75)
-        print(f"{'Epoch':^6} | {'<E_raw> (Ha)':^14} | {'<E_clip> (Ha)':^14} | {'Var(E)':^10} | {'IID SEM*':^9} | {'Acc (%)':^8} | {'Step':^7}")
-        print("-" * 75)
+        print(f"    预热完成 (耗时: {burn_in_time:.2f}s, 平均接受率: {burn_in_acc * 100:.1f}%, 初始步长: {sampler.step_size:.4f})")
+        print("-" * 72)
+        print(f"{'Epoch':^6} | {'<E_raw> (Ha)':^14} | {'<E_clip> (Ha)':^14} | {'Var(E)':^10} | {'Acc (%)':^8} | {'Step':^7}")
+        print("-" * 72)
 
-    # 4. 优化器配置
-    optimizer = optim.Adam(model.parameters(), lr=lr)
-
-    # 5. 训练主循环
+    # 4. 训练主循环
     history: Dict[str, List[float]] = {
         "energy_raw": [],
         "energy_clipped": [],
-        "energy_std": [],
         "energy_var": [],
-        "energy_iid_sem_proxy": [],
         "loss": [],
         "acceptance_rate": [],
         "step_size": [],
@@ -337,141 +237,79 @@ def train_vmc(
     start_train_time = time.time()
 
     for epoch in range(1, num_epochs + 1):
-        # A. MCMC 步进更新电子构型
+        # A. MCMC 抽样
         walkers = sampler.sample(num_steps=mcmc_steps_per_epoch)
 
-        # B. 计算局部能量与协方差代理损失
+        # B. 计算局域能量与代理损失
         loss, stats, _ = vmc_loss.compute_step_loss(model, system, walkers)
 
-        # C. 优化器反向传播与更新
+        # C. 反向传播更新网络参数
         optimizer.zero_grad()
         loss.backward()
 
         if grad_clip > 0:
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=grad_clip)
+            nn.utils.clip_grad_norm_(model.parameters(), max_norm=grad_clip)
 
         optimizer.step()
 
-        # D. 关键：模型参数更新后，刷新采样器波函数对数缓存
+        # D. 刷新当前 Walker 的对数波函数缓存
         sampler.recompute_log_psi()
 
-        # E. 记录指标
+        # E. 记录训练历史
         history["energy_raw"].append(stats["energy_mean"])
         history["energy_clipped"].append(stats["energy_clipped_mean"])
-        history["energy_std"].append(stats["energy_std"])
         history["energy_var"].append(stats["energy_var"])
-        history["energy_iid_sem_proxy"].append(stats["energy_iid_sem_proxy"])
         history["loss"].append(stats["loss"])
         history["acceptance_rate"].append(sampler.last_acceptance_rate)
         history["step_size"].append(sampler.step_size)
 
-        # F. 打印日志
+        # F. 周期性打印日志
         if verbose and (epoch == 1 or epoch % 5 == 0 or epoch == num_epochs):
             print(
                 f"{epoch:^6d} | "
                 f"{stats['energy_mean']:^14.5f} | "
                 f"{stats['energy_clipped_mean']:^14.5f} | "
                 f"{stats['energy_var']:^10.4f} | "
-                f"{stats['energy_iid_sem_proxy']:^9.4f} | "
                 f"{sampler.last_acceptance_rate * 100:^8.1f} | "
                 f"{sampler.step_size:^7.4f}"
             )
 
     total_train_time = time.time() - start_train_time
-    training_last_batch_energy = history["energy_raw"][-1]
-    training_last_batch_variance = history["energy_var"][-1]
-    evaluation = evaluate_trained_model(
-        model=model,
-        system=system,
-        sampler=sampler,
-        evaluation_steps=evaluation_steps,
-        evaluation_mcmc_steps=evaluation_mcmc_steps,
-        evaluation_burn_in_steps=evaluation_burn_in_steps,
-        laplacian_method=evaluation_laplacian_method,
-    )
-    # 守卫: 对外报告的能量不得来自 Hutchinson 随机估计器 (纵深防御;
-    # evaluate_trained_model 入口处已拒绝该方法，此处拦截任何绕过路径)。
-    if evaluation["laplacian_method"] == "hutchinson":
-        raise ValueError(
-            "reported energy must not come from the 'hutchinson' Laplacian method: "
-            "it is only valid for training-time variance reduction"
-        )
-    final_energy = evaluation["energy_mean"]
+    final_energy = float(history["energy_raw"][-1])
+    final_var = float(history["energy_var"][-1])
 
     if verbose:
-        print("-" * 75)
-        print(f"[*] 训练顺利完成! 总耗时: {total_train_time:.2f}s ({total_train_time / num_epochs:.3f}s/epoch)")
-        final_var = evaluation["energy_variance"]
-        ref_energy_str = ""
-        try:
-            from visualize import get_system_reference
-        except ImportError:
-            from ferminet_pytorch.visualize import get_system_reference
-        reference = get_system_reference(system)
-        if reference is not None:
-            ref_energy_str = f" ({reference.label} 参考: {reference.energy:.5f} Hartree)"
-        print(f"[*] 最终能量期望值: {final_energy:.5f} Hartree{ref_energy_str}")
+        print("-" * 72)
+        print(f"[*] 训练完成! 总耗时: {total_train_time:.2f}s ({total_train_time / max(num_epochs, 1):.3f}s/epoch)")
+        print(f"[*] 最终能量期望: {final_energy:.5f} Hartree (H2 真实基态参考: -1.1744 Hartree)")
         print(f"[*] 最终能量方差: {final_var:.5f}")
-        if evaluation["autocorrelation_status"] in ("ok", "constant"):
-            print(
-                f"[*] 相关 SEM: {evaluation['energy_sem']:.5f} | ESS: {evaluation['ess']:.1f} | "
-                f"tau_int: {evaluation['tau_int']:.3f} | R-hat: {evaluation['r_hat']:.4f}"
-            )
-        else:
-            print(
-                f"[!] 自相关时间无法解析 (autocorrelation_status={evaluation['autocorrelation_status']}, "
-                f"链长 {evaluation['num_steps']} 步): SEM / ESS / tau_int 报告为 nan。"
-            )
-            print(
-                f"    请提高 --evaluation_steps (当前 {evaluation_steps}) 后重新运行; "
-                f"不要按独立样本假设引用误差棒。"
-            )
-            print(f"[*] R-hat: {evaluation['r_hat']:.4f}")
-        print("=" * 75)
+        print("=" * 72)
 
     return {
         "model": model,
         "system": system,
         "sampler": sampler,
         "history": history,
-        "evaluation": evaluation,
         "final_energy": final_energy,
-        "final_variance": evaluation["energy_variance"],
-        "training_last_batch_energy": training_last_batch_energy,
-        "training_last_batch_variance": training_last_batch_variance,
+        "final_variance": final_var,
     }
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="FermiNet 变分量子蒙特卡洛 (VMC) 训练")
-    parser.add_argument("--system", type=str, default="h2", choices=["h2", "lih"], help="目标体系 (h2 或 lih，默认 h2)")
-    parser.add_argument("--laplacian_method", type=str, default="exact", choices=["exact", "hutchinson", "exact_jvp", "jvp"], help="局域动能拉普拉斯求解策略 (hutchinson 仅供训练期方差缩减，不用于对外报告能量)")
-    parser.add_argument("--hutch_samples", type=int, default=1, help="Hutchinson 采样次数 (默认 1，仅供训练期方差缩减，不用于对外报告能量)")
-    parser.add_argument("--hutch_dist", type=str, default="rademacher", choices=["rademacher", "gaussian"], help="Hutchinson 随机向量分布")
+    parser = argparse.ArgumentParser(description="FermiNet 变分量子蒙特卡洛 (VMC) 教学训练")
+    parser.add_argument("--system", type=str, default="h2", choices=["h2", "lih"], help="目标体系 (h2 或 lih)")
     parser.add_argument("--epochs", type=int, default=50, help="训练迭代步数 (默认: 50)")
-    parser.add_argument("--walkers", type=int, default=1024, help="MCMC Walker 数量 (默认: 1024)")
+    parser.add_argument("--walkers", type=int, default=512, help="MCMC Walker 数量 (默认: 512)")
     parser.add_argument("--mcmc_steps", type=int, default=10, help="每步训练采样的 MCMC 步数 (默认: 10)")
-    parser.add_argument("--burn_in", type=int, default=100, help="预热步数 (默认: 100)")
+    parser.add_argument("--burn_in", type=int, default=50, help="预热步数 (默认: 50)")
     parser.add_argument("--lr", type=float, default=1e-3, help="优化器学习率 (默认: 1e-3)")
     parser.add_argument("--step_size", type=float, default=0.5, help="MCMC 初始移动步长 (默认: 0.5)")
     parser.add_argument("--move_mode", type=str, default="all", choices=["all", "one_by_one"], help="MCMC 移动模式")
     parser.add_argument("--clip_factor", type=float, default=5.0, help="局域能量 MAD 截断倍数 (默认: 5.0)")
-    parser.add_argument("--clip_method", type=str, default="none", choices=["tanh", "hard", "none"], help="局域能量截断方法")
-    parser.add_argument("--evaluation_steps", type=int, default=32, help="冻结参数后的独立复评时间步数")
-    parser.add_argument("--evaluation_mcmc_steps", type=int, default=5, help="相邻复评样本之间的 MCMC 步数")
-    parser.add_argument("--evaluation_burn_in", type=int, default=20, help="最终参数下的复评预热步数")
-    parser.add_argument("--evaluation_laplacian_method", type=str, default="exact", choices=["exact", "exact_jvp", "jvp"], help="独立复评的 Laplacian 方法 (仅确定性方法；hutchinson 因随机噪声不适用于对外报告能量)")
+    parser.add_argument("--clip_method", type=str, default="tanh", choices=["tanh", "hard", "none"], help="局域能量截断方法")
     parser.add_argument("--grad_clip", type=float, default=1.0, help="梯度范数裁剪阈值 (默认: 1.0)")
     parser.add_argument("--device", type=str, default=None, help="运行设备 (cuda 或 cpu)")
-    parser.add_argument(
-        "--rotation_invariant", action="store_true",
-        help="使用仅距离的旋转不变特征（限制可表示的角动量和宇称）",
-    )
     parser.add_argument("--seed", type=int, default=42, help="随机数种子 (默认: 42)")
-    # 可视化参数
-    parser.add_argument("--plot", action="store_true", default=False, help="训练完成后自动生成并展示全部可视化图表")
-    parser.add_argument("--save_plots", action="store_true", default=False, help="将所有可视化图表保存为 PNG 文件")
-    parser.add_argument("--plot_dir", type=str, default="assets/plots", help="图表保存目录 (默认: assets/plots)")
     return parser.parse_args()
 
 
@@ -482,7 +320,7 @@ def main() -> None:
     else:
         system = build_h2_system()
 
-    result = train_vmc(
+    train_vmc(
         system=system,
         num_epochs=args.epochs,
         num_walkers=args.walkers,
@@ -493,57 +331,11 @@ def main() -> None:
         move_mode=args.move_mode,
         clip_factor=args.clip_factor,
         clip_method=args.clip_method,
-        laplacian_method=args.laplacian_method,
-        num_hutchinson_samples=args.hutch_samples,
-        hutchinson_distribution=args.hutch_dist,
         grad_clip=args.grad_clip,
-        evaluation_steps=args.evaluation_steps,
-        evaluation_mcmc_steps=args.evaluation_mcmc_steps,
-        evaluation_burn_in_steps=args.evaluation_burn_in,
-        evaluation_laplacian_method=args.evaluation_laplacian_method,
         device=args.device,
-        rotation_invariant=args.rotation_invariant,
         seed=args.seed,
         verbose=True,
     )
-
-    # 训练后可视化生成
-    if args.plot or args.save_plots:
-        try:
-            from visualize import plot_all_visualizations
-        except ImportError:
-            from ferminet_pytorch.visualize import plot_all_visualizations
-
-        # 从最终采样器获取当前 walkers 和局域能量
-        final_walkers = result["sampler"].walkers.clone().detach()
-        trained_model = result["model"]
-        trained_system = result["system"]
-
-        # 计算最终局域能量用于直方图 (动能拉普拉斯需对电子坐标求导，故不能在 torch.no_grad 中执行，且坐标需 requires_grad=True)
-        try:
-            from hamiltonian import compute_local_energy
-        except ImportError:
-            from ferminet_pytorch.hamiltonian import compute_local_energy
-        walkers_eval = final_walkers.clone().detach().requires_grad_(True)
-        e_local, _, _ = compute_local_energy(
-            trained_model, trained_system, walkers_eval, create_graph=False
-        )
-        e_local = e_local.detach()
-
-        saved = plot_all_visualizations(
-            history=result["history"],
-            system=trained_system,
-            model=trained_model,
-            walkers=final_walkers,
-            local_energies=e_local,
-            plot_dir=args.plot_dir if args.save_plots else "assets/plots",
-            prefix=args.system,
-        )
-
-        if args.save_plots and saved:
-            print(f"\n[*] 已保存 {len(saved)} 张可视化图表到 {os.path.abspath(args.plot_dir)}/:")
-            for name, path in saved.items():
-                print(f"    - {name}: {os.path.basename(path)}")
 
 
 if __name__ == "__main__":

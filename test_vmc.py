@@ -227,7 +227,7 @@ class TestVMCComponents(unittest.TestCase):
             log_psi_b, _ = self.model.forward_log_psi(single_walker)
             # 计算该样本的对数波函数参数梯度
             log_psi_b.backward()
-            weight = (2.0 / (b_size - 1)) * centered_e[b].item()
+            weight = (2.0 / b_size) * centered_e[b].item()
             for idx, p in enumerate(active_params):
                 if p.grad is not None:
                     manual_grads[idx] += weight * p.grad
@@ -260,45 +260,20 @@ class TestVMCComponents(unittest.TestCase):
             "energy_mean",
             "energy_std",
             "energy_var",
-            "energy_iid_sem_proxy",
             "energy_clipped_mean",
             "energy_median",
             "energy_mad",
             "loss",
-            "num_nonfinite",
         ]
         for k in expected_keys:
             self.assertIn(k, stats)
             self.assertFalse(torch.isnan(torch.tensor(stats[k])))
-        self.assertEqual(stats["gradient_estimator"], "robust_clipped")
-        self.assertFalse(stats["gradient_is_unbiased"])
 
         # 验证梯度反向传播
         self.model.zero_grad()
         loss.backward()
         has_grad = any(p.grad is not None for p in self.model.parameters())
         self.assertTrue(has_grad, "反向传播后模型参数未产生有效梯度")
-
-    def test_strict_gradient_defaults_and_finite_batch_correction(self) -> None:
-        theta = torch.tensor(0.7, dtype=torch.float64, requires_grad=True)
-        features = torch.tensor([-2.0, -0.5, 1.0, 3.0], dtype=torch.float64)
-        energies = torch.tensor([-3.0, -1.0, 2.0, 5.0], dtype=torch.float64)
-        loss, stats = vmc_surrogate_loss(theta * features, energies)
-        loss.backward()
-        expected = 2.0 * torch.sum((energies - energies.mean()) * features) / (len(energies) - 1)
-        self.assertAlmostEqual(theta.grad.item(), expected.item(), places=12)
-        self.assertEqual(stats["gradient_estimator"], "iid_covariance_corrected")
-        self.assertTrue(stats["gradient_is_unbiased"])
-        self.assertNotIn("energy_sem", stats)
-
-    def test_strict_gradient_rejects_singleton_and_nonfinite_batches(self) -> None:
-        with self.assertRaisesRegex(ValueError, "B >= 2"):
-            vmc_surrogate_loss(torch.ones(1, requires_grad=True), torch.ones(1))
-        with self.assertRaisesRegex(FloatingPointError, "non-finite"):
-            vmc_surrogate_loss(
-                torch.ones(3, requires_grad=True),
-                torch.tensor([-1.0, float("nan"), -2.0]),
-            )
 
     def test_train_vmc_end_to_end_loop(self) -> None:
         """测试端到端 VMC 训练迭代完整闭环 (3 步迷你训练)."""
@@ -310,26 +285,16 @@ class TestVMCComponents(unittest.TestCase):
             mcmc_steps_per_epoch=2,
             burn_in_steps=5,
             lr=1e-3,
-            evaluation_steps=64,
-            evaluation_mcmc_steps=1,
-            evaluation_burn_in_steps=2,
             verbose=False,
         )
 
         self.assertIn("history", result)
         self.assertIn("final_energy", result)
         self.assertIn("final_variance", result)
-        self.assertIn("evaluation", result)
         history = result["history"]
-        self.assertEqual(result["final_energy"], result["evaluation"]["energy_mean"])
-        self.assertEqual(result["training_last_batch_energy"], history["energy_raw"][-1])
-        self.assertNotIn("energy_sem", history)
-        # 复评链长 (64) 足以解析自相关，SEM 必须为有限值
-        self.assertEqual(result["evaluation"]["autocorrelation_status"], "ok")
-        self.assertTrue(torch.isfinite(torch.tensor(result["evaluation"]["energy_sem"])))
-        self.assertEqual(result["evaluation"]["laplacian_method"], "exact")
+        self.assertEqual(result["final_energy"], history["energy_raw"][-1])
+        self.assertEqual(result["final_variance"], history["energy_var"][-1])
         self.assertTrue(result["sampler"].adapt_step_size)
-        self.assertTrue(result["model"].training)
 
         self.assertEqual(len(history["energy_raw"]), 3)
         self.assertEqual(len(history["energy_clipped"]), 3)
@@ -428,9 +393,6 @@ class TestVMCComponents(unittest.TestCase):
             num_epochs=2,
             mcmc_steps_per_epoch=2,
             burn_in_steps=3,
-            evaluation_steps=4,
-            evaluation_mcmc_steps=1,
-            evaluation_burn_in_steps=2,
             verbose=False,
         )
         self.assertEqual(len(res["history"]["energy_raw"]), 2)

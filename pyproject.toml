@@ -6,10 +6,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "torch>=2.0.0",
-    # visualize.py 与 test_visualize.py 直接导入 numpy / matplotlib；此前未声明，
-    # 导致 `uv sync` 产出的环境里可视化模块与约 56 项测试无法导入。
     "numpy>=1.21",
-    "matplotlib>=3.5",
 ]
 
 [build-system]
@@ -26,13 +23,9 @@ only-include = [
     "model.py",
     "hamiltonian.py",
     "mcmc.py",
-    "mcmc_stats.py",
     "loss.py",
     "train_vmc.py",
-    "visualize.py",
     "example_h2.py",
-    "benchmark_compile.py",
-    "benchmark_100_atoms.py",
 ]
 
 [tool.hatch.build.targets.wheel.sources]
@@ -50,12 +43,8 @@ only-include = [
     "model.py",
     "hamiltonian.py",
     "mcmc.py",
-    "mcmc_stats.py",
     "loss.py",
     "train_vmc.py",
-    "visualize.py",
     "example_h2.py",
-    "benchmark_compile.py",
-    "benchmark_100_atoms.py",
     "ferminet_pytorch",
 ]

@@ -2,22 +2,14 @@
 
 ## Project Structure & Module Organization
 
-This repository is a flat Python package. Core neural-network components live in `features.py`, `layers.py`, `envelope.py`, and `model.py`; physics and optimization code is in `hamiltonian.py`, `mcmc.py`, `mcmc_stats.py`, `loss.py`, and `train_vmc.py`; plotting and diagnostics live in `visualize.py`. Runnable examples and performance checks are `example_h2.py`, `benchmark_compile.py`, and `benchmark_100_atoms.py`.
+This repository is a flat Python package. Core neural-network components live in `features.py`, `layers.py`, `envelope.py`, and `model.py`; physics and optimization code is in `hamiltonian.py`, `mcmc.py`, `loss.py`, and `train_vmc.py`. Runnable tutorial examples are `example_h2.py` and `train_vmc.py`.
 
 Tests remain beside the source as `test_*.py`:
 
 - `test_ferminet.py` — core physics properties and network architecture
 - `test_vmc.py` — MCMC sampling, gradient estimation, and energy clipping
-- `test_phase2.py` — kinetic-energy solvers, nuclear-charge injection, and the anisotropic envelope
-- `test_visualize.py` — visualization module
-- `test_mcmc_stats.py` — chain autocorrelation statistics, checked against analytic AR(1) results
-- `test_physics_invariants.py` — physical invariants and the limitations that are knowingly not met (symmetry, cusp, parameter reachability, estimator behaviour)
-- `test_geometry_invariants.py` — geometry-feature invariants and numerical stability
-- `test_estimator_invariants.py` — energy-estimator and potential numerical invariants
-- `test_cli_guards.py` — CLI guards that keep random estimators off the reported-energy path
-- `test_robustness_guards.py` — boundary behaviours and guards: determinant-weight recovery, non-finite handling, solver fallback visibility, geometry consistency
 
-Documentation is in `README.md` and `BEGINNER_GUIDE.md`. Reviewed audit reports, their reproduction scripts, and their measured JSON outputs live in `audit_review/`; `audit_review/README.md` indexes them and records the current fix status. Checked-in figures belong under `assets/` or `assets/plots/`.
+Documentation is in `README.md` and `BEGINNER_GUIDE.md`. Optional architecture diagrams live under `assets/`.
 
 ## Build, Test, and Development Commands
 
@@ -28,7 +20,7 @@ Documentation is in `README.md` and `BEGINNER_GUIDE.md`. Reviewed audit reports,
 - `uv run python -m unittest test_vmc.py` runs one focused test module.
 - `uv build` produces source and wheel distributions through Hatchling.
 
-GPU-heavy benchmarks are optional; use `uv run python benchmark_100_atoms.py --double --quick` for the reduced path.
+
 
 **Windows / non-UTF-8 locales and `torch.compile`:** if importing the inductor backend fails with `UnicodeDecodeError: 'gbk' codec can't decode byte 0x94`, your torch predates the fix that makes inductor read its CuteDSL templates with `encoding="utf-8"`. Torch 2.14.0 (the version pinned in `uv.lock`) has that fix; 2.13.0 does not. Setting `PYTHONUTF8=1` works around it on older torch — the variable only takes effect before the interpreter starts, so it cannot be set from code:
 
@@ -54,4 +46,4 @@ Tests use the standard-library `unittest` framework. Name files `test_<area>.py`
 
 ## Commit & Pull Request Guidelines
 
-History follows Conventional Commit-style subjects such as `feat:`, `fix(visualize):`, `docs:`, and `style:`. Keep the subject imperative and describe one logical change. Pull requests should explain the motivation and numerical/physical impact, list commands run, and link related issues. Include updated plots or screenshots when visualization output changes, plus benchmark numbers when making performance claims. Do not commit virtual environments, checkpoints, logs, or generated build artifacts.
+History follows Conventional Commit-style subjects such as `feat:`, `fix(mcmc):`, `docs:`, and `style:`. Keep the subject imperative and describe one logical change. Pull requests should explain the motivation and numerical/physical impact, list commands run, and link related issues. Do not commit virtual environments, checkpoints, logs, or generated build artifacts.

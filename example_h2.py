@@ -66,7 +66,6 @@ def run_h2_demo() -> None:
         nuclear_charges=nuclear_charges,
         n_up=n_up,
         n_down=n_down,
-        rotation_invariant=True,
         num_determinants=num_determinants,
         hidden_dim_one=hidden_dim_one,
         hidden_dim_two=hidden_dim_two,

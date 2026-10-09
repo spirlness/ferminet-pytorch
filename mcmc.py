@@ -1,13 +1,12 @@
 """
-批量并行 GPU 马尔可夫链蒙特卡洛 (MCMC) 采样器
-==============================================
-基于 Metropolis-Hastings (MH) 拒绝采样算法，实现全向量化批量电子构型采样。
-保证平衡态电子空间分布严格符合量子力学玻恩概率密度:
-    p(r) = |Psi(r)|^2 / int |Psi(r')|^2 dr'
+批量并行 Metropolis-Hastings (MCMC) 采样器
+==========================================
+依据玻恩概率密度 p(r) ∝ |Psi(r)|² 采样电子空间分布构型，
+支持全电子一体化移动、逐电子移动以及目标接受率自适应步长调节。
 """
 
 import math
-from typing import Optional, Tuple
+from typing import Optional
 import torch
 import torch.nn as nn
 
@@ -19,16 +18,13 @@ except (ImportError, ValueError):
 
 class MCMCSampler:
     """
-    批量 GPU/CPU 并行 Metropolis-Hastings MCMC 采样器。
+    批量并行 Metropolis-Hastings MCMC 采样器。
 
-    特性：
-    1. 批量并行：支持成百上千个 Walker 在 GPU/CPU 上并行游走。
-    2. 双步进模式：
-       - 'all': 全电子一体化移动 (All-electron moves)，速度快。
-       - 'one_by_one': 逐电子轮换移动 (One-electron moves)，大体系接受率高。
-    3. 自适应步长：根据当前接受率动态调节提议方差，使平均接受率稳定在目标值 (默认 50%)。
-    4. 显存安全：采样前向使用 no_grad 并与优化计算图完全解耦，彻底防范 CUDAGraphs 显存覆写。
-    5. 波函数缓存：每次接受后缓存对数波函数值，下一次提议仅需计算新点波函数，节省一半前向开销。
+    核心机制：
+    1. 构型提议：高斯随机游走 r' = r + sigma * N(0, I)
+    2. 接受准则：alpha = min(1, |Psi(r')|² / |Psi(r)|²) = min(1, exp(2 * (ln|Psi(r')| - ln|Psi(r)|)))
+    3. 自适应步长：根据当前接受率动态缩放提议步长 sigma，稳定在目标接受率 (通常 50%)
+    4. 对数缓存：缓存当前构型的 ln|Psi|，提议时仅需一次前向计算
     """
 
     def __init__(
@@ -177,32 +173,26 @@ class MCMCSampler:
         return self.current_log_abs_psi
 
     def _step_all_electrons(self) -> float:
-        """
-        全电子一体化移动 (All-electron move)。
-        一次性对每个 walker 的所有电子提议高斯位移。
-        """
-        # 提议新坐标 r' = r + sigma * eta
+        """全电子一体化移动 (All-electron moves)。"""
         noise = torch.randn_like(self.walkers) * self.step_size
-        proposed_walkers = self.walkers + noise
+        prop_walkers = self.walkers + noise
 
         with torch.no_grad():
-            log_abs_prop, _ = self.model.forward_log_psi(proposed_walkers)
-            # 严格防范非有限波函数：若出现 NaN 或 Inf，直接判定为非法提议并拒绝 (严格符合 Born 概率测度)
-            prop_is_valid = torch.isfinite(log_abs_prop)
-            safe_log_prop = torch.nan_to_num(log_abs_prop, nan=-1e20, neginf=-1e20, posinf=-1e20)
+            log_prop, _ = self.model.forward_log_psi(prop_walkers)
+            valid = torch.isfinite(log_prop) & ~torch.isnan(log_prop)
 
-            # 接受概率对数: log(alpha) = 2.0 * (log|Psi(r')| - log|Psi(r)|)
-            log_ratio = 2.0 * (safe_log_prop - self.current_log_abs_psi)
-            ratio = torch.exp(torch.clamp(log_ratio, max=0.0))  # 截断上限为 1.0
+            cur_is_node = torch.isneginf(self.current_log_abs_psi)
+            log_ratio = torch.where(
+                cur_is_node & valid,
+                torch.zeros_like(log_prop),
+                2.0 * (log_prop - self.current_log_abs_psi),
+            )
+            ratio = torch.exp(torch.clamp(log_ratio, max=0.0))
+            accepted = valid & (torch.rand_like(ratio) < ratio)
 
-            # 抽取均匀分布随机数 u ~ U(0, 1)
-            uniform_rand = torch.rand_like(ratio)
-            accepted = (uniform_rand < ratio) & prop_is_valid  # (num_walkers,)
-
-            # 更新接受的 walkers 与对数幅值
-            accepted_mask = accepted.unsqueeze(-1).unsqueeze(-1)  # (num_walkers, 1, 1)
-            self.walkers = torch.where(accepted_mask, proposed_walkers, self.walkers)
-            self.current_log_abs_psi = torch.where(accepted, safe_log_prop, self.current_log_abs_psi)
+            acc_mask = accepted.unsqueeze(-1).unsqueeze(-1)
+            self.walkers = torch.where(acc_mask, prop_walkers, self.walkers)
+            self.current_log_abs_psi = torch.where(accepted, log_prop, self.current_log_abs_psi)
 
             acc_rate = accepted.float().mean().item()
             self.accepted_steps += int(accepted.sum().item())
@@ -210,41 +200,37 @@ class MCMCSampler:
         return acc_rate
 
     def _step_one_electron(self) -> float:
-        """
-        逐电子依次移动 (One-electron move)。
-        对每个电子轮流提议位移并独立进行 MH 接受-拒绝判定，在大体系下维持高接受率。
-        """
+        """逐电子轮换移动 (One-by-one moves)。"""
         total_electrons = max(self.system.total_electrons, 1)
         total_accepted = 0.0
         total_accepted_count = 0
 
         with torch.no_grad():
             for i in range(self.system.total_electrons):
-                # 仅对第 i 个电子提议位移
                 noise_i = torch.randn(
                     self.num_walkers, 3, device=self.device, dtype=self.dtype
                 ) * self.step_size
 
-                proposed_walkers = self.walkers.clone()
-                proposed_walkers[:, i, :] = proposed_walkers[:, i, :] + noise_i
+                prop_walkers = self.walkers.clone()
+                prop_walkers[:, i, :] = prop_walkers[:, i, :] + noise_i
 
-                log_abs_prop, _ = self.model.forward_log_psi(proposed_walkers)
-                prop_is_valid = torch.isfinite(log_abs_prop)
-                safe_log_prop = torch.nan_to_num(log_abs_prop, nan=-1e20, neginf=-1e20, posinf=-1e20)
+                log_prop, _ = self.model.forward_log_psi(prop_walkers)
+                valid = torch.isfinite(log_prop) & ~torch.isnan(log_prop)
 
-                log_ratio = 2.0 * (safe_log_prop - self.current_log_abs_psi)
+                cur_is_node = torch.isneginf(self.current_log_abs_psi)
+                log_ratio = torch.where(
+                    cur_is_node & valid,
+                    torch.zeros_like(log_prop),
+                    2.0 * (log_prop - self.current_log_abs_psi),
+                )
                 ratio = torch.exp(torch.clamp(log_ratio, max=0.0))
+                accepted = valid & (torch.rand_like(ratio) < ratio)
 
-                uniform_rand = torch.rand_like(ratio)
-                accepted = (uniform_rand < ratio) & prop_is_valid  # (num_walkers,)
-
-                accepted_mask_i = accepted.unsqueeze(-1)  # (num_walkers, 1)
+                acc_mask_i = accepted.unsqueeze(-1)
                 self.walkers[:, i, :] = torch.where(
-                    accepted_mask_i, proposed_walkers[:, i, :], self.walkers[:, i, :]
+                    acc_mask_i, prop_walkers[:, i, :], self.walkers[:, i, :]
                 )
-                self.current_log_abs_psi = torch.where(
-                    accepted, safe_log_prop, self.current_log_abs_psi
-                )
+                self.current_log_abs_psi = torch.where(accepted, log_prop, self.current_log_abs_psi)
 
                 total_accepted += accepted.float().mean().item()
                 total_accepted_count += int(accepted.sum().item())
@@ -254,58 +240,25 @@ class MCMCSampler:
         return acc_rate
 
     def step(self) -> float:
-        """
-        执行单步 Metropolis-Hastings MCMC 采样移动。
-        根据当前接受率与目标接受率动态调整 step_size。
-
-        Returns:
-            float: 本次步进的平均接受率 (0.0 ~ 1.0)。
-        """
-        if self.move_mode == "all":
-            acc_rate = self._step_all_electrons()
-        else:
-            acc_rate = self._step_one_electron()
-
+        """执行单步 MCMC 移动，并动态自适应更新步长。"""
+        acc_rate = self._step_all_electrons() if self.move_mode == "all" else self._step_one_electron()
         self.last_acceptance_rate = acc_rate
         self.total_steps += 1
 
-        # 自适应更新步长: 根据接受率偏离程度指数调整 (使用纯标量算术，避免 CPU-GPU 张量同步开销)
         if self.adapt_step_size:
             diff = acc_rate - self.target_acceptance
-            # 步长因子限制在 [-0.5, 0.5] 避免步长剧烈跳跃
             factor = max(-0.5, min(0.5, self.adapt_rate * diff))
-            new_step = self.step_size * math.exp(factor)
-            # 限制步长边界在 [1e-3, 10.0]
-            self.step_size = max(0.001, min(10.0, new_step))
+            self.step_size = max(0.001, min(10.0, self.step_size * math.exp(factor)))
 
         return acc_rate
 
     def sample(self, num_steps: int = 10) -> torch.Tensor:
-        """
-        进行多次连续 MCMC 迭代采样以实现充分去相关，并返回最新构型副本。
-
-        Args:
-            num_steps (int): 执行的 MCMC 步数 (默认 10 步)。
-
-        Returns:
-            torch.Tensor: 采样得到的电子空间构型副本，Shape: `(num_walkers, total_electrons, 3)`。
-        """
+        """执行多步连续 MCMC 迭代并返回最新构型副本。"""
         for _ in range(num_steps):
             self.step()
         return self.walkers.clone().detach()
 
     def burn_in(self, num_steps: int = 100) -> float:
-        """
-        执行预热 (Burn-in) 弛豫，消除随机初始构型的不良偏差，使 Walker 进入高概率波函数区域。
-
-        Args:
-            num_steps (int): 预热步数。
-
-        Returns:
-            float: 预热阶段的平均接受率。
-        """
-        acc_list = []
-        for _ in range(num_steps):
-            acc = self.step()
-            acc_list.append(acc)
+        """预热 (Burn-in) 消除随机初始偏差，返回平均接受率。"""
+        acc_list = [self.step() for _ in range(num_steps)]
         return float(sum(acc_list) / max(len(acc_list), 1))

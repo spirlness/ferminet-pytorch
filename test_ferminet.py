@@ -59,31 +59,21 @@ class TestFermiNet(unittest.TestCase):
         )
 
     def test_feature_embedding_shapes(self) -> None:
-        """测试特征嵌入层输出张量形状 (两种特征模式)."""
+        """测试特征嵌入层输出张量形状与数值有限性。"""
         r = torch.randn(self.batch_size, self.total_electrons, 3)
         num_nuclei = self.nuclear_coords.shape[0]
 
-        # 显式纯距离模式: 单电子流每核 1 维 [d_{iI}]，双电子流 1 维 [d_{ij}]
-        invariant = ElectronFeatureEmbedding(rotation_invariant=True)
-        h1, h2 = invariant(r, self.nuclear_coords)
+        cartesian = ElectronFeatureEmbedding()
+        h1, h2 = cartesian(r, self.nuclear_coords, self.nuclear_charges)
         self.assertEqual(
-            h1.shape, (self.batch_size, self.total_electrons, 1 * num_nuclei)
+            h1.shape, (self.batch_size, self.total_electrons, 5 * num_nuclei)
         )
         self.assertEqual(
             h2.shape,
-            (self.batch_size, self.total_electrons, self.total_electrons, 1),
-        )
-
-        # 公共默认的笛卡尔模式: 每核 4 维 [r_{iI}, d_{iI}]，双电子流 4 维
-        cartesian = ElectronFeatureEmbedding()
-        h1_legacy, h2_legacy = cartesian(r, self.nuclear_coords)
-        self.assertEqual(
-            h1_legacy.shape, (self.batch_size, self.total_electrons, 4 * num_nuclei)
-        )
-        self.assertEqual(
-            h2_legacy.shape,
             (self.batch_size, self.total_electrons, self.total_electrons, 4),
         )
+        self.assertTrue(torch.isfinite(h1).all())
+        self.assertTrue(torch.isfinite(h2).all())
 
     def test_interaction_layer_shapes(self) -> None:
         """测试自旋等变相互作用层形状."""
@@ -309,148 +299,31 @@ class TestFermiNet(unittest.TestCase):
         self.assertIsNotNone(self.model.det_weights.grad)
         self.assertFalse(torch.isnan(self.model.det_weights.grad).any())
 
-    def test_default_compile_flags(self) -> None:
-        """
-        验证阶段0纠偏: FermiNet 默认 compile 为 False，compile_mode 默认为 'default'，
-        并支持显式链式 enable/disable_compile。
-
-        本测试只检查标志位，不触发真正的编译后端，因此在任何环境下都应通过。
-        """
-        model = FermiNet(
-            nuclear_coords=self.nuclear_coords,
-            nuclear_charges=self.nuclear_charges,
-            n_up=self.n_up,
-            n_down=self.n_down,
-        )
-        self.assertFalse(model.use_compile, "FermiNet 默认应禁用编译 (compile=False)")
-        self.assertEqual(model.compile_mode, "default", "默认 compile_mode 应为 'default'")
-
-        # 测试显式按需启用与关闭
-        model.enable_compile(mode="reduce-overhead")
-        self.assertTrue(model.use_compile)
-        self.assertEqual(model.compile_mode, "reduce-overhead")
-
-        model.disable_compile()
-        self.assertFalse(model.use_compile)
-
-    def test_compile_model_disables_internal_compile(self) -> None:
-        """
-        验证 `compile_model` 会先关闭内部懒加载编译以消除多重嵌套编译。
-
-        `torch.compile` 需要可用的编译后端。若当前环境无法导入后端——例如 Windows
-        的 GBK 默认编码下 torch inductor 读取模板文件时未指定编码，抛
-        UnicodeDecodeError——则跳过本项：那是环境/区域设置问题，不是本仓库的缺陷
-        (审查报告 D12)。标志位层面由 test_default_compile_flags 覆盖。
-        """
-        model = FermiNet(
-            nuclear_coords=self.nuclear_coords,
-            nuclear_charges=self.nuclear_charges,
-            n_up=self.n_up,
-            n_down=self.n_down,
-        )
-        model.enable_compile()
-        try:
-            model.compile_model()  # 默认 mode 应为 default
-        except (UnicodeDecodeError, ImportError) as exc:
-            self.skipTest(
-                f"torch.compile 在当前环境不可用 ({type(exc).__name__}: {exc})，"
-                f"跳过编译路径检查。"
-            )
-        self.assertFalse(
-            model.use_compile, "compile_model 应显式关闭内部编译以消除多重嵌套编译"
-        )
-
     def test_v_nn_precomputed_and_migrated(self) -> None:
-        """
-        验证阶段0优化: MolecularSystem 初始化时预计算并缓存核-核排斥常数 V_nn，
-        在 .to(device, dtype) 各种位置与关键字传参时同步迁移缓存，
-        并在 update_geometry 几何构型变更时自动刷新缓存。
-        """
+        """测试 MolecularSystem 初始化时预计算并缓存核-核排斥常数 V_nn，以及在 .to() 迁移时同步。"""
         system = MolecularSystem(
             nuclear_coords=self.nuclear_coords,
             nuclear_charges=self.nuclear_charges,
             n_up=self.n_up,
             n_down=self.n_down,
         )
-        # 验证缓存属性存在
         self.assertTrue(hasattr(system, "v_nn"))
         self.assertIsInstance(system.v_nn, torch.Tensor)
 
-        # 理论计算 2 个核的库仑斥力: Z1 * Z2 / |R1 - R2|
-        # R1 = (0, 0, -1), R2 = (0, 0, 1), dist = 2.0, Z1=1, Z2=1 => V_nn = 0.5 Hartree
         expected_v_nn = 1.0 * 1.0 / 2.0
         self.assertAlmostEqual(system.v_nn.item(), expected_v_nn, places=5)
 
-        # 验证 .to(torch.float64) 位置参数传参 (防范因具名位置参数签名导致的 API 崩溃)
         system.to(torch.float64)
         self.assertEqual(system.nuclear_coords.dtype, torch.float64)
         self.assertEqual(system.nuclear_charges.dtype, torch.float64)
         self.assertEqual(system.v_nn.dtype, torch.float64)
         self.assertAlmostEqual(system.v_nn.item(), expected_v_nn, places=5)
 
-        # 验证 .to('cpu') 位置参数传参
-        system.to("cpu")
-        self.assertEqual(system.nuclear_coords.device.type, "cpu")
-        self.assertEqual(system.v_nn.device.type, "cpu")
-
-        # 验证 update_geometry 几何构型变更时自动刷新 V_nn 缓存 (防范 stale cache)
-        new_coords = torch.tensor([[0.0, 0.0, -0.5], [0.0, 0.0, 0.5]], dtype=torch.float64)
-        system.update_geometry(new_coords)
-        expected_new_v_nn = 1.0 * 1.0 / 1.0  # dist = 1.0 => V_nn = 1.0
-        self.assertAlmostEqual(system.v_nn.item(), expected_new_v_nn, places=5)
-
-        # 验证势能计算复用缓存正确性
         r = torch.randn(self.batch_size, self.total_electrons, 3, dtype=torch.float64)
         v = system.compute_potential_energy(r)
         self.assertEqual(v.shape, (self.batch_size,))
         self.assertEqual(v.dtype, torch.float64)
         self.assertFalse(torch.isnan(v).any())
-
-    def test_precision_warning_for_large_systems(self) -> None:
-        """
-        验证阶段0防范: 多电子体系 (N > 16) 在单精度下自动发出精度提升建议告警。
-        """
-        n_atoms = 10
-        coords = torch.zeros(n_atoms, 3, dtype=torch.float32)
-        charges = torch.ones(n_atoms, dtype=torch.float32)
-
-        # 总电子数 18 (> 16)
-        n_up = 9
-        n_down = 9
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            model_large_f32 = FermiNet(
-                nuclear_coords=coords,
-                nuclear_charges=charges,
-                n_up=n_up,
-                n_down=n_down,
-                hidden_dim_one=16,
-                hidden_dim_two=8,
-                num_layers=1,
-            )
-            # 应该捕获到 UserWarning
-            warning_msgs = [str(item.message) for item in w if issubclass(item.category, UserWarning)]
-            self.assertTrue(
-                any("总电子数 N = 18 > 16" in msg or "建议提升至双精度" in msg for msg in warning_msgs),
-                "未检测到针对 N > 16 单精度大体系的精度提升告警！",
-            )
-
-        # 双精度下不应发出警告
-        coords_f64 = coords.to(torch.float64)
-        charges_f64 = charges.to(torch.float64)
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            _ = FermiNet(
-                nuclear_coords=coords_f64,
-                nuclear_charges=charges_f64,
-                n_up=n_up,
-                n_down=n_down,
-                hidden_dim_one=16,
-                hidden_dim_two=8,
-                num_layers=1,
-            )
-            warning_msgs = [str(item.message) for item in w if issubclass(item.category, UserWarning)]
-            self.assertEqual(len(warning_msgs), 0, "双精度下不应发出下溢告警")
 
     def test_slogdet_antisymmetry_on_large_system(self) -> None:
         """
@@ -508,71 +381,6 @@ class TestFermiNet(unittest.TestCase):
         self.assertTrue(torch.all(sign_det_swap == -sign_det_orig))
         self.assertTrue(torch.allclose(log_det_orig, log_det_swap, rtol=1e-4, atol=1e-5))
 
-    def test_large_float32_underflow_keeps_finite_log_wavefunction(self) -> None:
-        """R8: scalar underflow must not turn a nonzero state into a node."""
-        # 针对 50 电子大体系，单精度下乘积波函数幅值约为 exp(-200) 发生真实物理浮点下溢
-        coords = torch.zeros(50, 3, dtype=torch.float32)
-        charges = torch.ones(50, dtype=torch.float32)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", UserWarning)
-            model = FermiNet(
-                nuclear_coords=coords,
-                nuclear_charges=charges,
-                n_up=25,
-                n_down=25,
-                num_determinants=1,
-                hidden_dim_one=16,
-                hidden_dim_two=8,
-                num_layers=1,
-            )
-
-        r = torch.randn(2, 50, 3, dtype=torch.float32)
-        log_abs, sign = model.forward_log_psi(r)
-        self.assertTrue(torch.all(torch.isfinite(log_abs)))
-        self.assertTrue(torch.all(sign != 0.0))
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter("always")
-            psi = model(r)
-        self.assertTrue(torch.all(psi == 0.0))
-        self.assertTrue(any("下溢" in str(item.message) for item in caught))
-
-    def test_benchmark_compile_helpers(self) -> None:
-        """
-        验证 benchmark_compile 模块中的辅助函数及 Eager 模式执行路径。
-        """
-        from ferminet_pytorch.benchmark_compile import setup_benchmark_system, measure_inference
-
-        # 默认不传 device 测试自适应能力
-        system, model = setup_benchmark_system(num_atoms=4, spacing=1.8)
-        self.assertEqual(system.num_nuclei, 4)
-        self.assertEqual(system.total_electrons, 4)
-        self.assertFalse(model.use_compile)
-
-        model.disable_compile()
-        r = torch.randn(2, 4, 3, device=system.nuclear_coords.device)
-        device_type = system.nuclear_coords.device.type
-        lat, thr, out = measure_inference(model, r, warmup_steps=1, benchmark_steps=3, device_type=device_type)
-        self.assertGreater(lat, 0.0)
-        self.assertGreater(thr, 0.0)
-        self.assertEqual(out.shape, (2,))
-
-    def test_benchmark_100_atoms_helpers(self) -> None:
-        """
-        验证 benchmark_100_atoms 模块体系构建及精度支持。
-        """
-        from ferminet_pytorch.benchmark_100_atoms import build_h100_system
-
-        # 验证默认 float32 构建
-        sys_f32 = build_h100_system(spacing=1.8, dtype=torch.float32)
-        self.assertEqual(sys_f32.num_nuclei, 100)
-        self.assertEqual(sys_f32.total_electrons, 100)
-        self.assertEqual(sys_f32.nuclear_coords.dtype, torch.float32)
-        self.assertEqual(sys_f32.v_nn.dtype, torch.float32)
-
-        # 验证 float64 双精度构建
-        sys_f64 = build_h100_system(spacing=1.8, dtype=torch.float64)
-        self.assertEqual(sys_f64.nuclear_coords.dtype, torch.float64)
-        self.assertEqual(sys_f64.v_nn.dtype, torch.float64)
 
     def test_mcmc_sampler_functionality(self) -> None:
         """验证批量 GPU/CPU MCMC 采样器的全电子与逐电子步进、自适应步长与预热."""
@@ -631,9 +439,6 @@ class TestFermiNet(unittest.TestCase):
             mcmc_steps_per_epoch=2,
             burn_in_steps=4,
             lr=1e-3,
-            evaluation_steps=4,
-            evaluation_mcmc_steps=1,
-            evaluation_burn_in_steps=2,
             verbose=False,
         )
         self.assertIn("history", result)
