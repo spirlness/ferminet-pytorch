@@ -17,10 +17,14 @@ try:
     from .features import ElectronFeatureEmbedding
     from .layers import FermiInteractionLayer
     from .envelope import NuclearEnvelope
+    from .jastrow import KatoCuspJastrow
+    from .spin import SpinProjector
 except (ImportError, ValueError):
     from features import ElectronFeatureEmbedding
     from layers import FermiInteractionLayer
     from envelope import NuclearEnvelope
+    from jastrow import KatoCuspJastrow
+    from spin import SpinProjector
 
 
 class FermiNet(nn.Module):
@@ -42,6 +46,14 @@ class FermiNet(nn.Module):
         hidden_dim_two: int = 16,
         num_layers: int = 2,
         eps: float = 1e-24,
+        use_cusp_jastrow: bool = False,
+        jastrow: Optional[nn.Module] = None,
+        jastrow_kwargs: Optional[dict] = None,
+        spin_adapted: bool = False,
+        spin_projector: Optional[nn.Module] = None,
+        spin_projector_kwargs: Optional[dict] = None,
+        envelope_type: Optional[str] = None,
+        smooth_cuspless: Optional[bool] = None,
     ) -> None:
         """
         初始化 FermiNet 模型。
@@ -56,6 +68,12 @@ class FermiNet(nn.Module):
             hidden_dim_two: 双电子流隐藏层维度
             num_layers: 交互层数
             eps: 数值稳定性参数 (最小平方距离)
+            use_cusp_jastrow: 是否启用显式 Kato 尖峰 Jastrow 因子
+            jastrow: 自定义 Jastrow 模块 (若提供则优先使用)
+            jastrow_kwargs: KatoCuspJastrow 初始化的额外参数字典
+            spin_adapted: 是否启用自旋纯态投影算符 (如针对双电子单重态加入空间对称化 1/2(I + P12))
+            spin_projector: 自定义自旋投影算符模块 (若提供则优先使用)
+            spin_projector_kwargs: SpinProjector 初始化的额外参数字典
         """
         super().__init__()
         assert n_up >= 0 and n_down >= 0, "电子数必须非负"
@@ -77,8 +95,16 @@ class FermiNet(nn.Module):
         num_nuclei = nuclear_coords.shape[0]
         self.num_nuclei = num_nuclei
 
+        # 解析 Jastrow 状态与协同平滑参数
+        has_jastrow = (jastrow is not None) or use_cusp_jastrow
+        eff_env_type = envelope_type if envelope_type is not None else ("gaussian" if has_jastrow else "exponential")
+        eff_smooth = smooth_cuspless if smooth_cuspless is not None else has_jastrow
+
+        self.envelope_type = eff_env_type
+        self.smooth_cuspless = eff_smooth
+
         # 1. 几何特征提取模块
-        self.embedding = ElectronFeatureEmbedding(eps=eps)
+        self.embedding = ElectronFeatureEmbedding(eps=eps, smooth_cuspless=eff_smooth)
         in_dim_one, in_dim_two = ElectronFeatureEmbedding.feature_dims(
             num_nuclei=num_nuclei,
             use_nuclear_charges=True,
@@ -108,6 +134,7 @@ class FermiNet(nn.Module):
                 num_orbitals=n_up,
                 num_nuclei=num_nuclei,
                 eps=eps,
+                envelope_type=eff_env_type,
             )
         else:
             self.linear_orb_up = None
@@ -120,6 +147,7 @@ class FermiNet(nn.Module):
                 num_orbitals=n_down,
                 num_nuclei=num_nuclei,
                 eps=eps,
+                envelope_type=eff_env_type,
             )
         else:
             self.linear_orb_down = None
@@ -129,6 +157,34 @@ class FermiNet(nn.Module):
         self.det_weights = nn.Parameter(
             torch.ones(num_determinants) / (num_determinants ** 0.5)
         )
+
+        # 5. Kato 尖峰 Jastrow 因子
+        if jastrow is not None:
+            self.jastrow = jastrow
+        elif use_cusp_jastrow:
+            jk = jastrow_kwargs or {}
+            self.jastrow = KatoCuspJastrow(
+                nuclear_charges=self.nuclear_charges,
+                n_up=n_up,
+                n_down=n_down,
+                eps=eps,
+                **jk,
+            )
+        else:
+            self.jastrow = None
+
+        # 6. 自旋投影算符 (自旋纯态适配)
+        if spin_projector is not None:
+            self.spin_projector = spin_projector
+        elif spin_adapted:
+            spk = spin_projector_kwargs or {}
+            self.spin_projector = SpinProjector(
+                n_up=n_up,
+                n_down=n_down,
+                **spk,
+            )
+        else:
+            self.spin_projector = None
 
     def forward_orbitals(
         self, r: torch.Tensor
@@ -179,9 +235,9 @@ class FermiNet(nn.Module):
 
         return d_up, d_down
 
-    def forward_log_psi(self, r: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _forward_log_psi_base(self, r: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        计算对数波函数: (log|Psi(r)|, sign(Psi(r)))。
+        计算基础 FermiNet (未进行自旋投影和 Jastrow 修正) 的对数波函数。
 
         Args:
             r: 电子坐标, Shape: (B, N, 3)
@@ -235,6 +291,43 @@ class FermiNet(nn.Module):
         )
 
         return log_abs_psi, sign_psi
+
+    def _forward_log_psi_unprojected(self, r: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        计算未投影的全对数波函数 (基础 Slater 行列式融合解析 Kato Jastrow 因子)。
+        """
+        log_abs_psi, sign_psi = self._forward_log_psi_base(r)
+
+        if self.jastrow is not None:
+            log_j = self.jastrow(r, self.nuclear_coords)
+            zero_mask = (sign_psi == 0) | torch.isneginf(log_abs_psi)
+            log_abs_psi = torch.where(
+                zero_mask,
+                torch.full_like(log_abs_psi, float("-inf")),
+                log_abs_psi + log_j,
+            )
+
+        return log_abs_psi, sign_psi
+
+    def forward_log_psi(self, r: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        计算总对数波函数: (log|Psi(r)|, sign(Psi(r)))。
+        首先通过神经网络与解析 Kato 尖峰 Jastrow 因子消除库仑奇点发散，
+        并在波函数输出前施加自旋投影算符 (如针对双电子单重态加入空间对称化 1/2(I + P_12))，
+        在架构底层彻底消除自旋污染。
+
+        Args:
+            r: 电子坐标, Shape: (B, N, 3)
+
+        Returns:
+            log_abs_psi: log|Psi(r)|, Shape: (B,)
+            sign_psi: sign(Psi(r)), Shape: (B,)
+        """
+        if self.spin_projector is not None:
+            return self.spin_projector.project_log_psi(
+                self._forward_log_psi_unprojected, r
+            )
+        return self._forward_log_psi_unprojected(r)
 
     def forward(self, r: torch.Tensor) -> torch.Tensor:
         """

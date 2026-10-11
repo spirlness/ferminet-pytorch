@@ -115,6 +115,10 @@ def train_vmc(
     clip_factor: float = 5.0,
     clip_method: str = "tanh",
     grad_clip: float = 1.0,
+    use_cusp_jastrow: bool = False,
+    spin_adapted: bool = False,
+    envelope_type: Optional[str] = None,
+    smooth_cuspless: Optional[bool] = None,
     device: Optional[str] = None,
     dtype: torch.dtype = torch.float32,
     seed: int = 42,
@@ -137,6 +141,10 @@ def train_vmc(
         clip_factor: 局域能量 MAD 截断因子
         clip_method: 截断方式 ('tanh', 'hard', 'none')
         grad_clip: 梯度范数裁剪阈值
+        use_cusp_jastrow: 是否启用显式 Kato 尖峰 Jastrow 因子
+        spin_adapted: 是否启用自旋纯态适配网络 (如双电子单重态空间对称化)
+        envelope_type: 核包络类型 ('gaussian' 或 'exponential', 默认根据 Jastrow 自动协同)
+        smooth_cuspless: 是否使用平滑无尖峰特征 (默认根据 Jastrow 自动协同)
         device: 运行设备 ('cpu' 或 'cuda')
         dtype: 浮点精度
         seed: 随机数种子
@@ -149,24 +157,11 @@ def train_vmc(
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
 
-    # 设备检测与匹配
-    if device is None:
-        target_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    else:
-        target_device = torch.device(device)
-        if target_device.type == "cuda":
-            if not torch.cuda.is_available():
-                raise RuntimeError(
-                    "CUDA was requested but this PyTorch installation has no available CUDA device"
-                )
-            if (
-                target_device.index is not None
-                and target_device.index >= torch.cuda.device_count()
-            ):
-                raise ValueError(
-                    f"CUDA device index {target_device.index} is unavailable; "
-                    f"device_count={torch.cuda.device_count()}"
-                )
+    target_device = (
+        torch.device(device)
+        if device is not None
+        else torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    )
 
     # 1. 体系与模型
     if system is None:
@@ -184,6 +179,10 @@ def train_vmc(
             hidden_dim_one=64,
             hidden_dim_two=16,
             num_layers=2,
+            use_cusp_jastrow=use_cusp_jastrow,
+            spin_adapted=spin_adapted,
+            envelope_type=envelope_type,
+            smooth_cuspless=smooth_cuspless,
         ).to(device=target_device, dtype=dtype)
     else:
         model = model.to(device=target_device, dtype=dtype)
@@ -211,6 +210,7 @@ def train_vmc(
         print("=" * 72)
         print(f"[*] 设备: {target_device} | 精度: {dtype}")
         print(f"[*] 体系: 核数 = {system.num_nuclei}, 电子数 = {system.total_electrons} (up={system.n_up}, down={system.n_down})")
+        print(f"[*] 架构: 自旋纯态适配 = {spin_adapted} | Kato 尖峰 Jastrow = {use_cusp_jastrow}")
         print(f"[*] 采样: Walkers = {num_walkers}, 移动模式 = {move_mode}")
         print(f"[*] 预热: 正在执行 {burn_in_steps} 步 MCMC 预热...")
 
@@ -310,6 +310,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--grad_clip", type=float, default=1.0, help="梯度范数裁剪阈值 (默认: 1.0)")
     parser.add_argument("--device", type=str, default=None, help="运行设备 (cuda 或 cpu)")
     parser.add_argument("--seed", type=int, default=42, help="随机数种子 (默认: 42)")
+    parser.add_argument("--cusp_jastrow", action="store_true", help="启用显式 Kato 尖峰 Jastrow 因子")
+    parser.add_argument("--spin_adapted", action="store_true", help="启用自旋纯态投影网络")
+    parser.add_argument("--envelope_type", type=str, default=None, choices=["gaussian", "exponential"], help="核包络类型")
+    parser.add_argument("--smooth_cuspless", action="store_true", help="强制使用平滑无尖峰几何特征")
     return parser.parse_args()
 
 
@@ -332,6 +336,10 @@ def main() -> None:
         clip_factor=args.clip_factor,
         clip_method=args.clip_method,
         grad_clip=args.grad_clip,
+        use_cusp_jastrow=args.cusp_jastrow,
+        spin_adapted=args.spin_adapted,
+        envelope_type=args.envelope_type,
+        smooth_cuspless=args.smooth_cuspless if args.smooth_cuspless else None,
         device=args.device,
         seed=args.seed,
         verbose=True,

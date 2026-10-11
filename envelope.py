@@ -26,6 +26,7 @@ class NuclearEnvelope(nn.Module):
         num_nuclei: int,
         eps: float = 1e-24,
         init_decay_rate: float = 1.0,
+        envelope_type: str = "exponential",
     ) -> None:
         """
         Args:
@@ -34,12 +35,14 @@ class NuclearEnvelope(nn.Module):
             num_nuclei: 原子核数目 M
             eps: 最小平方距离
             init_decay_rate: 初始衰减速率
+            envelope_type: 包络形式 ("exponential" 为指数包络, "gaussian" 为平滑高斯包络)
         """
         super().__init__()
         self.num_determinants = num_determinants
         self.num_orbitals = num_orbitals
         self.num_nuclei = num_nuclei
         self.eps = eps
+        self.envelope_type = envelope_type.lower()
 
         self.weights = nn.Parameter(
             torch.empty(num_determinants, num_orbitals, num_nuclei)
@@ -85,7 +88,11 @@ class NuclearEnvelope(nn.Module):
         alpha_expanded = alpha.unsqueeze(0).unsqueeze(2)     # (1, K, 1, N_orb, M)
         weights_expanded = self.weights.unsqueeze(0).unsqueeze(2)  # (1, K, 1, N_orb, M)
 
-        exponent = torch.exp(-alpha_expanded * dist_expanded)  # (B, K, N_spin, N_orb, M)
+        if self.envelope_type == "gaussian":
+            exponent = torch.exp(-alpha_expanded * (dist_expanded ** 2))
+        else:
+            exponent = torch.exp(-alpha_expanded * dist_expanded)
+
         envelope = torch.sum(weights_expanded * exponent, dim=-1)  # (B, K, N_spin, N_orb)
 
         return envelope

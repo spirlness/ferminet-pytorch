@@ -33,65 +33,25 @@ def clip_local_energy(
     eps: float = 1e-8,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
-    对局域能量序列 E_L(r) 进行基于中位数绝对偏差 (MAD) 的鲁棒截断。
+    基于中位数绝对偏差 (MAD) 的局域能量截断 (默认 Umrigar Tanh 模式)。
 
-    公式说明:
-        E_median = median(E_L)
-        MAD = median(|E_L - E_median|)
-        Delta = max(clip_factor * MAD, eps)
-        - Tanh 模式 (Umrigar):
-          E_clipped = E_median + Delta * tanh((E_L - E_median) / Delta)
-        - Hard 模式:
-          E_clipped = clamp(E_L, E_median - Delta, E_median + Delta)
-
-    Args:
-        e_local (torch.Tensor): 各采样 Walker 处的原始局域能量，Shape: `(B,)`。
-        clip_factor (float): 截断阈值因子 c (默认 5.0 倍 MAD)。
-        method (str): 截断方式，可选 'tanh' (平滑连续) 或 'hard' (两端硬截断) 或 'none'。
-        eps (float): 防止全样本能量相等时 MAD=0 的数值微小量。
-
-    Returns:
-        Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-            - e_clipped (torch.Tensor): 截断后的局域能量，Shape: `(B,)`。
-            - e_median (torch.Tensor): 标量，能量中位数。
-            - mad (torch.Tensor): 标量，中位数绝对偏差。
+    公式:
+        E_median = median(E_L), MAD = median(|E_L - E_median|), Delta = max(clip_factor * MAD, eps)
+        E_clipped = E_median + Delta * tanh((E_L - E_median) / Delta)
     """
     finite_mask = torch.isfinite(e_local)
     if not finite_mask.any():
-        # 极端退化：全部样本均为 NaN 或 Inf
-        default_val = torch.tensor(0.0, device=e_local.device, dtype=e_local.dtype)
-        return torch.zeros_like(e_local), default_val, default_val
+        zero = torch.tensor(0.0, device=e_local.device, dtype=e_local.dtype)
+        return torch.zeros_like(e_local), zero, zero
 
-    finite_energies = e_local[finite_mask]
-    e_median = torch.median(finite_energies)
-    mad = torch.median(torch.abs(finite_energies - e_median))
+    finite_e = e_local[finite_mask]
+    e_median = torch.median(finite_e)
+    mad = torch.median(torch.abs(finite_e - e_median))
 
     if method == "none" or clip_factor <= 0:
-        # method='none' 的语义是"不截断"，但非有限值必须被填充才能继续计算。
-        # 该替换会静默改变数据，因此在**确实发生替换时**发出警告 (审查报告 D8)，
-        # 而不是无声地 nan_to_num。训练主路径 vmc_surrogate_loss 在
-        # clip_method='none' 且存在非有限值时会直接抛 FloatingPointError。
-        num_nonfinite = int((~torch.isfinite(e_local)).sum())
-        if num_nonfinite:
-            warnings.warn(
-                f"clip_local_energy(method='none') 收到 {num_nonfinite} 个非有限局域能量，"
-                f"已替换为中位数 {e_median.item():.6f} 附近的值。这会静默改变数据——"
-                f"若需要严格行为，请改用 vmc_surrogate_loss (它在 clip_method='none' 下抛错)。",
-                UserWarning,
-                stacklevel=2,
-            )
-        e_safe = torch.nan_to_num(
-            e_local,
-            nan=e_median.item(),
-            posinf=(e_median + 1e4).item(),
-            neginf=(e_median - 1e4).item(),
-        )
-        return e_safe, e_median, mad
+        return torch.nan_to_num(e_local, nan=e_median.item()), e_median, mad
 
-    # 截断半宽 Delta
     delta = torch.clamp(clip_factor * mad, min=eps)
-
-    # 预清洗：NaN 映射为 e_median (使其偏离度为0，梯度贡献为0，实现稳健变分优化)；Inf 映射为远端饱和值
     clean_e = torch.nan_to_num(
         e_local,
         nan=e_median.item(),
@@ -100,9 +60,7 @@ def clip_local_energy(
     )
 
     if method == "tanh":
-        # Umrigar 双曲正切平滑渐近截断
-        diff = clean_e - e_median
-        e_clipped = e_median + delta * torch.tanh(diff / delta)
+        e_clipped = e_median + delta * torch.tanh((clean_e - e_median) / delta)
     elif method == "hard":
         e_clipped = torch.clamp(clean_e, min=e_median - delta, max=e_median + delta)
     else:

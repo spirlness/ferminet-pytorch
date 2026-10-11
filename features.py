@@ -19,13 +19,16 @@ class ElectronFeatureEmbedding(nn.Module):
     双电子特征: [r_{ij}(3), d_{ij}] (4维)
     """
 
-    def __init__(self, eps: float = 1e-24) -> None:
+    def __init__(self, eps: float = 1e-24, smooth_cuspless: bool = False) -> None:
         """
         Args:
             eps: 最小平方距离, 防止 sqrt(0) 的梯度为 NaN
+            smooth_cuspless: 是否使用平滑无尖峰距离特征 d^2 / (1 + d),
+                             消除距离在近核/短程处的 1/r 拉普拉斯奇异性
         """
         super().__init__()
         self.eps = eps
+        self.smooth_cuspless = smooth_cuspless
 
     @staticmethod
     def feature_dims(
@@ -68,14 +71,16 @@ class ElectronFeatureEmbedding(nn.Module):
             torch.sum(r_en ** 2, dim=-1, keepdim=True), min=self.eps
         ))                                                          # (B, N, M, 1)
 
+        d_en_feature = (d_en ** 2) / (1.0 + d_en) if self.smooth_cuspless else d_en
+
         if nuclear_charges is not None:
             charges = nuclear_charges.to(device=r.device, dtype=r.dtype)
             charges_expanded = charges.reshape(1, 1, num_nuclei, 1).expand(
                 batch_size, num_electrons, num_nuclei, 1
             )
-            parts = [r_en, d_en, charges_expanded]
+            parts = [r_en, d_en_feature, charges_expanded]
         else:
-            parts = [r_en, d_en]
+            parts = [r_en, d_en_feature]
 
         h1_raw = torch.cat(parts, dim=-1)                           # (B, N, M, K)
         h1_input = h1_raw.reshape(batch_size, num_electrons, h1_raw.shape[-1] * num_nuclei)
@@ -88,6 +93,7 @@ class ElectronFeatureEmbedding(nn.Module):
             torch.sum(r_ee ** 2, dim=-1, keepdim=True), min=self.eps
         ))                      # (B, N, N, 1)
 
-        h2_input = torch.cat([r_ee, d_ee], dim=-1)  # (B, N, N, 4)
+        d_ee_feature = (d_ee ** 2) / (1.0 + d_ee) if self.smooth_cuspless else d_ee
+        h2_input = torch.cat([r_ee, d_ee_feature], dim=-1)  # (B, N, N, 4)
 
         return h1_input, h2_input

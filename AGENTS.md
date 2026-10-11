@@ -2,12 +2,13 @@
 
 ## Project Structure & Module Organization
 
-This repository is a flat Python package. Core neural-network components live in `features.py`, `layers.py`, `envelope.py`, and `model.py`; physics and optimization code is in `hamiltonian.py`, `mcmc.py`, `loss.py`, and `train_vmc.py`. Runnable tutorial examples are `example_h2.py` and `train_vmc.py`.
+This repository is a flat Python package. Core neural-network and physics components live in `features.py`, `layers.py`, `envelope.py`, `jastrow.py`, `spin.py`, and `model.py`; physics and optimization code is in `hamiltonian.py`, `mcmc.py`, `loss.py`, and `train_vmc.py`. Runnable tutorial examples are `example_h2.py` and `train_vmc.py`.
 
 Tests remain beside the source as `test_*.py`:
 
 - `test_ferminet.py` — core physics properties and network architecture
 - `test_vmc.py` — MCMC sampling, gradient estimation, and energy clipping
+- `test_spin_and_cusp.py` — spin-adapted projection, Kato cusp derivative limits, and singularity cancellation
 
 Documentation is in `README.md` and `BEGINNER_GUIDE.md`. Optional architecture diagrams live under `assets/`.
 
@@ -33,8 +34,7 @@ $env:PYTHONUTF8='1'; python -m unittest test_ferminet.py   # PowerShell
 ```cmd
 set PYTHONUTF8=1 && python -m unittest test_ferminet.py   :: cmd.exe
 ```
-
-This affects only the `torch.compile` path. With the pinned environment the suite is green either way; on older torch the single test that exercises `compile_model()` skips itself with that reason.
+This affects only the optional `torch.compile` Inductor backend path under Windows / non-UTF-8 locales.
 
 ## Coding Style & Naming Conventions
 

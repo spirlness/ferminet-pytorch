@@ -12,8 +12,15 @@ __path__.append(str(Path(__file__).resolve().parent.parent))
 from .features import ElectronFeatureEmbedding
 from .layers import FermiInteractionLayer
 from .envelope import NuclearEnvelope
+from .jastrow import KatoCuspJastrow
+from .spin import SpinProjector
 from .model import FermiNet
-from .hamiltonian import MolecularSystem, compute_local_energy
+from .hamiltonian import (
+    MolecularSystem,
+    compute_local_energy,
+    compute_kinetic_energy,
+    diagnose_cusp_divergence,
+)
 from .mcmc import MCMCSampler
 from .loss import clip_local_energy, vmc_surrogate_loss, VMCLoss
 from .train_vmc import train_vmc, build_h2_system, build_lih_system
@@ -22,9 +29,13 @@ __all__ = [
     "ElectronFeatureEmbedding",
     "FermiInteractionLayer",
     "NuclearEnvelope",
+    "KatoCuspJastrow",
+    "SpinProjector",
     "FermiNet",
     "MolecularSystem",
     "compute_local_energy",
+    "compute_kinetic_energy",
+    "diagnose_cusp_divergence",
     "MCMCSampler",
     "clip_local_energy",
     "vmc_surrogate_loss",
