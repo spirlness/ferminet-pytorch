@@ -38,18 +38,20 @@ def clip_local_energy(
     公式:
         E_median = median(E_L), MAD = median(|E_L - E_median|), Delta = max(clip_factor * MAD, eps)
         E_clipped = E_median + Delta * tanh((E_L - E_median) / Delta)
+
+    所有样本无效时抛出 FloatingPointError。部分无效输入保持返回形状，
+    仅以有效样本估计中位数/MAD；VMC 损失会排除这些无效样本。
     """
     finite_mask = torch.isfinite(e_local)
     if not finite_mask.any():
-        zero = torch.tensor(0.0, device=e_local.device, dtype=e_local.dtype)
-        return torch.zeros_like(e_local), zero, zero
+        raise FloatingPointError("No finite local energies; cannot compute energy statistics")
 
     finite_e = e_local[finite_mask]
     e_median = torch.median(finite_e)
     mad = torch.median(torch.abs(finite_e - e_median))
 
     if method == "none" or clip_factor <= 0:
-        return torch.nan_to_num(e_local, nan=e_median.item()), e_median, mad
+        return torch.where(finite_mask, e_local, e_median), e_median, mad
 
     delta = torch.clamp(clip_factor * mad, min=eps)
     clean_e = torch.nan_to_num(
@@ -91,7 +93,10 @@ def vmc_surrogate_loss(
 
     Returns:
         loss: 可反向传播的标量代理损失
-        stats: 统计指标字典 (含 energy_mean, energy_std, loss)
+        stats: 统计指标字典 (含 energy_mean, energy_std, loss, num_valid, num_invalid)
+
+    非有限能量不参与损失或统计，并发出 RuntimeWarning。全部能量无效，
+    或任意 log|Psi| 非有限时，抛出 FloatingPointError，禁止参数更新。
     """
     batch_size = e_local.shape[0]
     assert log_abs_psi.shape[0] == batch_size, "log_abs_psi 与 e_local 的 Batch 大小必须一致"
@@ -99,9 +104,22 @@ def vmc_surrogate_loss(
     # 1. 局域能量截断与分离梯度 (阻止对 E_L 进行高阶求导)
     e_local_detached = e_local.detach()
     finite_mask = torch.isfinite(e_local_detached)
+    if not finite_mask.any():
+        raise FloatingPointError("No finite local energies; VMC update aborted")
+    if not torch.isfinite(log_abs_psi).all():
+        raise FloatingPointError("Nonfinite log|Psi|; VMC update aborted")
+    finite_e = e_local_detached[finite_mask]
+    num_valid = int(finite_mask.sum().item())
+    num_invalid = batch_size - num_valid
+    if num_invalid:
+        warnings.warn(
+            f"Excluded {num_invalid}/{batch_size} nonfinite local energies from the VMC estimate",
+            RuntimeWarning,
+            stacklevel=2,
+        )
 
     e_clipped, e_median, mad = clip_local_energy(
-        e_local_detached, clip_factor=clip_factor, method=clip_method
+        finite_e, clip_factor=clip_factor, method=clip_method
     )
 
     # 2. 计算中心化能量差
@@ -109,16 +127,11 @@ def vmc_surrogate_loss(
     delta_e = (e_clipped - mean_clipped_energy).detach()
 
     # 3. 构造变分代理损失: L = 2.0 * mean( Delta E * ln|Psi| )
-    loss = 2.0 * torch.mean(delta_e * log_abs_psi)
+    loss = 2.0 * torch.mean(delta_e * log_abs_psi[finite_mask])
 
     # 4. 统计物理指标
-    if finite_mask.any():
-        finite_e = e_local_detached[finite_mask]
-        raw_mean = torch.mean(finite_e).item()
-        raw_var = torch.var(finite_e, unbiased=True).item() if finite_e.shape[0] > 1 else 0.0
-    else:
-        raw_mean = 0.0
-        raw_var = 0.0
+    raw_mean = torch.mean(finite_e).item()
+    raw_var = torch.var(finite_e, unbiased=True).item() if num_valid > 1 else 0.0
     raw_std = raw_var ** 0.5
 
     stats = {
@@ -129,6 +142,8 @@ def vmc_surrogate_loss(
         "energy_median": e_median.item(),
         "energy_mad": mad.item(),
         "loss": loss.item(),
+        "num_valid": num_valid,
+        "num_invalid": num_invalid,
     }
 
     return loss, stats

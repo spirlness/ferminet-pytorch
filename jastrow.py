@@ -49,6 +49,7 @@ class KatoCuspJastrow(nn.Module):
         cusp_en: bool = True,
         cusp_ee: bool = True,
         eps: float = 1e-24,
+        two_electron_spin: Optional[int] = None,
     ) -> None:
         """
         初始化 Kato Cusp Jastrow 因子。
@@ -64,11 +65,19 @@ class KatoCuspJastrow(nn.Module):
             cusp_en: 是否启用电子-核尖峰
             cusp_ee: 是否启用电子-电子尖峰
             eps: 最小平方距离, 防止 sqrt(0) 的梯度为 NaN
+            two_electron_spin: 双电子总自旋 S (0 或 1)。S=1 的空间反对称对
+                使用 1/4 尖峰系数，包括 M_S=0 的上下自旋电子对。
         """
         super().__init__()
         self.n_up = n_up
         self.n_down = n_down
         self.total_electrons = n_up + n_down
+        if two_electron_spin is not None:
+            if self.total_electrons != 2 or two_electron_spin not in (0, 1):
+                raise ValueError("two_electron_spin requires two electrons and S=0 or S=1")
+            if two_electron_spin == 0 and n_up != n_down:
+                raise ValueError("A two-electron singlet requires n_up=n_down=1")
+        self.two_electron_spin = two_electron_spin
         self.num_nuclei = nuclear_charges.shape[0]
         self.cusp_en = cusp_en
         self.cusp_ee = cusp_ee
@@ -89,7 +98,7 @@ class KatoCuspJastrow(nn.Module):
         for i in range(n_tot):
             for j in range(i + 1, n_tot):
                 same_spin = (i < n_up and j < n_up) or (i >= n_up and j >= n_up)
-                if same_spin:
+                if same_spin or two_electron_spin == 1:
                     gamma_mat[i, j] = 0.25
                     is_parallel_mat[i, j] = True
                 else:

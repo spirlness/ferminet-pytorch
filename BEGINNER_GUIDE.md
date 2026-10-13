@@ -474,6 +474,7 @@ $$U_{ee}(\mathbf{r}) = \sum_{1 \le i < j \le N} \frac{\gamma_{ij} r_{ij}}{1 + b_
   0.25 & \text{当电子 } i, j \text{ 自旋相同 (同自旋对，有泡利排斥)} 
   \end{cases}$$
   模块在初始化时预先构建一个 $(N, N)$ 的布尔掩码与常量系数矩阵 `gamma_ee`，仅提取上三角严格加和，零重复计算。
+  上述默认异自旋系数针对非零的球对称碰撞分量。双电子三重态的空间部分含线性节点，其径向因子使用 $1/4$，即使两电子的标签为 up/down。独立 Jastrow 可指定 `two_electron_spin=1`；`FermiNet` 根据内置三重态投影自动配置，并拒绝不相容的显式系数。
 
 #### 3. 阻尼参数的可学习性 (`trainable=True`)
 阻尼参数 $b_{en, I}$ 与 $b_{ee, ij}$ 决定了短程尖峰向长程平滑过渡的特征长度。
@@ -496,9 +497,12 @@ $$\Psi_{\text{proj}}(\mathbf{r}) = \sum_{k=1}^K w_k \, \Psi_{\text{base}}(P_k \m
 - **双电子三重态 (Triplet, $S=1, M_S=0$)**：
   $$K=2, \quad P_0 = [0, 1], \; w_0 = 0.5; \quad P_1 = [1, 0], \; w_1 = -0.5$$
   强制空间波函数反对称，两个电子碰撞时空间波函数自然为 0。
-- **闭壳层多电子反转对称化 ($n_\uparrow = n_\downarrow > 1$)**：
-  $$P_0 = \text{Identity}, \; w_0 = 0.5; \quad P_{\text{flip}} = [n_\uparrow \dots N-1, 0 \dots n_\uparrow-1], \; w_1 = 0.5$$
-  压制多电子闭壳层体系中上下自旋通道不对称引起的非物理自旋杂化。
+- **多电子总自旋谱投影**：
+  在固定 $M_S=(n_\uparrow-n_\downarrow)/2$ 的扇区，
+  $$\hat S^2 = N/2+M_S^2-\sum_{i\in\uparrow,j\in\downarrow}P_{ij},\qquad
+  \hat P_S=\prod_{s\ne S}\frac{\hat S^2-s(s+1)I}{S(S+1)-s(s+1)}.$$
+  乘积遍历该扇区除目标 $S$ 外的所有允许总自旋。该算符排除其他自旋分量；仅固定整体自旋翻转宇称不足以排除五重态。代码以有理数构建系数，利用组内反对称性合并置换。LiH 单重态需要 6 项，六电子闭壳层单重态需要 20 项；一般最多为 $\binom{N}{n_\uparrow}$ 项，适合小体系教学。
+  `singlet`/`triplet` 要求基础波函数在各自旋组内反对称，并在不相容的自旋扇区报错。完全极化体系已是 $S=N/2$，`FermiNet` 的自动适配默认保持恒等变换。
 
 #### 2. 数值稳定的带符号 LogSumExp (Signed Log-Sum-Exp)
 深度学习中普通的 `torch.logsumexp` 只能处理正数求和。但由于权重 $w_k$ 或波函数 $\Psi(P_k r)$ 可能带有负号，必须在对数空间中完成带符号的合成运算：
@@ -776,7 +780,7 @@ Epoch  |  <E_raw> (Ha)  | <E_clip> (Ha)  |   Var(E)   | Acc (%)  |  Step
 ### 6.3 演示 3：极性异核分子氢化锂 $LiH$ 变分优化
 
 氢化锂 $LiH$ 是一个典型的极性共价键分子：锂核电荷 $Z=3$，氢核电荷 $Z=1$，总电子数 $N=4$（闭壳层：$n_\uparrow = 2, n_\downarrow = 2$）。
-这里验证了多核电荷注入、平滑高斯/指数包络能力，同时支持开启自旋翻转对称性与异核 Kato 尖峰修正：
+这里验证了多核电荷注入、平滑高斯/指数包络能力，同时支持开启多电子单重态投影与异核 Kato 尖峰修正：
 
 ```bash
 uv run python train_vmc.py --system lih --epochs 50 --walkers 512 --cusp_jastrow --spin_adapted

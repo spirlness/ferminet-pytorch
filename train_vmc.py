@@ -232,6 +232,8 @@ def train_vmc(
         "loss": [],
         "acceptance_rate": [],
         "step_size": [],
+        "num_valid": [],
+        "num_invalid": [],
     }
 
     start_train_time = time.time()
@@ -262,6 +264,8 @@ def train_vmc(
         history["loss"].append(stats["loss"])
         history["acceptance_rate"].append(sampler.last_acceptance_rate)
         history["step_size"].append(sampler.step_size)
+        history["num_valid"].append(stats["num_valid"])
+        history["num_invalid"].append(stats["num_invalid"])
 
         # F. 周期性打印日志
         if verbose and (epoch == 1 or epoch % 5 == 0 or epoch == num_epochs):

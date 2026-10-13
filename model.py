@@ -27,6 +27,57 @@ except (ImportError, ValueError):
     from spin import SpinProjector
 
 
+class _CofactorDeterminant(torch.autograd.Function):
+    """Determinant with inverse-free derivatives, including at singular matrices.
+
+    Used only for singular branches. Recursing on minors in backward preserves
+    higher derivatives at rank-deficient matrices without differentiating an SVD.
+    """
+
+    @staticmethod
+    def forward(ctx, matrix: torch.Tensor, log_scale: torch.Tensor) -> torch.Tensor:
+        ctx.save_for_backward(matrix, log_scale)
+        sign, log_abs = torch.linalg.slogdet(matrix)
+        return sign * torch.exp(log_abs + log_scale)
+
+    @staticmethod
+    def backward(ctx, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:
+        matrix, log_scale = ctx.saved_tensors
+        size = matrix.shape[-1]
+        if size == 1:
+            derivative = grad_output * torch.exp(log_scale)
+            return derivative[..., None, None] + matrix * 0.0, None
+
+        indices = torch.arange(size, device=matrix.device)
+        keep = indices.expand(size, size)[~torch.eye(size, device=matrix.device, dtype=torch.bool)]
+        keep = keep.reshape(size, size - 1)
+        minors = matrix[..., keep[:, None, :, None], keep[None, :, None, :]]
+        parity = 1 - 2 * ((indices[:, None] + indices[None, :]) % 2)
+        cofactors = parity * _CofactorDeterminant.apply(minors, log_scale[..., None, None])
+        return grad_output[..., None, None] * cofactors, None
+
+
+def _determinant_terms(matrix: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Return amplitude and detached log scale for a batch of square matrices.
+
+    det(matrix) = amplitude * exp(log_scale). Ordinary branches retain slogdet
+    scaling. Singular branches are placeholders, repaired jointly for both spins
+    after choosing the scale of the total wavefunction.
+    """
+    with torch.no_grad():
+        singular = torch.linalg.slogdet(matrix)[0] == 0
+
+    # Mask BEFORE slogdet: masking its output cannot prevent 0 * inf in backward.
+    identity = torch.eye(matrix.shape[-1], device=matrix.device, dtype=matrix.dtype)
+    safe_matrix = torch.where(singular[..., None, None], identity, matrix)
+    sign, log_abs = torch.linalg.slogdet(safe_matrix)
+    log_scale = log_abs.detach()
+    amplitude = torch.where(
+        singular, torch.zeros_like(sign), sign * torch.exp(log_abs - log_scale)
+    )
+    return amplitude, log_scale
+
+
 class FermiNet(nn.Module):
     """
     FermiNet 深度波函数模型。
@@ -158,11 +209,31 @@ class FermiNet(nn.Module):
             torch.ones(num_determinants) / (num_determinants ** 0.5)
         )
 
-        # 5. Kato 尖峰 Jastrow 因子
+        # 5. Resolve the target spin before choosing the two-electron cusp.
+        if spin_projector is not None:
+            self.spin_projector = spin_projector
+        elif spin_adapted:
+            spk = dict(spin_projector_kwargs or {})
+            # A fully polarized wavefunction already has S=N/2, including H.
+            spk.setdefault("mode", "none" if min(n_up, n_down) == 0 else "singlet")
+            self.spin_projector = SpinProjector(
+                n_up=n_up,
+                n_down=n_down,
+                **spk,
+            )
+        else:
+            self.spin_projector = None
+
+        # 6. Kato 尖峰 Jastrow 因子
+        pair_spin = None
+        if self.total_electrons == 2 and isinstance(self.spin_projector, SpinProjector):
+            pair_spin = {"singlet": 0, "triplet": 1}.get(self.spin_projector.mode)
         if jastrow is not None:
             self.jastrow = jastrow
         elif use_cusp_jastrow:
-            jk = jastrow_kwargs or {}
+            jk = dict(jastrow_kwargs or {})
+            if pair_spin is not None:
+                jk.setdefault("two_electron_spin", pair_spin)
             self.jastrow = KatoCuspJastrow(
                 nuclear_charges=self.nuclear_charges,
                 n_up=n_up,
@@ -172,19 +243,13 @@ class FermiNet(nn.Module):
             )
         else:
             self.jastrow = None
-
-        # 6. 自旋投影算符 (自旋纯态适配)
-        if spin_projector is not None:
-            self.spin_projector = spin_projector
-        elif spin_adapted:
-            spk = spin_projector_kwargs or {}
-            self.spin_projector = SpinProjector(
-                n_up=n_up,
-                n_down=n_down,
-                **spk,
-            )
-        else:
-            self.spin_projector = None
+        if pair_spin is not None and isinstance(self.jastrow, KatoCuspJastrow):
+            expected_cusp = 0.25 if pair_spin == 1 else 0.5
+            if self.jastrow.cusp_ee and self.jastrow.gamma_ee[0, 1].item() != expected_cusp:
+                raise ValueError(
+                    f"Jastrow cusp is incompatible with the projected spin; "
+                    f"construct KatoCuspJastrow with two_electron_spin={pair_spin}"
+                )
 
     def forward_orbitals(
         self, r: torch.Tensor
@@ -249,36 +314,58 @@ class FermiNet(nn.Module):
         batch_size = r.shape[0]
         d_up, d_down = self.forward_orbitals(r)
 
-        # 计算行列式 (使用 slogdet 保证数值稳定性)
+        # Keep singular determinant derivatives even when the total Psi is nonzero.
         if d_up is not None:
-            sign_up, logabsdet_up = torch.linalg.slogdet(d_up)
+            amplitude_up, log_scale_up = _determinant_terms(d_up)
         else:
-            sign_up = torch.ones(batch_size, self.num_determinants, device=r.device, dtype=r.dtype)
-            logabsdet_up = torch.zeros_like(sign_up)
+            amplitude_up = torch.ones(batch_size, self.num_determinants, device=r.device, dtype=r.dtype)
+            log_scale_up = torch.zeros_like(amplitude_up)
 
         if d_down is not None:
-            sign_down, logabsdet_down = torch.linalg.slogdet(d_down)
+            amplitude_down, log_scale_down = _determinant_terms(d_down)
         else:
-            sign_down = torch.ones(batch_size, self.num_determinants, device=r.device, dtype=r.dtype)
-            logabsdet_down = torch.zeros_like(sign_down)
+            amplitude_down = torch.ones(batch_size, self.num_determinants, device=r.device, dtype=r.dtype)
+            log_scale_down = torch.zeros_like(amplitude_down)
 
         # 合并上下自旋行列式
-        sign_k = sign_up * sign_down          # (B, K)
-        log_abs_k = logabsdet_up + logabsdet_down  # (B, K)
+        amplitude_k = amplitude_up * amplitude_down  # (B, K)
+        log_scale_k = log_scale_up + log_scale_down  # (B, K)
 
         # 多行列式加权求和: Psi = sum_k w_k * det_k
         w = self.det_weights.unsqueeze(0)  # (1, K)
         # LogSumExp 技巧保证数值稳定
-        max_log = torch.amax(log_abs_k.detach(), dim=1, keepdim=True)  # (B, 1)
-        all_zero = torch.isneginf(max_log)
-        safe_max_log = torch.where(all_zero, torch.zeros_like(max_log), max_log)
+        singular = amplitude_k.detach() == 0
+        active_log_scale = log_scale_k.masked_fill(singular, float("-inf"))
+        max_log = torch.amax(active_log_scale, dim=1, keepdim=True)  # (B, 1)
+        max_log = torch.where(torch.isneginf(max_log), torch.zeros_like(max_log), max_log)
 
-        scaled_det = w * sign_k * torch.exp(log_abs_k - safe_max_log)
-        scaled_det = torch.where(all_zero.expand_as(scaled_det), torch.zeros_like(scaled_det), scaled_det)
-        summed = torch.sum(scaled_det, dim=1)  # (B,)
+        relative_scale = torch.where(singular, torch.zeros_like(log_scale_k), log_scale_k - max_log)
+        scaled_det = amplitude_k * torch.exp(relative_scale)
+        if singular.any():
+            # A block determinant retains mixed derivatives when BOTH spin
+            # determinants vanish. Normalization is detached and exactly undone.
+            if d_up is None:
+                block = d_down
+            elif d_down is None:
+                block = d_up
+            else:
+                zeros = d_up.new_zeros(batch_size, self.num_determinants, self.n_up, self.n_down)
+                block = torch.cat((torch.cat((d_up, zeros), dim=-1),
+                                   torch.cat((zeros.transpose(-1, -2), d_down), dim=-1)), dim=-2)
+            row_scale = block.detach().abs().amax(dim=-1, keepdim=True)
+            # Borrow the other branches' row scale for an exactly zero orbital.
+            fallback = row_scale.amax(dim=1, keepdim=True)
+            row_scale = torch.where(row_scale == 0, fallback, row_scale)
+            row_scale = torch.where(row_scale == 0, torch.ones_like(row_scale), row_scale)
+            normalized = (block / row_scale)[singular]
+            correction_scale = row_scale.log().sum(dim=(-1, -2)) - max_log
+            correction = _CofactorDeterminant.apply(normalized, correction_scale[singular])
+            # Preserve the exact LU zero even if normalization perturbs it.
+            scaled_det = scaled_det.masked_scatter(singular, correction - correction.detach())
+        summed = torch.sum(w * scaled_det, dim=1)  # (B,)
 
         abs_summed = torch.abs(summed)
-        zero_mask = (abs_summed == 0) | all_zero.squeeze(1)
+        zero_mask = abs_summed == 0
 
         sign_psi = torch.sign(summed)
         sign_psi = torch.where(zero_mask, torch.zeros_like(sign_psi), sign_psi)
@@ -287,7 +374,7 @@ class FermiNet(nn.Module):
         log_abs_psi = torch.where(
             zero_mask,
             torch.full_like(summed, float("-inf")),
-            safe_max_log.squeeze(1) + torch.log(safe_abs_summed),
+            max_log.squeeze(1) + torch.log(safe_abs_summed),
         )
 
         return log_abs_psi, sign_psi

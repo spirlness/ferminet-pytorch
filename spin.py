@@ -6,13 +6,15 @@
    通过空间置换对称化 P_{S=0} = 1/2 * (I + P_{12}) 严格消除自旋污染。
 2. 针对双电子三重态 (Triplet, S=1, M_S=0):
    通过空间置换反对称化 P_{S=1} = 1/2 * (I - P_{12}) 严格保留三重态。
-3. 针对闭壳层等自旋多电子体系 (n_up == n_down):
-   通过上下自旋空间反转对称化 1/2 * (I + P_{up <-> down}) 抑制非物理自旋污染。
+3. 多电子体系通过 S^2 的谱投影多项式选择目标自旋，
+   而非仅固定整体自旋翻转宇称。输入须在各自旋组内反对称。
 4. 提供数值极其稳定的带符号对数求和 (Signed Log-Sum-Exp) 机制，
    保证反向传播与局域能量二阶导数的数值鲁棒性。
 """
 
-from typing import Callable, List, Optional, Tuple, Union
+from collections import defaultdict
+from fractions import Fraction
+from typing import Callable, List, Optional, Tuple
 import torch
 import torch.nn as nn
 
@@ -23,6 +25,9 @@ class SpinProjector(nn.Module):
 
     针对给定自旋通道与模式，提供空间置换投影:
         Psi_proj(r) = sum_k w_k * Psi(P_k r)
+
+    singlet/triplet 模式要求基础波函数在各自旋组内反对称，并要求目标
+    自旋与固定 M_S 相容。多电子投影最多需要 binom(N, n_up) 次前向计算。
     """
 
     def __init__(
@@ -46,6 +51,8 @@ class SpinProjector(nn.Module):
             custom_permutations: 自定义置换列表, 每项为 (permutation_indices, weight)
         """
         super().__init__()
+        if n_up < 0 or n_down < 0 or n_up + n_down == 0:
+            raise ValueError("Electron counts must be nonnegative with at least one electron")
         self.n_up = n_up
         self.n_down = n_down
         self.total_electrons = n_up + n_down
@@ -55,6 +62,41 @@ class SpinProjector(nn.Module):
         # perms: (K, N), weights: (K,)
         self.register_buffer("perms", perms)
         self.register_buffer("weights", weights)
+
+    def _spin_eigenprojector(self, target: int) -> Tuple[List[List[int]], List[float]]:
+        """Expand product_{s != target} (S^2-s(s+1))/(target(target+1)-s(s+1)).
+
+        In a fixed M sector, S^2 = N/2 + M^2 - sum_{up,down} P_ij.
+        See https://arxiv.org/html/2406.01222v1#S1.SS1, Eq. (1).
+        Same-spin antisymmetry reduces the expansion to at most binom(N, n_up)
+        coordinate assignments. Construction uses exact rational coefficients.
+        """
+        n = self.total_electrons
+        minimum = abs(self.n_up - self.n_down) // 2
+        if n % 2 or not minimum <= target <= n // 2:
+            raise ValueError(f"mode={self.mode!r} is incompatible with n_up={self.n_up}, n_down={self.n_down}")
+        constant = Fraction(n, 2) + Fraction((self.n_up - self.n_down) ** 2, 4)
+        terms = {tuple(range(n)): Fraction(1)}
+        for spin in range(minimum, n // 2 + 1):
+            if spin == target:
+                continue
+            eigenvalue = spin * (spin + 1)
+            denominator = target * (target + 1) - eigenvalue
+            updated = defaultdict(Fraction)
+            for perm, weight in terms.items():
+                updated[perm] += weight * (constant - eigenvalue) / denominator
+                for i in range(self.n_up):
+                    for j in range(self.n_up, n):
+                        swapped = [j if k == i else i if k == j else k for k in perm]
+                        up, down = swapped[:self.n_up], swapped[self.n_up:]
+                        inversions = sum(
+                            group[a] > group[b] for group in (up, down)
+                            for a in range(len(group)) for b in range(a + 1, len(group))
+                        )
+                        canonical = tuple(sorted(up) + sorted(down))
+                        updated[canonical] -= weight * ((-1) ** inversions) / denominator
+            terms = {perm: weight for perm, weight in updated.items() if weight}
+        return [list(perm) for perm in terms], [float(weight) for weight in terms.values()]
 
     def _build_permutations(
         self,
@@ -80,45 +122,14 @@ class SpinProjector(nn.Module):
                 perms.append(p)
                 weights.append(float(w))
 
-        elif self.mode == "singlet":
-            if self.n_up == 1 and self.n_down == 1:
-                # 标准双电子单重态空间对称化: 1/2 * (I + P_12)
-                p12 = [1, 0]
-                perms = [identity, p12]
-                weights = [0.5, 0.5]
-            elif self.n_up == self.n_down and self.n_up > 1:
-                # 闭壳层等自旋体系: 自旋空间翻转置换 P_{up <-> down}
-                # 前 n_up 个与后 n_down 个互换。
-                # 对应全波函数自旋翻转宇称与空间置换奇偶性 (-1)^{n_up} 结合，
-                # 保证单重态空间波函数的对称性:
-                p_flip = list(range(self.n_up, n_tot)) + list(range(0, self.n_up))
-                perms = [identity, p_flip]
-                weights = [0.5, 0.5]
-            else:
-                # 其他构型默认仅恒等
-                perms = [identity]
-                weights = [1.0]
-
-        elif self.mode == "triplet":
-            if self.n_up == 1 and self.n_down == 1:
-                # 标准双电子三重态空间反对称化: 1/2 * (I - P_12)
-                p12 = [1, 0]
-                perms = [identity, p12]
-                weights = [0.5, -0.5]
-            elif self.n_up == self.n_down and self.n_up > 1:
-                # 闭壳层等自旋体系三重态空间反对称化: 1/2 * (I - P_{up <-> down})
-                p_flip = list(range(self.n_up, n_tot)) + list(range(0, self.n_up))
-                perms = [identity, p_flip]
-                weights = [0.5, -0.5]
-            else:
-                perms = [identity]
-                weights = [1.0]
+        elif self.mode in ("singlet", "triplet"):
+            perms, weights = self._spin_eigenprojector(0 if self.mode == "singlet" else 1)
 
         else:
             raise ValueError(f"不支持的投影模式: {self.mode}，可选 'singlet', 'triplet', 'custom', 'none'")
 
         perms_tensor = torch.tensor(perms, dtype=torch.long)
-        weights_tensor = torch.tensor(weights, dtype=torch.float32)
+        weights_tensor = torch.tensor(weights, dtype=torch.float64)
         return perms_tensor, weights_tensor
 
     @property
@@ -143,9 +154,9 @@ class SpinProjector(nn.Module):
             log_abs_psi_proj: 投影后的 log|Psi(r)|, Shape: (B,)
             sign_psi_proj: 投影后的 sign(Psi(r)), Shape: (B,)
         """
-        # 若仅有 1 个恒等置换且权重为 1.0，直接短路以提高速度
-        if self.num_permutations == 1 and abs(self.weights[0].item() - 1.0) < 1e-7:
-            return base_forward_fn(r)
+        # 单项单位权重可省略求和，但仍必须执行所指定的置换。
+        if self.num_permutations == 1 and self.weights[0].item() == 1.0:
+            return base_forward_fn(r[:, self.perms[0], :])
 
         batch_size = r.shape[0]
         num_k = self.num_permutations

@@ -36,14 +36,16 @@ FermiNet 使用深度神经网络直接参数化多电子试探波函数 $\Psi_\
    本项目通过空间置换投影算符在波函数输出前施加自旋对称化：
    - **双电子单重态 (Singlet, $S=0$)**：施加空间置换严格对称化 $\hat{P}_{S=0} = \frac{1}{2}(I + P_{12})$，使 $\Psi(\mathbf{r}_1, \mathbf{r}_2) = \Psi(\mathbf{r}_2, \mathbf{r}_1)$，严格消除自旋污染并使 $\hat{S}^2 \Psi = 0$；
    - **双电子三重态 (Triplet, $S=1, M_S=0$)**：施加空间置换反对称化 $\hat{P}_{S=1} = \frac{1}{2}(I - P_{12})$；
-   - **闭壳层等自旋多电子体系 ($n_\uparrow = n_\downarrow$)**：施加空间自旋翻转对称化 $\frac{1}{2}(I + P_{\uparrow \leftrightarrow \downarrow})$；
-   - 配合数值极度稳定的带符号对数求和 (**Signed Log-Sum-Exp**) 算法，保障反向传播与局域能量二阶导数的绝对稳定性。
+   - **多电子体系**：利用 $\hat S^2$ 的谱投影多项式 $\hat P_S=\prod_{s\ne S}(\hat S^2-s(s+1)I)/(S(S+1)-s(s+1))$ 选择单重态或三重态。例如 LiH 单重态投影会排除五重态分量，并验证 $\hat S^2\Psi=0$；
+   - 基础波函数须在各自旋组内反对称；不相容的电子数与目标自旋会报错。完全极化体系已具有 $S=N/2$，`spin_adapted=True` 默认使用恒等变换；
+   - 使用带符号对数求和 (**Signed Log-Sum-Exp**)；多电子投影的置换数至多为 $\binom{N}{n_\uparrow}$，LiH 单重态使用 6 项，较双电子投影开销更高。
 
 5. **【核心前沿】Kato 尖峰边界条件与解析 Jastrow 因子 (`jastrow.py`, `KatoCuspJastrow`)**：
    在库仑哈密顿量中，微观粒子重合碰撞时库仑势能发散（$r \to 0$ 时 $V \propto -Z/r$ 或 $1/r$）。为保证局域能量 $E_L = T_L + V$ 在重合点保持有限常数，波函数对数导数必须满足精确的 Kato 尖峰条件 (Kato Cusp Conditions)：
    - **电子-核碰撞** ($r_{iI} \to 0$)：$\left. \frac{\partial \ln|\Psi|}{\partial r_{iI}} \right|_{r_{iI}=0} = -Z_I$；
    - **反平行自旋电子对** (异自旋 $r_{ij} \to 0$)：$\left. \frac{\partial \ln|\Psi|}{\partial r_{ij}} \right|_{r_{ij}=0} = \frac{1}{2}$；
    - **平行自旋电子对** (同自旋 $r_{ij} \to 0$)：$\left. \frac{\partial \ln|\Psi|}{\partial r_{ij}} \right|_{r_{ij}=0} = \frac{1}{4}$。
+   这些系数约束相应角动量通道的径向因子；同自旋对需要先除去线性节点。双电子三重态的空间部分反对称，包括 $M_S=0$ 的上下自旋对，也使用 $1/4$。`FermiNet` 会根据内置投影模式自动配置 Jastrow；独立构造时使用 `two_electron_spin=1`。显式配置与投影不相容时会报错。
    本项目采用 Padé 阻尼形式的显式解析 Jastrow 因子：
    $$J(\mathbf{r}) = \exp(U_{en}(\mathbf{r}) + U_{ee}(\mathbf{r}))$$
    $$U_{en}(\mathbf{r}) = -\sum_{i=1}^N \sum_{I=1}^M \frac{Z_I r_{iI}}{1 + b_{en, I} r_{iI}}, \quad U_{ee}(\mathbf{r}) = \sum_{1 \le i < j \le N} \frac{\gamma_{ij} r_{ij}}{1 + b_{ee, ij} r_{ij}}$$
@@ -58,6 +60,7 @@ FermiNet 使用深度神经网络直接参数化多电子试探波函数 $\Psi_\
    通过 Metropolis-Hastings (MH) 算法按 Born 概率密度 $p(\mathbf{r}) \propto |\Psi(\mathbf{r})|^2$ 采样电子构型，变分能量梯度表达为协方差形式：
    $$\nabla_\theta \langle E \rangle = 2 \, \mathbb{E}_{\mathbf{r} \sim |\Psi|^2} \left[ (E_L(\mathbf{r}) - \langle E_L \rangle) \nabla_\theta \ln|\Psi_\theta(\mathbf{r})| \right]$$
    构造代理损失 $\mathcal{L}(\theta) = 2 \cdot \text{mean}((E_{\text{clip}} - \bar{E}_{\text{clip}}) \ln|\Psi_\theta|)$，避免三阶导数计算，并结合基于 MAD 的 Umrigar Tanh 稳健截断防止优化器梯度崩溃。
+   部分非有限局域能量会被排除，并发出警告；`stats` 和训练 `history` 记录 `num_valid`、`num_invalid`。所有能量无效或对数波函数非有限时，抛出 `FloatingPointError`，在优化器更新前停止训练。
 
 ---
 
@@ -307,7 +310,7 @@ print("近核逼近局域能量 E_L(r):", diag["e_local"])
 uv run python -m unittest discover -s . -p "test_*.py" -v
 ```
 
-测试集涵盖三大核心板块（47 个严苛测试用例全部通过）：
+测试集涵盖核心物理、训练闭环及发布交付回归：
 1. **`test_ferminet.py` (基础网络与物理对称性)**：
    - 几何特征维度与无 NaN 边界；
    - 相互作用层自旋置换等变性；
@@ -324,12 +327,20 @@ uv run python -m unittest discover -s . -p "test_*.py" -v
    - **自旋单重态空间交换对称性**：严格验证 $\Psi(\mathbf{r}_1, \mathbf{r}_2) = \Psi(\mathbf{r}_2, \mathbf{r}_1)$，误差 $< 10^{-10}$；
    - **自旋算符本征态**：验证总自旋算符期望值 $\hat{S}^2 \Psi_{\text{singlet}} = (1 - P_{12}) \Psi_{\text{singlet}} = 0$；
    - **自旋三重态空间反对称性**：验证 $\Psi(\mathbf{r}_1, \mathbf{r}_2) = -\Psi(\mathbf{r}_2, \mathbf{r}_1)$ 且重合点严格为 0；
-   - **闭壳层空间翻转对称性**：验证 $LiH$ ($n_\uparrow=2, n_\downarrow=2$) 空间自旋翻转对称；
+   - **闭壳层空间翻转对称性**：验证 $LiH$ ($n_\uparrow=2, n_\downarrow=2$) 空间自旋翻转对称；完整 $S^2$ 本征态条件另由回归测试验证；
    - **Kato 尖峰导数解析极限**：
      - 电子-核碰撞极限：$\left. \frac{d\ln|\Psi|}{dr_{iI}} \right|_{r_{iI} \to 0} = -Z_I$ (针对 $Z=1, Z=3$)；
      - 异自旋电子对碰撞极限：$\left. \frac{d\ln|\Psi|}{dr_{ij}} \right|_{r_{ij} \to 0} = 0.50$；
      - 同自旋电子对碰撞极限：$\left. \frac{d\ln|\Psi|}{dr_{ij}} \right|_{r_{ij} \to 0} = 0.25$；
    - **库仑奇点发散完全抵消**：数值验证电子贴近原子核与贴近另一电子时，动能发散与势能发散精确抵消，局域能量 $E_L(r)$ 保持有限常数。
+4. **新增回归测试**：`test_determinants.py` 验证奇异行列式的一、二阶导数及极小波函数；`test_packaging.py` 构建并从源码目录外导入发布包；`test_p2_regressions.py` 验证多电子 $S^2$ 本征态、投影幂等性、三重态碰撞极限、自定义置换和无效能量的更新阻断。
+5. **CUDA 回归测试**：`test_cuda.py` 将上述数值回归显式放在 GPU 上执行，并比较 CPU/CUDA 的局域能量、坐标梯度，验证 H2/LiH 的参数更新和采样缓存均位于 CUDA。使用安装了 CUDA 版 PyTorch 的解释器运行：
+
+   ```bash
+   python -m unittest discover -s . -p "test_cuda.py" -v
+   ```
+
+   CPU 版 PyTorch 或无可用 GPU 时，这些测试明确显示 `skipped`，不能算作 CUDA 验证通过。`uv run` 使用项目环境中的 PyTorch；若该环境是 CPU 版，需要选择 CUDA 版解释器。
 
 ---
 

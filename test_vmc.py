@@ -320,7 +320,8 @@ class TestVMCComponents(unittest.TestCase):
 
         # 验证代理损失面对 dirty 输入的鲁棒性
         log_psi = torch.randn(5, requires_grad=True)
-        loss, stats = vmc_surrogate_loss(log_psi, e_dirty, clip_factor=5.0, clip_method="tanh")
+        with self.assertWarnsRegex(RuntimeWarning, "Excluded 3/5"):
+            loss, stats = vmc_surrogate_loss(log_psi, e_dirty, clip_factor=5.0, clip_method="tanh")
         self.assertTrue(torch.isfinite(loss), "代理损失变为非有限数")
         self.assertTrue(torch.isfinite(torch.tensor(stats["energy_mean"])))
         self.assertTrue(torch.isfinite(torch.tensor(stats["energy_var"])))
