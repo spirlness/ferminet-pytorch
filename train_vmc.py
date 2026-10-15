@@ -6,6 +6,8 @@
 """
 
 import argparse
+import copy
+import math
 import os
 import sys
 import time
@@ -110,7 +112,7 @@ def train_vmc(
     burn_in_steps: int = 50,
     lr: float = 1e-3,
     step_size: float = 0.5,
-    target_acceptance: float = 0.5,
+    target_acceptance: Optional[float] = None,
     move_mode: str = "all",
     clip_factor: float = 5.0,
     clip_method: str = "tanh",
@@ -119,6 +121,8 @@ def train_vmc(
     spin_adapted: bool = False,
     envelope_type: Optional[str] = None,
     smooth_cuspless: Optional[bool] = None,
+    restore_best: bool = True,
+    checkpoint_path: Optional[str] = None,
     device: Optional[str] = None,
     dtype: torch.dtype = torch.float32,
     seed: int = 42,
@@ -136,7 +140,7 @@ def train_vmc(
         burn_in_steps: 训练开始前的 MCMC 预热步数
         lr: Adam 优化器学习率
         step_size: MCMC 初始移动步长
-        target_acceptance: 目标接受率 (用于自适应步长调节)
+        target_acceptance: 目标接受率 (用于自适应步长调节，为 None 时由 MCMC 自动动态适配)
         move_mode: MCMC 移动模式 ('all' 或 'one_by_one')
         clip_factor: 局域能量 MAD 截断因子
         clip_method: 截断方式 ('tanh', 'hard', 'none')
@@ -145,13 +149,15 @@ def train_vmc(
         spin_adapted: 是否启用自旋纯态适配网络 (如双电子单重态空间对称化)
         envelope_type: 核包络类型 ('gaussian' 或 'exponential', 默认根据 Jastrow 自动协同)
         smooth_cuspless: 是否使用平滑无尖峰特征 (默认根据 Jastrow 自动协同)
+        restore_best: 训练结束后是否恢复为历史最低局域能量模型状态
+        checkpoint_path: 模型检查点磁盘保存路径 (为 None 时不持久化)
         device: 运行设备 ('cpu' 或 'cuda')
         dtype: 浮点精度
         seed: 随机数种子
         verbose: 是否打印训练日志
 
     Returns:
-        包含训练历史、模型、体系和采样器的结果字典
+        包含训练历史、模型、体系、采样器及历史最优状态的结果字典
     """
     torch.manual_seed(seed)
     if torch.cuda.is_available():
@@ -227,7 +233,11 @@ def train_vmc(
         print(f"{'Epoch':^6} | {'<E_raw> (Ha)':^14} | {'<E_clip> (Ha)':^14} | {'Var(E)':^10} | {'Acc (%)':^8} | {'Step':^7}")
         print("-" * 72)
 
-    # 4. 训练主循环
+    # 4. 训练主循环与最优模型状态跟踪
+    best_energy = float("inf")
+    best_epoch = 0
+    best_model_state: Optional[Dict[str, torch.Tensor]] = copy.deepcopy(model.state_dict())
+
     history: Dict[str, List[float]] = {
         "energy_raw": [],
         "energy_clipped": [],
@@ -247,6 +257,13 @@ def train_vmc(
 
         # B. 计算局域能量与代理损失
         loss, stats, _ = vmc_loss.compute_step_loss(model, system, walkers)
+
+        # 紧随能量测定，在参数更新前保存产生当前最低能量期望的真实波函数状态 (theta_t)
+        current_energy = float(stats["energy_mean"])
+        if math.isfinite(current_energy) and current_energy < best_energy:
+            best_energy = current_energy
+            best_epoch = epoch
+            best_model_state = copy.deepcopy(model.state_dict())
 
         # C. 反向传播更新网络参数
         optimizer.zero_grad()
@@ -271,7 +288,24 @@ def train_vmc(
         history["num_valid"].append(stats["num_valid"])
         history["num_invalid"].append(stats["num_invalid"])
 
-        # F. 周期性打印日志
+        # F. 磁盘 Checkpoint 持久化
+        if checkpoint_path is not None:
+            checkpoint_dir = os.path.dirname(os.path.abspath(checkpoint_path))
+            if checkpoint_dir:
+                os.makedirs(checkpoint_dir, exist_ok=True)
+            checkpoint_data = {
+                "epoch": epoch,
+                "best_epoch": best_epoch,
+                "best_energy": best_energy,
+                "model_state_dict": model.state_dict(),
+                "best_model_state_dict": best_model_state,
+                "optimizer_state_dict": optimizer.state_dict(),
+                "scheduler_state_dict": scheduler.state_dict(),
+                "history": history,
+            }
+            torch.save(checkpoint_data, checkpoint_path)
+
+        # G. 周期性打印日志
         if verbose and (epoch == 1 or epoch % 5 == 0 or epoch == num_epochs):
             print(
                 f"{epoch:^6d} | "
@@ -283,14 +317,23 @@ def train_vmc(
             )
 
     total_train_time = time.time() - start_train_time
-    final_energy = float(history["energy_raw"][-1])
-    final_var = float(history["energy_var"][-1])
+    final_energy = float(history["energy_raw"][-1]) if history["energy_raw"] else float("nan")
+    final_var = float(history["energy_var"][-1]) if history["energy_var"] else float("nan")
+
+    # 5. 恢复历史最优状态
+    if restore_best and best_model_state is not None:
+        model.load_state_dict(best_model_state)
 
     if verbose:
         print("-" * 72)
         print(f"[*] 训练完成! 总耗时: {total_train_time:.2f}s ({total_train_time / max(num_epochs, 1):.3f}s/epoch)")
+        print(f"[*] 最优能量期望: {best_energy:.5f} Hartree (达成于 Epoch {best_epoch})")
         print(f"[*] 最终能量期望: {final_energy:.5f} Hartree (H2 真实基态参考: -1.1744 Hartree)")
         print(f"[*] 最终能量方差: {final_var:.5f}")
+        if restore_best and best_model_state is not None:
+            print(f"[*] 模型参数已成功恢复为 Epoch {best_epoch} 的最优权重。")
+        if checkpoint_path is not None:
+            print(f"[*] 训练 Checkpoint 已持久化保存至: {checkpoint_path}")
         print("=" * 72)
 
     return {
@@ -300,6 +343,9 @@ def train_vmc(
         "history": history,
         "final_energy": final_energy,
         "final_variance": final_var,
+        "best_model_state": best_model_state,
+        "best_energy": best_energy,
+        "best_epoch": best_epoch,
     }
 
 
@@ -322,6 +368,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--spin_adapted", action="store_true", help="启用自旋纯态投影网络")
     parser.add_argument("--envelope_type", type=str, default=None, choices=["gaussian", "exponential"], help="核包络类型")
     parser.add_argument("--smooth_cuspless", action="store_true", help="强制使用平滑无尖峰几何特征")
+    parser.add_argument("--target_acceptance", type=float, default=None, help="MCMC 目标接受率 (全电子默认 0.234, 逐电子默认 0.50)")
+    parser.add_argument("--checkpoint_path", type=str, default=None, help="模型检查点保存路径 (.pt)")
+    parser.add_argument("--no_restore_best", action="store_true", help="禁用训练结束时自动恢复历史最优模型状态")
     return parser.parse_args()
 
 
@@ -340,6 +389,7 @@ def main() -> None:
         burn_in_steps=args.burn_in,
         lr=args.lr,
         step_size=args.step_size,
+        target_acceptance=args.target_acceptance,
         move_mode=args.move_mode,
         clip_factor=args.clip_factor,
         clip_method=args.clip_method,
@@ -348,6 +398,8 @@ def main() -> None:
         spin_adapted=args.spin_adapted,
         envelope_type=args.envelope_type,
         smooth_cuspless=args.smooth_cuspless if args.smooth_cuspless else None,
+        restore_best=not args.no_restore_best,
+        checkpoint_path=args.checkpoint_path,
         device=args.device,
         seed=args.seed,
         verbose=True,

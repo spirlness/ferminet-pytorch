@@ -33,7 +33,7 @@ class MCMCSampler:
         system: MolecularSystem,
         num_walkers: int = 1024,
         step_size: float = 0.5,
-        target_acceptance: float = 0.5,
+        target_acceptance: Optional[float] = None,
         adapt_step_size: bool = True,
         adapt_rate: float = 0.05,
         move_mode: str = "all",
@@ -50,7 +50,7 @@ class MCMCSampler:
             system (MolecularSystem): 分子体系定义 (包含核坐标与电子配置)。
             num_walkers (int): 并行 MCMC Walker (构型) 数量。
             step_size (float): 高斯提议分布的标准差 sigma。
-            target_acceptance (float): 目标接受率 (通常在 0.4 ~ 0.6 之间，默认 0.5)。
+            target_acceptance (Optional[float]): 目标接受率。若为 None，全电子模式默认为理论最优值 0.234，逐电子模式默认为 0.50。
             adapt_step_size (bool): 是否动态自适应调节 step_size。
             adapt_rate (float): 步长自适应调节的学习率/步长因子。
             move_mode (str): 移动模式，可选 'all' (全电子) 或 'one_by_one' (逐电子)。
@@ -63,11 +63,14 @@ class MCMCSampler:
         self.system = system
         self.num_walkers = num_walkers
         self.step_size = float(step_size)
-        self.target_acceptance = float(target_acceptance)
-        self.adapt_step_size = adapt_step_size
-        self.adapt_rate = float(adapt_rate)
         assert move_mode in ("all", "one_by_one"), f"不支持的移动模式: {move_mode}"
         self.move_mode = move_mode
+        if target_acceptance is None:
+            self.target_acceptance = 0.234 if self.move_mode == "all" else 0.50
+        else:
+            self.target_acceptance = float(target_acceptance)
+        self.adapt_step_size = adapt_step_size
+        self.adapt_rate = float(adapt_rate)
         self.init_width = float(init_width)
 
         if device is None:
@@ -99,10 +102,27 @@ class MCMCSampler:
         )
         self.recompute_log_psi()
 
-        # 统计指标跟踪
+        # 统计指标跟踪 (宏观步数与精确微观移动分离)
         self.total_steps = 0
         self.accepted_steps = 0
+        self.proposed_moves: int = 0
+        self.accepted_moves: int = 0
         self.last_acceptance_rate = 0.0
+
+    @property
+    def micro_acceptance_rate(self) -> float:
+        """真实累计微观移动接受率 (无舍入失真)。"""
+        return float(self.accepted_moves) / max(self.proposed_moves, 1)
+
+    @property
+    def acceptance_rate(self) -> float:
+        """向后兼容属性，反映真实累计微观移动接受率。"""
+        return self.micro_acceptance_rate
+
+    @property
+    def cumulative_acceptance_rate(self) -> float:
+        """真实累计微观移动接受率。"""
+        return self.micro_acceptance_rate
 
     @staticmethod
     def init_walkers(
@@ -199,7 +219,13 @@ class MCMCSampler:
             self.current_log_abs_psi = torch.where(accepted, log_prop, self.current_log_abs_psi)
 
             acc_rate = accepted.float().mean().item()
-            self.accepted_steps += int(accepted.sum().item())
+            accepted_count = int(accepted.sum().item())
+            self.accepted_steps += accepted_count
+
+            # 微观移动统计 (每个全电子移动包含 total_electrons 个微观坐标位移)
+            total_electrons = self.system.total_electrons
+            self.proposed_moves += self.num_walkers * total_electrons
+            self.accepted_moves += accepted_count * total_electrons
 
         return acc_rate
 
@@ -245,6 +271,10 @@ class MCMCSampler:
 
         acc_rate = total_accepted / total_electrons
         self.accepted_steps += int(round(total_accepted_count / total_electrons))
+
+        # 微观移动统计 (共计尝试 N * num_walkers 次微观移动，实际接受 total_accepted_count 次)
+        self.proposed_moves += self.num_walkers * self.system.total_electrons
+        self.accepted_moves += total_accepted_count
         return acc_rate
 
     def step(self) -> float:
@@ -278,3 +308,8 @@ class MCMCSampler:
         """预热 (Burn-in) 消除随机初始偏差，返回平均接受率。"""
         acc_list = [self.step() for _ in range(num_steps)]
         return float(sum(acc_list) / max(len(acc_list), 1))
+
+
+# 别名兼容
+MetropolisHastings = MCMCSampler
+

@@ -90,20 +90,31 @@ class FermiInteractionLayer(nn.Module):
         mean_h1_up_expanded = mean_h1_up.expand(batch_size, num_electrons, -1)
         mean_h1_down_expanded = mean_h1_down.expand(batch_size, num_electrons, -1)
 
-        # 2. 双电子流均值池化
-        if n_up > 0:
-            mean_h2_up = torch.mean(h2[:, :, :n_up, :], dim=2)
-        else:
-            mean_h2_up = torch.zeros(
-                batch_size, num_electrons, self.in_dim_two, device=h2.device, dtype=h2.dtype
-            )
+        # 2. 双电子流均值池化（显式剔除自身对角线自交互项 i=j）
+        eye_mask = torch.eye(num_electrons, dtype=torch.bool, device=h2.device)
+        h2_no_diag = h2.masked_fill(eye_mask.unsqueeze(0).unsqueeze(-1), 0.0)
 
+        # 2.1 自旋向上通道均值池化 (同自旋排除自身除以 n_up - 1，异自旋除以 n_up)
+        sum_h2_up = torch.sum(h2_no_diag[:, :, :n_up, :], dim=2)
+        counts_up = torch.full((1, num_electrons, 1), float(n_up), device=h2.device, dtype=h2.dtype)
+        if n_up > 0:
+            counts_up[:, :n_up, :] = float(n_up - 1)
+        mean_h2_up = torch.where(
+            counts_up > 0,
+            sum_h2_up / counts_up.clamp(min=1.0),
+            torch.zeros_like(sum_h2_up),
+        )
+
+        # 2.2 自旋向下通道均值池化 (同自旋排除自身除以 n_down - 1，异自旋除以 n_down)
+        sum_h2_down = torch.sum(h2_no_diag[:, :, n_up:, :], dim=2)
+        counts_down = torch.full((1, num_electrons, 1), float(n_down), device=h2.device, dtype=h2.dtype)
         if n_down > 0:
-            mean_h2_down = torch.mean(h2[:, :, n_up:, :], dim=2)
-        else:
-            mean_h2_down = torch.zeros(
-                batch_size, num_electrons, self.in_dim_two, device=h2.device, dtype=h2.dtype
-            )
+            counts_down[:, n_up:, :] = float(n_down - 1)
+        mean_h2_down = torch.where(
+            counts_down > 0,
+            sum_h2_down / counts_down.clamp(min=1.0),
+            torch.zeros_like(sum_h2_down),
+        )
 
         # 3. 拼接并更新单电子流
         h1_agg = torch.cat(
@@ -121,3 +132,8 @@ class FermiInteractionLayer(nn.Module):
         h2_next = h2_transformed + self.res_proj_two(h2)
 
         return h1_next, h2_next
+
+
+# 别名兼容
+FermiNetLayer = FermiInteractionLayer
+

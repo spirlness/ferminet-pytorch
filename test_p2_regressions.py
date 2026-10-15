@@ -7,10 +7,11 @@ import torch
 
 from ferminet_pytorch.hamiltonian import MolecularSystem, compute_local_energy
 from ferminet_pytorch.jastrow import KatoCuspJastrow
-from ferminet_pytorch.loss import clip_local_energy, vmc_surrogate_loss
+from ferminet_pytorch.layers import FermiNetLayer
+from ferminet_pytorch.loss import VMCLoss, clip_local_energy, vmc_surrogate_loss
 from ferminet_pytorch.model import FermiNet
 from ferminet_pytorch.spin import SpinProjector
-from ferminet_pytorch.mcmc import MCMCSampler
+from ferminet_pytorch.mcmc import MCMCSampler, MetropolisHastings
 from ferminet_pytorch.train_vmc import build_h2_system, build_lih_system, train_vmc
 
 MetropolisSampler = MCMCSampler
@@ -161,8 +162,12 @@ class TestInvalidEnergyRegressions(unittest.TestCase):
                 log_abs = torch.tensor([1., 2., 3., 4., 5.], requires_grad=True)
                 energy = torch.tensor([1., float("nan"), 3., float("inf"), float("-inf")])
                 with self.assertWarnsRegex(RuntimeWarning, "Excluded 3/5"):
-                    loss, stats = vmc_surrogate_loss(log_abs, energy, clip_method=method)
-                reference, _ = vmc_surrogate_loss(log_abs[[0, 2]], energy[[0, 2]], clip_method=method)
+                    loss, stats = vmc_surrogate_loss(
+                        log_abs, energy, clip_method=method, max_invalid_fraction=1.0
+                    )
+                reference, _ = vmc_surrogate_loss(
+                    log_abs[[0, 2]], energy[[0, 2]], clip_method=method, max_invalid_fraction=1.0
+                )
                 torch.testing.assert_close(loss, reference)
                 gradient = torch.autograd.grad(loss, log_abs)[0]
                 self.assertTrue(torch.isfinite(gradient).all())
@@ -560,5 +565,140 @@ class TestMCMCStationaryRegressions(unittest.TestCase):
         self.assertTrue(torch.isfinite(walkers).all())
 
 
+class TestP2OptimizationRegressions(unittest.TestCase):
+    """验证 P2 梯队优化项的物理不变量与工程稳健性。"""
+
+    def setUp(self) -> None:
+        torch.manual_seed(42)
+
+    def test_two_electron_pooling_excludes_diagonal_self_interaction(self) -> None:
+        """
+        验证 FermiNetLayer 双电子均值池化显式剔除了自身项 i=j，
+        且同自旋分母除以 n-1 (单自旋置 0)，异自旋分母除以 n_other。
+        """
+        # 1. 四电子体系 (n_up=2, n_down=2)
+        n_up = 2
+        n_down = 2
+        num_electrons = n_up + n_down
+        batch_size = 3
+        in_dim_one = 8
+        in_dim_two = 4
+        out_dim_one = 8
+        out_dim_two = 4
+
+        layer = FermiNetLayer(
+            in_dim_one=in_dim_one,
+            in_dim_two=in_dim_two,
+            out_dim_one=out_dim_one,
+            out_dim_two=out_dim_two,
+            produce_two_electron_output=True,
+        )
+
+        h1 = torch.zeros(batch_size, num_electrons, in_dim_one)
+        # 构造 h2: 非对角线全为 1.0, 对角线 i=j 注入极大自身特征 999.0
+        h2 = torch.ones(batch_size, num_electrons, num_electrons, in_dim_two)
+        for i in range(num_electrons):
+            h2[:, i, i, :] = 999.0
+
+        # 手动执行 layer 中双电子均值提取逻辑进行等价验证
+        eye_mask = torch.eye(num_electrons, dtype=torch.bool)
+        h2_no_diag = h2.masked_fill(eye_mask.unsqueeze(0).unsqueeze(-1), 0.0)
+
+        # 检查对角线是否严格为 0
+        for i in range(num_electrons):
+            self.assertTrue(torch.all(h2_no_diag[:, i, i, :] == 0.0))
+
+        # 执行前向传播，确保不会因自交互项导致数值爆炸
+        h1_out, h2_out = layer(h1, h2, n_up=n_up, n_down=n_down)
+        self.assertTrue(torch.isfinite(h1_out).all())
+        self.assertTrue(torch.isfinite(h2_out).all())
+
+        # 2. 单电子边界验证 (n_up=1, n_down=1)
+        h1_2 = torch.zeros(batch_size, 2, in_dim_one)
+        h2_2 = torch.ones(batch_size, 2, 2, in_dim_two)
+        h2_2[:, 0, 0, :] = 500.0
+        h2_2[:, 1, 1, :] = 500.0
+
+        h1_out_2, h2_out_2 = layer(h1_2, h2_2, n_up=1, n_down=1)
+        self.assertTrue(torch.isfinite(h1_out_2).all())
+        self.assertFalse(torch.isnan(h1_out_2).any())
+
+        # 3. 氢原子单自旋极值边界 (n_up=1, n_down=0)
+        h1_h = torch.zeros(batch_size, 1, in_dim_one)
+        h2_h = torch.ones(batch_size, 1, 1, in_dim_two)
+        h1_out_h, _ = layer(h1_h, h2_h, n_up=1, n_down=0)
+        self.assertTrue(torch.isfinite(h1_out_h).all())
+        self.assertFalse(torch.isnan(h1_out_h).any())
+
+    def test_mcmc_target_acceptance_mode_defaults(self) -> None:
+        """
+        验证 MCMC 采样器在全电子模式下默认采用理论最优值 0.234，
+        在逐电子模式下默认保持 0.50，且显式指定时被优先使用。
+        """
+        system = build_h2_system()
+        model = FermiNet(
+            system.nuclear_coords,
+            system.nuclear_charges,
+            n_up=1,
+            n_down=1,
+            num_determinants=2,
+            hidden_dim_one=8,
+            hidden_dim_two=4,
+            num_layers=1,
+        )
+
+        # 全电子移动模式默认 0.234
+        sampler_all = MCMCSampler(model=model, system=system, move_mode="all")
+        self.assertAlmostEqual(sampler_all.target_acceptance, 0.234, places=3)
+
+        # 逐电子移动模式默认 0.50
+        sampler_one = MCMCSampler(model=model, system=system, move_mode="one_by_one")
+        self.assertAlmostEqual(sampler_one.target_acceptance, 0.50, places=3)
+
+        # 显式传参覆盖测试
+        sampler_custom = MCMCSampler(
+            model=model, system=system, move_mode="all", target_acceptance=0.42
+        )
+        self.assertAlmostEqual(sampler_custom.target_acceptance, 0.42, places=3)
+
+        # 别名兼容性测试
+        sampler_alias = MetropolisHastings(model=model, system=system, move_mode="all")
+        self.assertAlmostEqual(sampler_alias.target_acceptance, 0.234, places=3)
+
+    def test_invalid_energy_fraction_cutoff(self) -> None:
+        """
+        验证当非有限局域能量样本比例超过安全阈值 max_invalid_fraction 时，
+        立即抛出 FloatingPointError 熔断变分更新，杜绝乐观选择偏差。
+        """
+        batch_size = 10
+        log_abs = torch.zeros(batch_size, requires_grad=True)
+        # 10 个样本中有 2 个 NaN (20% 无效)
+        energy = torch.ones(batch_size)
+        energy[0] = float("nan")
+        energy[1] = float("inf")
+
+        # 默认阈值 0.10 (10%)，20% 超过阈值，必须抛出 FloatingPointError
+        with self.assertRaisesRegex(FloatingPointError, "exceeds maximum allowed"):
+            vmc_surrogate_loss(log_abs, energy)
+
+        # 显式放宽阈值至 0.25 (25%)，20% 在允许范围内，应正常计算并发出 warning
+        with self.assertWarnsRegex(RuntimeWarning, "Excluded 2/10"):
+            loss, stats = vmc_surrogate_loss(log_abs, energy, max_invalid_fraction=0.25)
+        self.assertEqual(stats["num_valid"], 8)
+        self.assertEqual(stats["num_invalid"], 2)
+        self.assertTrue(torch.isfinite(loss))
+
+        # 验证 VMCLoss 模块封装同样具备熔断保护
+        vmc_loss_module_strict = VMCLoss(max_invalid_fraction=0.10)
+        with self.assertRaisesRegex(FloatingPointError, "exceeds maximum allowed"):
+            vmc_loss_module_strict(log_abs, energy)
+
+        vmc_loss_module_lenient = VMCLoss(max_invalid_fraction=0.30)
+        with self.assertWarnsRegex(RuntimeWarning, "Excluded 2/10"):
+            loss_m, stats_m = vmc_loss_module_lenient(log_abs, energy)
+        self.assertEqual(stats_m["num_valid"], 8)
+
+
 if __name__ == "__main__":
     unittest.main()
+

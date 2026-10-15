@@ -77,6 +77,7 @@ def vmc_surrogate_loss(
     e_local: torch.Tensor,
     clip_factor: float = 5.0,
     clip_method: str = "tanh",
+    max_invalid_fraction: float = 0.10,
 ) -> Tuple[torch.Tensor, Dict[str, Any]]:
     """
     计算变分原理代理损失及能量统计指标。
@@ -91,13 +92,14 @@ def vmc_surrogate_loss(
         e_local: 各 walker 处的局域能量数值, Shape: (B,)
         clip_factor: 截断阈值倍数 (MAD 倍数)
         clip_method: 截断方法 ('tanh', 'hard', 'none')
+        max_invalid_fraction: 允许的最大非有限样本占比阈值 (默认 0.10, 即 10%)。若超标立即抛出 FloatingPointError。
 
     Returns:
         loss: 可反向传播的标量代理损失
         stats: 统计指标字典 (含 energy_mean, energy_std, loss, num_valid, num_invalid)
 
-    非有限能量不参与损失或统计，并发出 RuntimeWarning。全部能量无效，
-    或任意 log|Psi| 非有限时，抛出 FloatingPointError，禁止参数更新。
+    非有限能量不参与损失或统计，并发出 RuntimeWarning。若非有限样本占比超过 max_invalid_fraction，
+    或全部能量无效，或任意 log|Psi| 非有限时，抛出 FloatingPointError，禁止参数更新。
     """
     batch_size = e_local.shape[0]
     assert log_abs_psi.shape[0] == batch_size, "log_abs_psi 与 e_local 的 Batch 大小必须一致"
@@ -109,9 +111,17 @@ def vmc_surrogate_loss(
         raise FloatingPointError("No finite local energies; VMC update aborted")
     if not torch.isfinite(log_abs_psi).all():
         raise FloatingPointError("Nonfinite log|Psi|; VMC update aborted")
-    finite_e = e_local_detached[valid_mask]
+
     num_valid = int(valid_mask.sum().item())
     num_invalid = batch_size - num_valid
+    invalid_fraction = float(num_invalid) / float(batch_size)
+    if invalid_fraction > max_invalid_fraction:
+        raise FloatingPointError(
+            f"Invalid local energy fraction {invalid_fraction:.2%} ({num_invalid}/{batch_size}) "
+            f"exceeds maximum allowed {max_invalid_fraction:.2%}; VMC update aborted"
+        )
+
+    finite_e = e_local_detached[valid_mask]
     if num_invalid:
         warnings.warn(
             f"Excluded {num_invalid}/{batch_size} nonfinite local energies from the VMC estimate",
@@ -163,10 +173,12 @@ class VMCLoss(nn.Module):
         self,
         clip_factor: float = 5.0,
         clip_method: str = "tanh",
+        max_invalid_fraction: float = 0.10,
     ) -> None:
         super().__init__()
         self.clip_factor = clip_factor
         self.clip_method = clip_method
+        self.max_invalid_fraction = float(max_invalid_fraction)
 
     def forward(
         self,
@@ -179,6 +191,7 @@ class VMCLoss(nn.Module):
             e_local=e_local,
             clip_factor=self.clip_factor,
             clip_method=self.clip_method,
+            max_invalid_fraction=self.max_invalid_fraction,
         )
 
     def compute_step_loss(

@@ -160,34 +160,27 @@ class SpinProjector(nn.Module):
 
         batch_size = r.shape[0]
         num_k = self.num_permutations
+        num_electrons = r.shape[1]
 
-        # 收集每一项的 log|Psi| 与 sign
-        log_abs_list: List[torch.Tensor] = []
-        sign_list: List[torch.Tensor] = []
+        # 批量向量化广播置换: Shape (B, K, N, 3)
+        perms_dev = self.perms.to(device=r.device)
+        r_all_perms = r[:, perms_dev, :]
 
-        # 遍历所有置换 (对于双电子对称化 K=2)
-        for k in range(num_k):
-            perm = self.perms[k]
-            w = self.weights[k].to(device=r.device, dtype=r.dtype)
-            w_sign = torch.sign(w)
-            w_log_abs = torch.log(torch.abs(w))
+        # 展平为大批次单次调用基础波函数前向: Shape (B * K, N, 3)
+        r_batched = r_all_perms.reshape(batch_size * num_k, num_electrons, 3)
+        log_abs_batched, sign_batched = base_forward_fn(r_batched)
 
-            # 应用置换: r_perm[:, i, :] = r[:, perm[i], :]
-            r_perm = r[:, perm, :]
+        # 恢复 (B, K) 形状
+        log_abs_all = log_abs_batched.reshape(batch_size, num_k)
+        sign_all = sign_batched.reshape(batch_size, num_k)
 
-            # 计算基础波函数
-            log_abs_k, sign_k = base_forward_fn(r_perm)
+        # 注入置换权重系数: Shape (1, K)
+        weights_dev = self.weights.to(device=r.device, dtype=r.dtype)
+        w_sign = torch.sign(weights_dev).unsqueeze(0)
+        w_log_abs = torch.log(torch.abs(weights_dev)).unsqueeze(0)
 
-            # 将权重吸纳至符号与对数模中
-            combined_sign = sign_k * w_sign
-            combined_log_abs = log_abs_k + w_log_abs
-
-            log_abs_list.append(combined_log_abs)
-            sign_list.append(combined_sign)
-
-        # 堆叠所有置换项: Shape (B, K)
-        log_abs_all = torch.stack(log_abs_list, dim=1)  # (B, K)
-        sign_all = torch.stack(sign_list, dim=1)        # (B, K)
+        log_abs_all = log_abs_all + w_log_abs
+        sign_all = sign_all * w_sign
 
         # 数值稳定的带符号 LogSumExp 合成:
         # Psi_total = sum_k sign_k * exp(log_abs_k)
@@ -216,3 +209,8 @@ class SpinProjector(nn.Module):
         )
 
         return log_abs_proj, sign_proj
+
+
+# 别名兼容
+SpinProjectedWaveFunction = SpinProjector
+
