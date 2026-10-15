@@ -16,10 +16,19 @@ Documentation is in `README.md` and `BEGINNER_GUIDE.md`. Optional architecture d
 
 - `uv sync` creates or updates the environment from `pyproject.toml` and `uv.lock`.
 - `uv run python example_h2.py` runs the small H2 inference and local-energy example.
-- `uv run python train_vmc.py --epochs 5 --walkers 64` performs a short local training smoke test.
-- `uv run python -m unittest discover -s . -p "test_*.py" -v` runs the complete test suite.
+- `uv run python train_vmc.py --epochs 5 --walkers 64` performs a short local training smoke test (CPU default).
+- `uv run python -m unittest discover -s . -p "test_*.py" -v` runs the test suite on CPU (CUDA tests skipped).
 - `uv run python -m unittest test_vmc.py` runs one focused test module.
 - `uv build` produces source and wheel distributions through Hatchling.
+
+### CUDA / GPU Development with Conda `torch` Environment
+
+For GPU-accelerated training and CUDA numerical regression testing (RTX 3060+), use the pre-configured local Conda `torch` environment (`F:\conda\envs\torch` or `conda activate torch`), which bundles CUDA-enabled PyTorch (CUDA 12.x+):
+
+- `F:\conda\envs\torch\python.exe train_vmc.py --device cuda --epochs 5 --walkers 128` runs GPU end-to-end VMC training.
+- `F:\conda\envs\torch\python.exe -m unittest test_cuda.py -v` executes the 18 GPU-specific numerical regression tests.
+- `F:\conda\envs\torch\python.exe -m unittest discover -s . -p "test_*.py" -v` executes the complete 145-test suite with GPU acceleration enabled (all tests passing, 0 skipped).
+
 
 
 

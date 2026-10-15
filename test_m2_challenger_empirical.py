@@ -799,7 +799,9 @@ class TestChallengerBestModelAndCheckpointPersistence(unittest.TestCase):
         new_optimizer.load_state_dict(checkpoint_data["optimizer_state_dict"])
 
         # 4. 验证新模型与原始最优模型的推断输出等价性
-        r_test = torch.randn(4, sys.total_electrons, 3)
+        device = next(res["model"].parameters()).device
+        new_model = new_model.to(device)
+        r_test = torch.randn(4, sys.total_electrons, 3, device=device)
         with torch.no_grad():
             log_abs_orig, sign_orig = res["model"].forward_log_psi(r_test)
             log_abs_loaded, sign_loaded = new_model.forward_log_psi(r_test)
