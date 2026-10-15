@@ -51,10 +51,11 @@ class _CofactorDeterminant(torch.autograd.Function):
         # 尺寸截断：根据 FINDING-PYT-04，小尺寸 (size <= 6，兼容单自旋通道 <= 3 构成的分块对角矩阵) 保持精确代数展开
         # size > 6 时自动切换至基于 Tikhonov 阻尼正则化的伴随矩阵 (O(N^3) 复杂度)，杜绝 (N!)^2 阶乘爆炸
         if size <= 6:
-            indices = torch.arange(size, device=matrix.device)
-            keep = indices.expand(size, size)[~torch.eye(size, device=matrix.device, dtype=torch.bool)]
-            keep = keep.reshape(size, size - 1)
+            row_idx = torch.arange(size, device=matrix.device).unsqueeze(1)
+            col_idx = torch.arange(size - 1, device=matrix.device).unsqueeze(0)
+            keep = torch.where(col_idx >= row_idx, col_idx + 1, col_idx)
             minors = matrix[..., keep[:, None, :, None], keep[None, :, None, :]]
+            indices = torch.arange(size, device=matrix.device)
             parity = 1 - 2 * ((indices[:, None] + indices[None, :]) % 2)
             cofactors = parity * _CofactorDeterminant.apply(minors, log_scale[..., None, None])
             return grad_output[..., None, None] * cofactors, None
@@ -361,27 +362,27 @@ class FermiNet(nn.Module):
 
         relative_scale = torch.where(singular, torch.zeros_like(log_scale_k), log_scale_k - max_log)
         scaled_det = amplitude_k * torch.exp(relative_scale)
-        if singular.any():
-            # A block determinant retains mixed derivatives when BOTH spin
-            # determinants vanish. Normalization is detached and exactly undone.
-            if d_up is None:
-                block = d_down
-            elif d_down is None:
-                block = d_up
-            else:
-                zeros = d_up.new_zeros(batch_size, self.num_determinants, self.n_up, self.n_down)
-                block = torch.cat((torch.cat((d_up, zeros), dim=-1),
-                                   torch.cat((zeros.transpose(-1, -2), d_down), dim=-1)), dim=-2)
-            row_scale = block.detach().abs().amax(dim=-1, keepdim=True)
-            # Borrow the other branches' row scale for an exactly zero orbital.
-            fallback = row_scale.amax(dim=1, keepdim=True)
-            row_scale = torch.where(row_scale == 0, fallback, row_scale)
-            row_scale = torch.where(row_scale == 0, torch.ones_like(row_scale), row_scale)
-            normalized = (block / row_scale)[singular]
-            correction_scale = row_scale.log().sum(dim=(-1, -2)) - max_log
-            correction = _CofactorDeterminant.apply(normalized, correction_scale[singular])
-            # Preserve the exact LU zero even if normalization perturbs it.
-            scaled_det = scaled_det.masked_scatter(singular, correction - correction.detach())
+        # 无分支纯张量向量化代数余子式修正 (Branchless Cofactor Correction):
+        # 消除 if singular.any() 与布尔切片，确保符号追踪 0 Graph Break
+        if d_up is None:
+            block = d_down
+        elif d_down is None:
+            block = d_up
+        else:
+            zeros = d_up.new_zeros(batch_size, self.num_determinants, self.n_up, self.n_down)
+            block = torch.cat((torch.cat((d_up, zeros), dim=-1),
+                               torch.cat((zeros.transpose(-1, -2), d_down), dim=-1)), dim=-2)
+        row_scale = block.detach().abs().amax(dim=-1, keepdim=True)
+        # Borrow the other branches' row scale for an exactly zero orbital.
+        fallback = row_scale.amax(dim=1, keepdim=True)
+        row_scale = torch.where(row_scale == 0, fallback, row_scale)
+        row_scale = torch.where(row_scale == 0, torch.ones_like(row_scale), row_scale)
+        normalized = block / row_scale
+        correction_scale = row_scale.log().sum(dim=(-1, -2)) - max_log
+        correction = _CofactorDeterminant.apply(normalized, correction_scale)
+        # Preserve the exact LU zero even if normalization perturbs it.
+        # correction - correction.detach() 在前向精确为 0，反向保留代数伴随矩阵导数
+        scaled_det = torch.where(singular, correction - correction.detach(), scaled_det)
         summed = torch.sum(w * scaled_det, dim=1)  # (B,)
 
         abs_summed = torch.abs(summed)

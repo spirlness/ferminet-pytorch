@@ -6,7 +6,7 @@
 """
 
 import math
-from typing import Optional
+from typing import Callable, Optional, Tuple
 import torch
 import torch.nn as nn
 
@@ -41,6 +41,7 @@ class MCMCSampler:
         device: Optional[torch.device] = None,
         dtype: torch.dtype = torch.float32,
         initial_walkers: Optional[torch.Tensor] = None,
+        forward_log_psi_fn: Optional[Callable[[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]] = None,
     ) -> None:
         """
         初始化 MCMC 采样器。
@@ -58,8 +59,12 @@ class MCMCSampler:
             device (Optional[torch.device]): 运行设备。若为 None 则跟随 system.nuclear_coords.device。
             dtype (torch.dtype): 数据精度，默认 torch.float32。
             initial_walkers (Optional[torch.Tensor]): 可选的用户指定初始构型，Shape: `(num_walkers, N, 3)`。
+            forward_log_psi_fn (Optional[Callable]): 可选的波函数对数模前向计算函数 (如编译加速后的函数)。默认使用 model.forward_log_psi。
         """
         self.model = model
+        self.forward_log_psi_fn = (
+            forward_log_psi_fn if forward_log_psi_fn is not None else self.model.forward_log_psi
+        )
         self.system = system
         self.num_walkers = num_walkers
         self.step_size = float(step_size)
@@ -180,7 +185,7 @@ class MCMCSampler:
             torch.Tensor: 重新计算后的当前构型对数波函数值 log|Psi(r)|。
         """
         with torch.no_grad():
-            log_abs_psi, _ = self.model.forward_log_psi(self.walkers)
+            log_abs_psi, _ = self.forward_log_psi_fn(self.walkers)
             invalid = torch.isnan(log_abs_psi) | torch.isposinf(log_abs_psi)
             if invalid.any():
                 raise FloatingPointError(
@@ -198,7 +203,7 @@ class MCMCSampler:
         prop_walkers = self.walkers + noise
 
         with torch.no_grad():
-            log_prop, _ = self.model.forward_log_psi(prop_walkers)
+            log_prop, _ = self.forward_log_psi_fn(prop_walkers)
             valid = torch.isfinite(log_prop) & ~torch.isnan(log_prop)
 
             cur_is_node = torch.isneginf(self.current_log_abs_psi)
@@ -244,7 +249,7 @@ class MCMCSampler:
                 prop_walkers = self.walkers.clone()
                 prop_walkers[:, i, :] = prop_walkers[:, i, :] + noise_i
 
-                log_prop, _ = self.model.forward_log_psi(prop_walkers)
+                log_prop, _ = self.forward_log_psi_fn(prop_walkers)
                 valid = torch.isfinite(log_prop) & ~torch.isnan(log_prop)
 
                 cur_is_node = torch.isneginf(self.current_log_abs_psi)

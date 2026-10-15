@@ -28,6 +28,7 @@ only-include = [
     "loss.py",
     "train_vmc.py",
     "example_h2.py",
+    "benchmark_compile.py",
 ]
 
 [tool.hatch.build.targets.wheel.sources]
@@ -50,5 +51,6 @@ only-include = [
     "loss.py",
     "train_vmc.py",
     "example_h2.py",
+    "benchmark_compile.py",
     "ferminet_pytorch",
 ]

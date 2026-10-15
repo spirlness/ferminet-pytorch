@@ -62,6 +62,7 @@ class SpinProjector(nn.Module):
         # perms: (K, N), weights: (K,)
         self.register_buffer("perms", perms)
         self.register_buffer("weights", weights)
+        self.is_trivial_identity = bool(self.num_permutations == 1 and weights[0].item() == 1.0)
 
     def _spin_eigenprojector(self, target: int) -> Tuple[List[List[int]], List[float]]:
         """Expand product_{s != target} (S^2-s(s+1))/(target(target+1)-s(s+1)).
@@ -155,7 +156,7 @@ class SpinProjector(nn.Module):
             sign_psi_proj: 投影后的 sign(Psi(r)), Shape: (B,)
         """
         # 单项单位权重可省略求和，但仍必须执行所指定的置换。
-        if self.num_permutations == 1 and self.weights[0].item() == 1.0:
+        if self.is_trivial_identity:
             return base_forward_fn(r[:, self.perms[0], :])
 
         batch_size = r.shape[0]

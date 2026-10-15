@@ -123,6 +123,8 @@ def train_vmc(
     smooth_cuspless: Optional[bool] = None,
     restore_best: bool = True,
     checkpoint_path: Optional[str] = None,
+    compile: bool = False,
+    compile_sampler: Optional[bool] = None,
     device: Optional[str] = None,
     dtype: torch.dtype = torch.float32,
     seed: int = 42,
@@ -151,6 +153,8 @@ def train_vmc(
         smooth_cuspless: 是否使用平滑无尖峰特征 (默认根据 Jastrow 自动协同)
         restore_best: 训练结束后是否恢复为历史最低局域能量模型状态
         checkpoint_path: 模型检查点磁盘保存路径 (为 None 时不持久化)
+        compile: 是否使用 torch.compile 对 MCMC 采样波函数进行内核融合编译加速
+        compile_sampler: 是否显式指定对采样器使用编译加速 (等价于 compile)
         device: 运行设备 ('cpu' 或 'cuda')
         dtype: 浮点精度
         seed: 随机数种子
@@ -195,6 +199,14 @@ def train_vmc(
 
     # 2. 损失函数与采样器
     vmc_loss = VMCLoss(clip_factor=clip_factor, clip_method=clip_method)
+
+    use_compile = compile or bool(compile_sampler)
+    sampler_forward_fn = None
+    if use_compile:
+        if verbose:
+            print("[*] 编译优化: 正在为 MCMC 采样器启用 torch.compile 融合内核加速...")
+        sampler_forward_fn = torch.compile(model.forward_log_psi)
+
     sampler = MCMCSampler(
         model=model,
         system=system,
@@ -205,6 +217,7 @@ def train_vmc(
         move_mode=move_mode,
         device=target_device,
         dtype=dtype,
+        forward_log_psi_fn=sampler_forward_fn,
     )
 
     optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -221,6 +234,7 @@ def train_vmc(
         print(f"[*] 体系: 核数 = {system.num_nuclei}, 电子数 = {system.total_electrons} (up={system.n_up}, down={system.n_down})")
         print(f"[*] 架构: 自旋纯态适配 = {spin_adapted} | Kato 尖峰 Jastrow = {use_cusp_jastrow}")
         print(f"[*] 采样: Walkers = {num_walkers}, 移动模式 = {move_mode}")
+        print(f"[*] 编译: 采样器编译加速 = {use_compile}")
         print(f"[*] 预热: 正在执行 {burn_in_steps} 步 MCMC 预热...")
 
     start_burn_in = time.time()
@@ -371,6 +385,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target_acceptance", type=float, default=None, help="MCMC 目标接受率 (全电子默认 0.234, 逐电子默认 0.50)")
     parser.add_argument("--checkpoint_path", type=str, default=None, help="模型检查点保存路径 (.pt)")
     parser.add_argument("--no_restore_best", action="store_true", help="禁用训练结束时自动恢复历史最优模型状态")
+    parser.add_argument("--compile", action="store_true", help="启用 torch.compile 对 MCMC 采样波函数进行内核融合编译加速")
+    parser.add_argument("--compile_sampler", action="store_true", help="显式指定对采样器使用编译加速 (等价于 --compile)")
     return parser.parse_args()
 
 
@@ -400,6 +416,8 @@ def main() -> None:
         smooth_cuspless=args.smooth_cuspless if args.smooth_cuspless else None,
         restore_best=not args.no_restore_best,
         checkpoint_path=args.checkpoint_path,
+        compile=args.compile,
+        compile_sampler=args.compile_sampler,
         device=args.device,
         seed=args.seed,
         verbose=True,
