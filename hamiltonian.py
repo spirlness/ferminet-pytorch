@@ -7,10 +7,34 @@
     T_L(r) = -0.5 * (∇²ln|Ψ| + |∇ln|Ψ||²)
 """
 
+from contextlib import nullcontext
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 import torch
 import torch.nn as nn
+
+try:
+    from .features import smooth_distance
+except (ImportError, ValueError):
+    from features import smooth_distance
+
+
+class _FreezeModelParameters:
+    """临时隔离模型参数的梯度追踪，阻止二阶计算图遍历模型权重。"""
+
+    def __init__(self, model: nn.Module) -> None:
+        self.model = model
+        self.prev_states: List[bool] = []
+
+    def __enter__(self) -> "_FreezeModelParameters":
+        self.prev_states = [p.requires_grad for p in self.model.parameters()]
+        for p in self.model.parameters():
+            p.requires_grad = False
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        for p, state in zip(self.model.parameters(), self.prev_states):
+            p.requires_grad = state
 
 
 @dataclass
@@ -85,14 +109,14 @@ class MolecularSystem:
 
         # 电子-核吸引: V_en = -sum_i sum_I Z_I / |r_i - R_I|
         diff_en = r.unsqueeze(2) - nuclear_coords.unsqueeze(0).unsqueeze(0)
-        dist_en = torch.sqrt(torch.clamp(torch.sum(diff_en ** 2, dim=-1), min=eps))
+        dist_en = smooth_distance(diff_en, eps=eps, keepdim=False)
         charges = nuclear_charges.unsqueeze(0).unsqueeze(0)
         v_en = -torch.sum(charges / dist_en, dim=(-1, -2))
 
         # 电子-电子排斥: V_ee = sum_{i<j} 1/|r_i - r_j|
         if num_electrons > 1:
             diff_ee = r.unsqueeze(2) - r.unsqueeze(1)
-            dist_ee = torch.sqrt(torch.clamp(torch.sum(diff_ee ** 2, dim=-1), min=eps))
+            dist_ee = smooth_distance(diff_ee, eps=eps, keepdim=False)
             mask_ee = torch.triu(
                 torch.ones(num_electrons, num_electrons, device=device, dtype=torch.bool),
                 diagonal=1,
@@ -136,51 +160,55 @@ def compute_local_energy(
     batch_size, num_electrons, _ = r.shape
     assert r.requires_grad, "输入 r 必须开启梯度追踪"
 
-    # 1. log|Psi(r)|
-    log_abs_psi, _ = model.forward_log_psi(r)
+    freeze_ctx = _FreezeModelParameters(model) if not create_graph else nullcontext()
+    with freeze_ctx:
+        # 1. log|Psi(r)|
+        log_abs_psi, _ = model.forward_log_psi(r)
 
-    # 2. 一阶梯度 ∇ln|Ψ|
-    ones = torch.ones_like(log_abs_psi)
-    grad_log_psi = torch.autograd.grad(
-        outputs=log_abs_psi,
-        inputs=r,
-        grad_outputs=ones,
-        create_graph=True,
-        retain_graph=True,
-    )[0]  # (B, N, 3)
-
-    grad_squared = torch.sum(grad_log_psi ** 2, dim=(-1, -2))  # (B,)
-
-    # 3. 拉普拉斯 ∇²ln|Ψ| (逐维精确二阶导)
-    grad_flat = grad_log_psi.reshape(batch_size, -1)
-    dim_total = grad_flat.shape[1]
-    laplacian = torch.zeros(batch_size, device=r.device, dtype=r.dtype)
-
-    for d in range(dim_total):
-        g_d = grad_flat[:, d]
-        sec_retain = True if create_graph else (d < dim_total - 1)
-        sec_grad = torch.autograd.grad(
-            outputs=g_d,
+        # 2. 一阶梯度 ∇ln|Ψ|
+        ones = torch.ones_like(log_abs_psi)
+        grad_log_psi = torch.autograd.grad(
+            outputs=log_abs_psi,
             inputs=r,
             grad_outputs=ones,
-            create_graph=create_graph,
-            retain_graph=sec_retain,
-        )[0]
-        sec_grad_flat = sec_grad.reshape(batch_size, -1)
-        laplacian = laplacian + sec_grad_flat[:, d]
+            create_graph=True,
+            retain_graph=True,
+        )[0]  # (B, N, 3)
 
-    # 4. 动能: T_L = -0.5 * (∇²ln|Ψ| + |∇ln|Ψ|²)
-    t_local = -0.5 * (laplacian + grad_squared)
+        grad_squared = torch.sum(grad_log_psi ** 2, dim=(-1, -2))  # (B,)
 
-    # 5. 势能: V(r)
-    if create_graph:
-        v_local = system.compute_potential_energy(r)
-    else:
-        with torch.no_grad():
+        # 3. 拉普拉斯 ∇²ln|Ψ| (逐维精确二阶导)
+        grad_flat = grad_log_psi.reshape(batch_size, -1)
+        dim_total = grad_flat.shape[1]
+        laplacian = torch.zeros(batch_size, device=r.device, dtype=r.dtype)
+
+        for d in range(dim_total):
+            g_d = grad_flat[:, d]
+            sec_retain = True if create_graph else (d < dim_total - 1)
+            sec_grad = torch.autograd.grad(
+                outputs=g_d,
+                inputs=r,
+                grad_outputs=ones,
+                create_graph=create_graph,
+                retain_graph=sec_retain,
+            )[0]
+            sec_grad_flat = sec_grad.reshape(batch_size, -1)
+            laplacian = laplacian + sec_grad_flat[:, d]
+            del sec_grad, sec_grad_flat
+        del grad_flat
+
+        # 4. 动能: T_L = -0.5 * (∇²ln|Ψ| + |∇ln|Ψ|²)
+        t_local = -0.5 * (laplacian + grad_squared)
+
+        # 5. 势能: V(r)
+        if create_graph:
             v_local = system.compute_potential_energy(r)
+        else:
+            with torch.no_grad():
+                v_local = system.compute_potential_energy(r)
 
-    e_local = t_local + v_local
-    return e_local, t_local, v_local
+        e_local = t_local + v_local
+        return e_local, t_local, v_local
 
 
 def compute_kinetic_energy(
@@ -205,38 +233,42 @@ def compute_kinetic_energy(
     batch_size = r.shape[0]
     assert r.requires_grad, "输入 r 必须开启梯度追踪"
 
-    log_abs_psi, _ = model.forward_log_psi(r)
-    ones = torch.ones_like(log_abs_psi)
+    freeze_ctx = _FreezeModelParameters(model) if not create_graph else nullcontext()
+    with freeze_ctx:
+        log_abs_psi, _ = model.forward_log_psi(r)
+        ones = torch.ones_like(log_abs_psi)
 
-    grad_log_psi = torch.autograd.grad(
-        outputs=log_abs_psi,
-        inputs=r,
-        grad_outputs=ones,
-        create_graph=True,
-        retain_graph=True,
-    )[0]  # (B, N, 3)
-
-    grad_squared = torch.sum(grad_log_psi ** 2, dim=(-1, -2))  # (B,)
-
-    grad_flat = grad_log_psi.reshape(batch_size, -1)
-    dim_total = grad_flat.shape[1]
-    laplacian = torch.zeros(batch_size, device=r.device, dtype=r.dtype)
-
-    for d in range(dim_total):
-        g_d = grad_flat[:, d]
-        sec_retain = True if create_graph else (d < dim_total - 1)
-        sec_grad = torch.autograd.grad(
-            outputs=g_d,
+        grad_log_psi = torch.autograd.grad(
+            outputs=log_abs_psi,
             inputs=r,
             grad_outputs=ones,
-            create_graph=create_graph,
-            retain_graph=sec_retain,
-        )[0]
-        sec_grad_flat = sec_grad.reshape(batch_size, -1)
-        laplacian = laplacian + sec_grad_flat[:, d]
+            create_graph=True,
+            retain_graph=True,
+        )[0]  # (B, N, 3)
 
-    t_local = -0.5 * (laplacian + grad_squared)
-    return t_local, laplacian, grad_squared
+        grad_squared = torch.sum(grad_log_psi ** 2, dim=(-1, -2))  # (B,)
+
+        grad_flat = grad_log_psi.reshape(batch_size, -1)
+        dim_total = grad_flat.shape[1]
+        laplacian = torch.zeros(batch_size, device=r.device, dtype=r.dtype)
+
+        for d in range(dim_total):
+            g_d = grad_flat[:, d]
+            sec_retain = True if create_graph else (d < dim_total - 1)
+            sec_grad = torch.autograd.grad(
+                outputs=g_d,
+                inputs=r,
+                grad_outputs=ones,
+                create_graph=create_graph,
+                retain_graph=sec_retain,
+            )[0]
+            sec_grad_flat = sec_grad.reshape(batch_size, -1)
+            laplacian = laplacian + sec_grad_flat[:, d]
+            del sec_grad, sec_grad_flat
+        del grad_flat
+
+        t_local = -0.5 * (laplacian + grad_squared)
+        return t_local, laplacian, grad_squared
 
 
 def diagnose_cusp_divergence(

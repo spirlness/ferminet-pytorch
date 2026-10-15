@@ -72,3 +72,6 @@ venv.bak/
 *.ckpt
 checkpoints/
 logs/
+
+# Multi-agent teamwork artifacts
+.agents/

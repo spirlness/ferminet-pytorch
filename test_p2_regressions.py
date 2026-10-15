@@ -10,7 +10,10 @@ from ferminet_pytorch.jastrow import KatoCuspJastrow
 from ferminet_pytorch.loss import clip_local_energy, vmc_surrogate_loss
 from ferminet_pytorch.model import FermiNet
 from ferminet_pytorch.spin import SpinProjector
-from ferminet_pytorch.train_vmc import build_lih_system, train_vmc
+from ferminet_pytorch.mcmc import MCMCSampler
+from ferminet_pytorch.train_vmc import build_h2_system, build_lih_system, train_vmc
+
+MetropolisSampler = MCMCSampler
 
 
 class TestSpinProjectionRegressions(unittest.TestCase):
@@ -190,6 +193,371 @@ class TestInvalidEnergyRegressions(unittest.TestCase):
                 step.assert_not_called()
         for old, new in zip(before, model.parameters()):
             torch.testing.assert_close(old, new, atol=0, rtol=0)
+
+
+class TestOddElectronRegressions(unittest.TestCase):
+    """Regression test suite for odd and general open-shell electron configurations."""
+
+    def setUp(self) -> None:
+        torch.manual_seed(42)
+
+    def test_li_atom_spin_adapted_initialization_and_forward(self) -> None:
+        """
+        Verify Li atom (n_up=2, n_down=1, spin_adapted=True) initialization,
+        forward pass, same-spin antisymmetry, and local energy calculation.
+        """
+        nuclear_coords = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float64)
+        nuclear_charges = torch.tensor([3.0], dtype=torch.float64)
+        system_li = MolecularSystem(nuclear_coords, nuclear_charges, n_up=2, n_down=1)
+
+        model_li = FermiNet(
+            nuclear_coords=nuclear_coords,
+            nuclear_charges=nuclear_charges,
+            n_up=2,
+            n_down=1,
+            num_determinants=2,
+            hidden_dim_one=16,
+            hidden_dim_two=8,
+            num_layers=1,
+            spin_adapted=True,
+            use_cusp_jastrow=True,
+        ).to(dtype=torch.float64)
+
+        # Spin adaptation for un-paired electrons safely defaults to mode='none'
+        self.assertIsNotNone(model_li.spin_projector)
+        self.assertEqual(model_li.spin_projector.mode, "none")
+
+        batch_size = 4
+        r = torch.randn(batch_size, 3, 3, dtype=torch.float64, requires_grad=True)
+        psi = model_li(r)
+        log_abs, sign = model_li.forward_log_psi(r)
+
+        self.assertEqual(psi.shape, (batch_size,))
+        self.assertEqual(log_abs.shape, (batch_size,))
+        self.assertTrue(torch.isfinite(psi).all())
+        self.assertTrue(torch.isfinite(log_abs).all())
+        torch.testing.assert_close(sign * log_abs.exp(), psi, atol=1e-12, rtol=1e-9)
+
+        # Invariance: antisymmetry under permutation of same-spin electrons (0 and 1)
+        r_swap_up = r.clone()
+        r_swap_up[:, [0, 1], :] = r[:, [1, 0], :]
+        with torch.no_grad():
+            psi_swap = model_li(r_swap_up)
+        torch.testing.assert_close(psi_swap, -psi, atol=1e-12, rtol=1e-9)
+
+        # Finite local energy calculation without NaNs
+        energy, t_local, v_local = compute_local_energy(model_li, system_li, r)
+        self.assertEqual(energy.shape, (batch_size,))
+        self.assertTrue(torch.isfinite(energy).all())
+        self.assertTrue(torch.isfinite(t_local).all())
+        self.assertTrue(torch.isfinite(v_local).all())
+
+    def test_general_open_shell_boron_and_polarized_systems(self) -> None:
+        """
+        Verify open-shell Boron atom (3, 2) and fully-polarized (3, 0) system
+        initialization, forward pass, and local energy finiteness.
+        """
+        # Open-shell Boron atom (n_up=3, n_down=2)
+        coords_b = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float64)
+        charges_b = torch.tensor([5.0], dtype=torch.float64)
+        system_b = MolecularSystem(coords_b, charges_b, n_up=3, n_down=2)
+        model_b = FermiNet(
+            nuclear_coords=coords_b,
+            nuclear_charges=charges_b,
+            n_up=3,
+            n_down=2,
+            num_determinants=2,
+            hidden_dim_one=16,
+            hidden_dim_two=8,
+            num_layers=1,
+            spin_adapted=True,
+            use_cusp_jastrow=True,
+        ).to(dtype=torch.float64)
+
+        self.assertIsNotNone(model_b.spin_projector)
+        self.assertEqual(model_b.spin_projector.mode, "none")
+
+        r_b = torch.randn(2, 5, 3, dtype=torch.float64, requires_grad=True)
+        psi_b = model_b(r_b)
+        self.assertTrue(torch.isfinite(psi_b).all())
+        e_b, t_b, v_b = compute_local_energy(model_b, system_b, r_b)
+        self.assertTrue(torch.isfinite(e_b).all())
+        self.assertTrue(torch.isfinite(t_b).all())
+        self.assertTrue(torch.isfinite(v_b).all())
+
+        # Fully-polarized system (n_up=3, n_down=0)
+        coords_pol = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float64)
+        charges_pol = torch.tensor([3.0], dtype=torch.float64)
+        system_pol = MolecularSystem(coords_pol, charges_pol, n_up=3, n_down=0)
+        model_pol = FermiNet(
+            nuclear_coords=coords_pol,
+            nuclear_charges=charges_pol,
+            n_up=3,
+            n_down=0,
+            num_determinants=2,
+            hidden_dim_one=16,
+            hidden_dim_two=8,
+            num_layers=1,
+            spin_adapted=True,
+            use_cusp_jastrow=True,
+        ).to(dtype=torch.float64)
+
+        self.assertIsNotNone(model_pol.spin_projector)
+        self.assertEqual(model_pol.spin_projector.mode, "none")
+
+        r_pol = torch.randn(2, 3, 3, dtype=torch.float64, requires_grad=True)
+        psi_pol = model_pol(r_pol)
+        self.assertTrue(torch.isfinite(psi_pol).all())
+        e_pol, t_pol, v_pol = compute_local_energy(model_pol, system_pol, r_pol)
+        self.assertTrue(torch.isfinite(e_pol).all())
+        self.assertTrue(torch.isfinite(t_pol).all())
+        self.assertTrue(torch.isfinite(v_pol).all())
+
+    def test_even_electron_high_spin_triplet_safe_fallback(self) -> None:
+        """
+        Verify even-electron high-spin states (4-electron 3,1 and Carbon atom 4,2)
+        safely fall back to mode='none' and maintain finite local energies.
+        """
+        # 4-electron high-spin (n_up=3, n_down=1)
+        coords_4e = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float64)
+        charges_4e = torch.tensor([4.0], dtype=torch.float64)
+        system_4e = MolecularSystem(coords_4e, charges_4e, n_up=3, n_down=1)
+        model_4e = FermiNet(
+            nuclear_coords=coords_4e,
+            nuclear_charges=charges_4e,
+            n_up=3,
+            n_down=1,
+            num_determinants=2,
+            hidden_dim_one=8,
+            hidden_dim_two=4,
+            num_layers=1,
+            spin_adapted=True,
+            use_cusp_jastrow=True,
+        ).to(dtype=torch.float64)
+
+        self.assertIsNotNone(model_4e.spin_projector)
+        self.assertEqual(model_4e.spin_projector.mode, "none")
+
+        r_4e = torch.randn(3, 4, 3, dtype=torch.float64, requires_grad=True)
+        e_4e, t_4e, v_4e = compute_local_energy(model_4e, system_4e, r_4e)
+        self.assertTrue(torch.isfinite(e_4e).all())
+        self.assertTrue(torch.isfinite(t_4e).all())
+        self.assertTrue(torch.isfinite(v_4e).all())
+
+        # Carbon atom ground-state triplet (n_up=4, n_down=2)
+        coords_c = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float64)
+        charges_c = torch.tensor([6.0], dtype=torch.float64)
+        system_c = MolecularSystem(coords_c, charges_c, n_up=4, n_down=2)
+        model_c = FermiNet(
+            nuclear_coords=coords_c,
+            nuclear_charges=charges_c,
+            n_up=4,
+            n_down=2,
+            num_determinants=2,
+            hidden_dim_one=16,
+            hidden_dim_two=8,
+            num_layers=1,
+            spin_adapted=True,
+            use_cusp_jastrow=True,
+        ).to(dtype=torch.float64)
+
+        self.assertIsNotNone(model_c.spin_projector)
+        self.assertEqual(model_c.spin_projector.mode, "none")
+
+        r_c = torch.randn(3, 6, 3, dtype=torch.float64, requires_grad=True)
+        e_c, t_c, v_c = compute_local_energy(model_c, system_c, r_c)
+        self.assertTrue(torch.isfinite(e_c).all())
+        self.assertTrue(torch.isfinite(t_c).all())
+        self.assertTrue(torch.isfinite(v_c).all())
+
+
+class TestNodalSurfaceRegressions(unittest.TestCase):
+    """Regression test suite for nodal surface robustness and zero-determinant behavior."""
+
+    def setUp(self) -> None:
+        torch.manual_seed(42)
+
+    def test_nodal_surface_zero_determinant_autograd_finite_and_no_nan(self) -> None:
+        """
+        Verify that on wavefunction nodal surfaces (where det -> 0 or exactly 0),
+        forward_log_psi and coordinate autograd derivatives of compute_local_energy
+        are strictly finite and never produce NaNs or crashes.
+        """
+        nuclear_coords = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float64)
+        nuclear_charges = torch.tensor([2.0], dtype=torch.float64)
+        system = MolecularSystem(nuclear_coords, nuclear_charges, n_up=2, n_down=0)
+        model = FermiNet(
+            nuclear_coords=nuclear_coords,
+            nuclear_charges=nuclear_charges,
+            n_up=2,
+            n_down=0,
+            num_determinants=2,
+            hidden_dim_one=8,
+            hidden_dim_two=4,
+            num_layers=1,
+        ).to(dtype=torch.float64)
+
+        # Construct exact nodal surface where electron 0 and electron 1 coincide
+        batch_size = 3
+        r_node = torch.randn(batch_size, 2, 3, dtype=torch.float64)
+        r_node[:, 1, :] = r_node[:, 0, :]
+        r_node.requires_grad_(True)
+
+        with torch.no_grad():
+            psi_val = model(r_node)
+            log_abs, sign = model.forward_log_psi(r_node)
+
+        # Wavefunction value must be exactly zero on same-spin coincidence node
+        self.assertTrue(torch.all(psi_val == 0.0))
+        self.assertTrue(torch.all(sign == 0.0))
+        self.assertTrue(torch.all(torch.isneginf(log_abs) | (log_abs <= -40.0)))
+
+        # Local energy and kinetic energy autograd derivatives must be strictly finite and free of NaNs
+        energy, t_local, v_local = compute_local_energy(model, system, r_node, create_graph=False)
+        self.assertFalse(torch.isnan(t_local).any(), "Kinetic energy Laplacian contains NaN on nodal surface")
+        self.assertFalse(torch.isnan(energy).any(), "Local energy contains NaN on nodal surface")
+        self.assertTrue(torch.isfinite(t_local).all(), "Kinetic energy is not finite on nodal surface")
+        self.assertTrue(torch.isfinite(energy).all(), "Local energy is not finite on nodal surface")
+
+        # Near-node continuous perturbation (r_01 = 1e-12)
+        r_near = r_node.clone().detach()
+        r_near[:, 1, 0] += 1e-12
+        r_near.requires_grad_(True)
+        e_near, t_near, _ = compute_local_energy(model, system, r_near, create_graph=False)
+        self.assertFalse(torch.isnan(t_near).any(), "Near-node kinetic energy contains NaN")
+        self.assertFalse(torch.isnan(e_near).any(), "Near-node local energy contains NaN")
+        self.assertTrue(torch.isfinite(e_near).all())
+
+    def test_coincident_same_spin_electrons_higher_order_derivatives(self) -> None:
+        """
+        Verify that higher-order gradient propagation (create_graph=True) through
+        the nodal surface coordinates remains strictly controlled and finite.
+        """
+        nuclear_coords = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float64)
+        nuclear_charges = torch.tensor([2.0], dtype=torch.float64)
+        system = MolecularSystem(nuclear_coords, nuclear_charges, n_up=2, n_down=0)
+        model = FermiNet(
+            nuclear_coords=nuclear_coords,
+            nuclear_charges=nuclear_charges,
+            n_up=2,
+            n_down=0,
+            num_determinants=2,
+            hidden_dim_one=8,
+            hidden_dim_two=4,
+            num_layers=1,
+        ).to(dtype=torch.float64)
+
+        r_node = torch.randn(2, 2, 3, dtype=torch.float64)
+        r_node[:, 1, :] = r_node[:, 0, :]
+        r_node.requires_grad_(True)
+
+        e_local, t_local, _ = compute_local_energy(model, system, r_node, create_graph=True)
+        self.assertTrue(torch.isfinite(e_local).all())
+        self.assertTrue(torch.isfinite(t_local).all())
+
+        # Backward propagation of local energy gradient w.r.t coordinates
+        e_local.sum().backward()
+        self.assertIsNotNone(r_node.grad)
+        self.assertTrue(torch.isfinite(r_node.grad).all())
+
+
+class TestMCMCStationaryRegressions(unittest.TestCase):
+    """Regression test suite for MCMC step size freezing and stationary sampling properties."""
+
+    def setUp(self) -> None:
+        torch.manual_seed(42)
+
+    def test_sample_adapt_false_strictly_freezes_step_size(self) -> None:
+        """
+        Verify MetropolisSampler.sample(num_steps=10, adapt=False) strictly preserves
+        the step size during production sampling, regardless of batch acceptance rate.
+        """
+        system = build_h2_system(bond_length=1.4)
+        model = FermiNet(
+            system.nuclear_coords,
+            system.nuclear_charges,
+            n_up=1,
+            n_down=1,
+            num_determinants=2,
+            hidden_dim_one=16,
+            hidden_dim_two=8,
+            num_layers=1,
+        )
+        sampler = MetropolisSampler(
+            model=model,
+            system=system,
+            num_walkers=32,
+            step_size=0.5,
+            adapt_step_size=True,
+            target_acceptance=0.5,
+        )
+
+        # 1. Burn-in: step size dynamically adapts
+        sampler.burn_in(num_steps=10)
+        adapted_step = sampler.step_size
+
+        # 2. Production sampling: adapt=False must freeze step size exactly
+        walkers_sample_1 = sampler.sample(num_steps=10, adapt=False)
+        self.assertEqual(
+            sampler.step_size,
+            adapted_step,
+            f"Step size drifted during sample(adapt=False): {sampler.step_size} != {adapted_step}",
+        )
+
+        walkers_sample_2 = sampler.sample(num_steps=20, adapt=False)
+        self.assertEqual(
+            sampler.step_size,
+            adapted_step,
+            f"Step size drifted in second production sample: {sampler.step_size} != {adapted_step}",
+        )
+
+        # Sampler's persistent adapt_step_size flag must be restored
+        self.assertTrue(sampler.adapt_step_size)
+
+        # Sampled walker valid tensor verification
+        self.assertEqual(walkers_sample_1.shape, (32, 2, 3))
+        self.assertEqual(walkers_sample_2.shape, (32, 2, 3))
+        self.assertTrue(torch.isfinite(walkers_sample_1).all())
+        self.assertTrue(torch.isfinite(walkers_sample_2).all())
+
+    def test_sample_adapt_true_dynamically_adjusts_step_size(self) -> None:
+        """
+        Verify MetropolisSampler.sample(num_steps=10, adapt=True) dynamically adapts
+        step size towards the target acceptance rate.
+        """
+        system = build_h2_system(bond_length=1.4)
+        model = FermiNet(
+            system.nuclear_coords,
+            system.nuclear_charges,
+            n_up=1,
+            n_down=1,
+            num_determinants=2,
+            hidden_dim_one=16,
+            hidden_dim_two=8,
+            num_layers=1,
+        )
+        # Initialize with step_size far away from equilibrium to force adaptation
+        sampler = MetropolisSampler(
+            model=model,
+            system=system,
+            num_walkers=32,
+            step_size=5.0,
+            adapt_step_size=True,
+            target_acceptance=0.5,
+        )
+
+        initial_step = sampler.step_size
+        walkers = sampler.sample(num_steps=10, adapt=True)
+
+        # Step size must have adjusted away from 5.0
+        self.assertNotEqual(
+            sampler.step_size,
+            initial_step,
+            "Step size failed to adapt when sample(adapt=True) was explicitly set",
+        )
+        self.assertTrue(sampler.adapt_step_size)
+        self.assertEqual(walkers.shape, (32, 2, 3))
+        self.assertTrue(torch.isfinite(walkers).all())
 
 
 if __name__ == "__main__":

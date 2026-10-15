@@ -208,7 +208,7 @@ class SpinProjector(nn.Module):
         sign_proj = torch.sign(summed)
         sign_proj = torch.where(zero_mask, torch.zeros_like(sign_proj), sign_proj)
 
-        safe_abs_summed = torch.where(zero_mask, torch.ones_like(abs_summed), abs_summed)
+        safe_abs_summed = torch.clamp(abs_summed, min=1e-20)
         log_abs_proj = torch.where(
             zero_mask,
             torch.full_like(summed, float("-inf")),

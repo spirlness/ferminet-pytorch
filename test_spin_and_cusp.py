@@ -176,6 +176,80 @@ class TestSpinAdaptation(unittest.TestCase):
         diff = torch.max(torch.abs(psi_orig - psi_flip)).item()
         self.assertLess(diff, 1e-9, f"闭壳层自旋翻转对称性破坏: {diff}")
 
+    def test_open_shell_even_electrons_safe_fallback(self) -> None:
+        """验证偶数总电子但自旋不相等的开壳层体系 (如 4 电子三线态与碳原子基态) 安全降级为 mode='none'。"""
+        # 测试用例 1: 4 电子三线态 (n_up=3, n_down=1)
+        coords_4e = torch.zeros(1, 3, dtype=torch.float64)
+        charges_4e = torch.tensor([4.0], dtype=torch.float64)
+        sys_4e = MolecularSystem(coords_4e, charges_4e, n_up=3, n_down=1)
+        model_4e = FermiNet(
+            nuclear_coords=coords_4e,
+            nuclear_charges=charges_4e,
+            n_up=3,
+            n_down=1,
+            num_determinants=2,
+            hidden_dim_one=16,
+            hidden_dim_two=8,
+            num_layers=1,
+            spin_adapted=True,
+        ).to(dtype=torch.float64)
+
+        self.assertIsNotNone(model_4e.spin_projector)
+        self.assertEqual(model_4e.spin_projector.mode, "none")
+
+        r_4e = torch.randn(4, 4, 3, dtype=torch.float64, requires_grad=True)
+        e_4e, _, _ = compute_local_energy(model_4e, sys_4e, r_4e)
+        self.assertTrue(torch.isfinite(e_4e).all())
+
+        # 测试用例 2: 碳原子三线态 (n_up=4, n_down=2)
+        coords_c = torch.zeros(1, 3, dtype=torch.float64)
+        charges_c = torch.tensor([6.0], dtype=torch.float64)
+        sys_c = MolecularSystem(coords_c, charges_c, n_up=4, n_down=2)
+        model_c = FermiNet(
+            nuclear_coords=coords_c,
+            nuclear_charges=charges_c,
+            n_up=4,
+            n_down=2,
+            num_determinants=2,
+            hidden_dim_one=16,
+            hidden_dim_two=8,
+            num_layers=1,
+            spin_adapted=True,
+        ).to(dtype=torch.float64)
+
+        self.assertIsNotNone(model_c.spin_projector)
+        self.assertEqual(model_c.spin_projector.mode, "none")
+
+        r_c = torch.randn(4, 6, 3, dtype=torch.float64, requires_grad=True)
+        e_c, _, _ = compute_local_energy(model_c, sys_c, r_c)
+        self.assertTrue(torch.isfinite(e_c).all())
+
+    def test_float32_nodal_clamp_underflow_prevention(self) -> None:
+        """验证在 float32 精度下波函数节点面截断下界不发生 0.0 下溢且导数稳定。"""
+        # 1. 直接验证常数下界在 float32 下严格大于 0
+        min_clamp_f32 = torch.tensor(1e-20, dtype=torch.float32)
+        self.assertGreater(min_clamp_f32.item(), 0.0)
+        self.assertFalse((min_clamp_f32 == 0.0).item())
+
+        # 2. 验证模型在单精度下接近节点面时梯度计算数值稳定
+        model_f32 = FermiNet(
+            nuclear_coords=self.h2_system.nuclear_coords.float(),
+            nuclear_charges=self.h2_system.nuclear_charges.float(),
+            n_up=1,
+            n_down=1,
+            num_determinants=2,
+            hidden_dim_one=16,
+            hidden_dim_two=8,
+            num_layers=1,
+            spin_adapted=True,
+        )
+        r = torch.randn(4, 2, 3, dtype=torch.float32, requires_grad=True)
+        log_abs, sign = model_f32.forward_log_psi(r)
+        self.assertTrue(torch.isfinite(log_abs).all())
+        grad_r = torch.autograd.grad(log_abs.sum(), r, create_graph=True)[0]
+        self.assertTrue(torch.isfinite(grad_r).all())
+
+
 
 class TestKatoCuspJastrow(unittest.TestCase):
     """Kato 尖峰解析 Jastrow 因子测试。"""

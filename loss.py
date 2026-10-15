@@ -21,9 +21,9 @@ import torch
 import torch.nn as nn
 
 try:
-    from .hamiltonian import MolecularSystem, compute_local_energy
+    from .hamiltonian import MolecularSystem, compute_local_energy, _FreezeModelParameters
 except (ImportError, ValueError):
-    from hamiltonian import MolecularSystem, compute_local_energy
+    from hamiltonian import MolecularSystem, compute_local_energy, _FreezeModelParameters
 
 
 def clip_local_energy(
@@ -53,7 +53,8 @@ def clip_local_energy(
     if method == "none" or clip_factor <= 0:
         return torch.where(finite_mask, e_local, e_median), e_median, mad
 
-    delta = torch.clamp(clip_factor * mad, min=eps)
+    min_physical_delta = max(float(eps), 1e-3, 0.01 * float(torch.abs(e_median).item()))
+    delta = torch.clamp(clip_factor * mad, min=min_physical_delta)
     clean_e = torch.nan_to_num(
         e_local,
         nan=e_median.item(),
@@ -103,13 +104,13 @@ def vmc_surrogate_loss(
 
     # 1. 局域能量截断与分离梯度 (阻止对 E_L 进行高阶求导)
     e_local_detached = e_local.detach()
-    finite_mask = torch.isfinite(e_local_detached)
-    if not finite_mask.any():
+    valid_mask = torch.isfinite(e_local_detached) & torch.isfinite(log_abs_psi)
+    if not valid_mask.any():
         raise FloatingPointError("No finite local energies; VMC update aborted")
     if not torch.isfinite(log_abs_psi).all():
         raise FloatingPointError("Nonfinite log|Psi|; VMC update aborted")
-    finite_e = e_local_detached[finite_mask]
-    num_valid = int(finite_mask.sum().item())
+    finite_e = e_local_detached[valid_mask]
+    num_valid = int(valid_mask.sum().item())
     num_invalid = batch_size - num_valid
     if num_invalid:
         warnings.warn(
@@ -127,7 +128,7 @@ def vmc_surrogate_loss(
     delta_e = (e_clipped - mean_clipped_energy).detach()
 
     # 3. 构造变分代理损失: L = 2.0 * mean( Delta E * ln|Psi| )
-    loss = 2.0 * torch.mean(delta_e * log_abs_psi[finite_mask])
+    loss = 2.0 * torch.mean(delta_e * log_abs_psi[valid_mask])
 
     # 4. 统计物理指标
     raw_mean = torch.mean(finite_e).item()
@@ -199,9 +200,10 @@ class VMCLoss(nn.Module):
             stats: 统计指标字典
             e_local: 局域能量, Shape: (B,)
         """
-        # 1. 计算局部能量 (使用独立坐标计算图)
+        # 1. 计算局部能量 (使用独立坐标计算图并隔离模型参数)
         r_for_energy = walkers.clone().detach().requires_grad_(True)
-        e_local, _, _ = compute_local_energy(model=model, system=system, r=r_for_energy)
+        with _FreezeModelParameters(model):
+            e_local, _, _ = compute_local_energy(model=model, system=system, r=r_for_energy)
         e_local = e_local.detach()
 
         # 2. 前向获取带模型参数梯度的 log|Psi(r)|

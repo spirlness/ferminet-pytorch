@@ -5,9 +5,15 @@ FermiNet 原子核指数包络衰减模块。
     Envelope_{k,i,j}(r_i) = sum_m pi_{k,j,m} * exp(-alpha_{k,j,m} * |r_i - R_m|)
 """
 
+from typing import Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+try:
+    from .features import smooth_distance
+except (ImportError, ValueError):
+    from features import smooth_distance
 
 
 class NuclearEnvelope(nn.Module):
@@ -27,6 +33,7 @@ class NuclearEnvelope(nn.Module):
         eps: float = 1e-24,
         init_decay_rate: float = 1.0,
         envelope_type: str = "exponential",
+        nuclear_charges: Optional[torch.Tensor] = None,
     ) -> None:
         """
         Args:
@@ -36,6 +43,7 @@ class NuclearEnvelope(nn.Module):
             eps: 最小平方距离
             init_decay_rate: 初始衰减速率
             envelope_type: 包络形式 ("exponential" 为指数包络, "gaussian" 为平滑高斯包络)
+            nuclear_charges: 原子核电荷, Shape: (M,), 若提供则初始衰减率与核电荷物理对齐
         """
         super().__init__()
         self.num_determinants = num_determinants
@@ -51,12 +59,27 @@ class NuclearEnvelope(nn.Module):
             torch.empty(num_determinants, num_orbitals, num_nuclei)
         )
 
-        self._reset_parameters(init_decay_rate)
+        self._reset_parameters(init_decay_rate, nuclear_charges=nuclear_charges)
 
-    def _reset_parameters(self, init_decay_rate: float) -> None:
+    def _reset_parameters(
+        self,
+        init_decay_rate: float,
+        nuclear_charges: Optional[torch.Tensor] = None,
+    ) -> None:
         nn.init.normal_(self.weights, mean=1.0, std=0.1)
-        inv_val = torch.log(torch.exp(torch.tensor(init_decay_rate)) - 1.0).item()
-        nn.init.constant_(self.decay_rates_raw, inv_val)
+        if nuclear_charges is not None:
+            charges = nuclear_charges.to(
+                device=self.decay_rates_raw.device, dtype=self.decay_rates_raw.dtype
+            )
+            charges = torch.clamp(charges, min=1e-4)
+            inv_vals = torch.where(charges > 20.0, charges, torch.log(torch.expm1(charges)))
+            with torch.no_grad():
+                self.decay_rates_raw.data.copy_(
+                    inv_vals.reshape(1, 1, self.num_nuclei).expand_as(self.decay_rates_raw)
+                )
+        else:
+            inv_val = torch.log(torch.exp(torch.tensor(init_decay_rate)) - 1.0).item()
+            nn.init.constant_(self.decay_rates_raw, inv_val)
 
     def forward(
         self,
@@ -76,10 +99,8 @@ class NuclearEnvelope(nn.Module):
         coords = nuclear_coords.to(device=r.device, dtype=r.dtype)
         diff = r.unsqueeze(2) - coords.unsqueeze(0).unsqueeze(0)  # (B, N_spin, M, 3)
 
-        # 欧氏距离
-        dist = torch.sqrt(torch.clamp(
-            torch.sum(diff ** 2, dim=-1), min=self.eps
-        ))  # (B, N_spin, M)
+        # 平滑欧氏距离 (keepdim=False 保持 (B, N_spin, M))
+        dist = smooth_distance(diff, eps=self.eps, keepdim=False)
 
         # softplus 保证衰减率为正
         alpha = F.softplus(self.decay_rates_raw)  # (K, N_orb, M)

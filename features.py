@@ -10,6 +10,27 @@ from typing import Optional, Tuple
 import torch
 import torch.nn as nn
 
+def smooth_distance(
+    r_diff: torch.Tensor,
+    eps: float = 1e-12,
+    keepdim: bool = False,
+) -> torch.Tensor:
+    """
+    计算处处可微的平滑欧氏距离 sqrt(sum(r^2) + eps)。
+
+    严正声明：仅用于几何特征与库仑势能平滑，严禁用于 KatoCuspJastrow 物理尖点！
+
+    Args:
+        r_diff: 坐标差向量, 最后一维为 3 (x, y, z)
+        eps: 平滑化正则项 (默认 1e-12)
+        keepdim: 是否保留缩减维度 (默认 False)
+
+    Returns:
+        平滑距离张量
+    """
+    sum_sq = torch.sum(r_diff ** 2, dim=-1, keepdim=keepdim)
+    return torch.sqrt(sum_sq + eps)
+
 
 class ElectronFeatureEmbedding(nn.Module):
     """
@@ -19,7 +40,7 @@ class ElectronFeatureEmbedding(nn.Module):
     双电子特征: [r_{ij}(3), d_{ij}] (4维)
     """
 
-    def __init__(self, eps: float = 1e-24, smooth_cuspless: bool = False) -> None:
+    def __init__(self, eps: float = 1e-24, smooth_cuspless: bool = True) -> None:
         """
         Args:
             eps: 最小平方距离, 防止 sqrt(0) 的梯度为 NaN
@@ -67,9 +88,7 @@ class ElectronFeatureEmbedding(nn.Module):
         nuclei_expanded = coords.unsqueeze(0).unsqueeze(0)          # (1, 1, M, 3)
 
         r_en = r_expanded - nuclei_expanded                         # (B, N, M, 3)
-        d_en = torch.sqrt(torch.clamp(
-            torch.sum(r_en ** 2, dim=-1, keepdim=True), min=self.eps
-        ))                                                          # (B, N, M, 1)
+        d_en = smooth_distance(r_en, eps=self.eps, keepdim=True)    # (B, N, M, 1)
 
         d_en_feature = (d_en ** 2) / (1.0 + d_en) if self.smooth_cuspless else d_en
 
@@ -89,9 +108,7 @@ class ElectronFeatureEmbedding(nn.Module):
         r_i = r.unsqueeze(2)   # (B, N, 1, 3)
         r_j = r.unsqueeze(1)   # (B, 1, N, 3)
         r_ee = r_i - r_j       # (B, N, N, 3)
-        d_ee = torch.sqrt(torch.clamp(
-            torch.sum(r_ee ** 2, dim=-1, keepdim=True), min=self.eps
-        ))                      # (B, N, N, 1)
+        d_ee = smooth_distance(r_ee, eps=self.eps, keepdim=True)    # (B, N, N, 1)
 
         d_ee_feature = (d_ee ** 2) / (1.0 + d_ee) if self.smooth_cuspless else d_ee
         h2_input = torch.cat([r_ee, d_ee_feature], dim=-1)  # (B, N, N, 4)

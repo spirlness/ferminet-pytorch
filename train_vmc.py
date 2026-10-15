@@ -202,6 +202,9 @@ def train_vmc(
     )
 
     optimizer = optim.Adam(model.parameters(), lr=lr)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(
+        optimizer, T_max=max(num_epochs, 1), eta_min=lr * 0.01
+    )
 
     # 3. 预热 (Burn-in)
     if verbose:
@@ -239,8 +242,8 @@ def train_vmc(
     start_train_time = time.time()
 
     for epoch in range(1, num_epochs + 1):
-        # A. MCMC 抽样
-        walkers = sampler.sample(num_steps=mcmc_steps_per_epoch)
+        # A. MCMC 抽样 (正式抽样冻结步长调整以保障细致平衡与时齐性)
+        walkers = sampler.sample(num_steps=mcmc_steps_per_epoch, adapt=False)
 
         # B. 计算局域能量与代理损失
         loss, stats, _ = vmc_loss.compute_step_loss(model, system, walkers)
@@ -253,6 +256,7 @@ def train_vmc(
             nn.utils.clip_grad_norm_(model.parameters(), max_norm=grad_clip)
 
         optimizer.step()
+        scheduler.step()
 
         # D. 刷新当前 Walker 的对数波函数缓存
         sampler.recompute_log_psi()

@@ -48,13 +48,26 @@ class _CofactorDeterminant(torch.autograd.Function):
             derivative = grad_output * torch.exp(log_scale)
             return derivative[..., None, None] + matrix * 0.0, None
 
-        indices = torch.arange(size, device=matrix.device)
-        keep = indices.expand(size, size)[~torch.eye(size, device=matrix.device, dtype=torch.bool)]
-        keep = keep.reshape(size, size - 1)
-        minors = matrix[..., keep[:, None, :, None], keep[None, :, None, :]]
-        parity = 1 - 2 * ((indices[:, None] + indices[None, :]) % 2)
-        cofactors = parity * _CofactorDeterminant.apply(minors, log_scale[..., None, None])
-        return grad_output[..., None, None] * cofactors, None
+        # 尺寸截断：根据 FINDING-PYT-04，小尺寸 (size <= 6，兼容单自旋通道 <= 3 构成的分块对角矩阵) 保持精确代数展开
+        # size > 6 时自动切换至基于 Tikhonov 阻尼正则化的伴随矩阵 (O(N^3) 复杂度)，杜绝 (N!)^2 阶乘爆炸
+        if size <= 6:
+            indices = torch.arange(size, device=matrix.device)
+            keep = indices.expand(size, size)[~torch.eye(size, device=matrix.device, dtype=torch.bool)]
+            keep = keep.reshape(size, size - 1)
+            minors = matrix[..., keep[:, None, :, None], keep[None, :, None, :]]
+            parity = 1 - 2 * ((indices[:, None] + indices[None, :]) % 2)
+            cofactors = parity * _CofactorDeterminant.apply(minors, log_scale[..., None, None])
+            return grad_output[..., None, None] * cofactors, None
+        else:
+            # 尺寸截断：size > 4 切换至基于 Tikhonov 阻尼正则化的伴随矩阵 (O(N^3) 复杂度)
+            eye = torch.eye(size, device=matrix.device, dtype=matrix.dtype)
+            damping = 1e-6
+            matrix_damped = matrix + damping * eye
+            sign, log_abs = torch.linalg.slogdet(matrix_damped)
+            inv_mat = torch.linalg.inv(matrix_damped)
+            det_val = sign * torch.exp(log_abs + log_scale)
+            cofactors = (det_val[..., None, None] * inv_mat).transpose(-1, -2)
+            return grad_output[..., None, None] * cofactors, None
 
 
 def _determinant_terms(matrix: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -149,7 +162,7 @@ class FermiNet(nn.Module):
         # 解析 Jastrow 状态与协同平滑参数
         has_jastrow = (jastrow is not None) or use_cusp_jastrow
         eff_env_type = envelope_type if envelope_type is not None else ("gaussian" if has_jastrow else "exponential")
-        eff_smooth = smooth_cuspless if smooth_cuspless is not None else has_jastrow
+        eff_smooth = smooth_cuspless if smooth_cuspless is not None else True
 
         self.envelope_type = eff_env_type
         self.smooth_cuspless = eff_smooth
@@ -186,6 +199,7 @@ class FermiNet(nn.Module):
                 num_nuclei=num_nuclei,
                 eps=eps,
                 envelope_type=eff_env_type,
+                nuclear_charges=self.nuclear_charges,
             )
         else:
             self.linear_orb_up = None
@@ -199,6 +213,7 @@ class FermiNet(nn.Module):
                 num_nuclei=num_nuclei,
                 eps=eps,
                 envelope_type=eff_env_type,
+                nuclear_charges=self.nuclear_charges,
             )
         else:
             self.linear_orb_down = None
@@ -214,8 +229,13 @@ class FermiNet(nn.Module):
             self.spin_projector = spin_projector
         elif spin_adapted:
             spk = dict(spin_projector_kwargs or {})
-            # A fully polarized wavefunction already has S=N/2, including H.
-            spk.setdefault("mode", "none" if min(n_up, n_down) == 0 else "singlet")
+            # 判定开壳层与自旋未配对体系:
+            # 闭壳层单重态要求 n_up == n_down；若 n_up != n_down 则为自旋未配对体系，默认安全降级为 mode="none"
+            is_open_shell = (n_up != n_down)
+            if is_open_shell:
+                spk.setdefault("mode", "none")
+            else:
+                spk.setdefault("mode", "singlet")
             self.spin_projector = SpinProjector(
                 n_up=n_up,
                 n_down=n_down,
@@ -370,7 +390,7 @@ class FermiNet(nn.Module):
         sign_psi = torch.sign(summed)
         sign_psi = torch.where(zero_mask, torch.zeros_like(sign_psi), sign_psi)
 
-        safe_abs_summed = torch.where(zero_mask, torch.ones_like(abs_summed), abs_summed)
+        safe_abs_summed = torch.clamp(abs_summed, min=1e-20)
         log_abs_psi = torch.where(
             zero_mask,
             torch.full_like(summed, float("-inf")),

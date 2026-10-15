@@ -182,12 +182,16 @@ class MCMCSampler:
             valid = torch.isfinite(log_prop) & ~torch.isnan(log_prop)
 
             cur_is_node = torch.isneginf(self.current_log_abs_psi)
+            safe_current = torch.where(
+                torch.isfinite(self.current_log_abs_psi), self.current_log_abs_psi, torch.zeros_like(self.current_log_abs_psi)
+            )
+            safe_prop = torch.where(valid, log_prop, torch.zeros_like(log_prop))
             log_ratio = torch.where(
                 cur_is_node & valid,
                 torch.zeros_like(log_prop),
-                2.0 * (log_prop - self.current_log_abs_psi),
+                2.0 * (safe_prop - safe_current),
             )
-            ratio = torch.exp(torch.clamp(log_ratio, max=0.0))
+            ratio = torch.where(valid, torch.exp(torch.clamp(log_ratio, max=0.0)), torch.zeros_like(log_prop))
             accepted = valid & (torch.rand_like(ratio) < ratio)
 
             acc_mask = accepted.unsqueeze(-1).unsqueeze(-1)
@@ -218,12 +222,16 @@ class MCMCSampler:
                 valid = torch.isfinite(log_prop) & ~torch.isnan(log_prop)
 
                 cur_is_node = torch.isneginf(self.current_log_abs_psi)
+                safe_current = torch.where(
+                    torch.isfinite(self.current_log_abs_psi), self.current_log_abs_psi, torch.zeros_like(self.current_log_abs_psi)
+                )
+                safe_prop = torch.where(valid, log_prop, torch.zeros_like(log_prop))
                 log_ratio = torch.where(
                     cur_is_node & valid,
                     torch.zeros_like(log_prop),
-                    2.0 * (log_prop - self.current_log_abs_psi),
+                    2.0 * (safe_prop - safe_current),
                 )
-                ratio = torch.exp(torch.clamp(log_ratio, max=0.0))
+                ratio = torch.where(valid, torch.exp(torch.clamp(log_ratio, max=0.0)), torch.zeros_like(log_prop))
                 accepted = valid & (torch.rand_like(ratio) < ratio)
 
                 acc_mask_i = accepted.unsqueeze(-1)
@@ -252,10 +260,18 @@ class MCMCSampler:
 
         return acc_rate
 
-    def sample(self, num_steps: int = 10) -> torch.Tensor:
-        """执行多步连续 MCMC 迭代并返回最新构型副本。"""
-        for _ in range(num_steps):
-            self.step()
+    def sample(self, num_steps: int = 10, adapt: bool = False) -> torch.Tensor:
+        """执行多步连续 MCMC 迭代并返回最新构型副本。
+
+        默认在正式抽样期间冻结步长调整，保障马尔可夫链时齐性与细致平衡。
+        """
+        prev_adapt = self.adapt_step_size
+        self.adapt_step_size = adapt
+        try:
+            for _ in range(num_steps):
+                self.step()
+        finally:
+            self.adapt_step_size = prev_adapt
         return self.walkers.clone().detach()
 
     def burn_in(self, num_steps: int = 100) -> float:
