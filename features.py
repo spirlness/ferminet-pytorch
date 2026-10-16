@@ -10,26 +10,10 @@ from typing import Optional, Tuple
 import torch
 import torch.nn as nn
 
-def smooth_distance(
-    r_diff: torch.Tensor,
-    eps: float = 1e-12,
-    keepdim: bool = False,
-) -> torch.Tensor:
-    """
-    计算处处可微的平滑欧氏距离 sqrt(sum(r^2) + eps)。
-
-    严正声明：仅用于几何特征与库仑势能平滑，严禁用于 KatoCuspJastrow 物理尖点！
-
-    Args:
-        r_diff: 坐标差向量, 最后一维为 3 (x, y, z)
-        eps: 平滑化正则项 (默认 1e-12)
-        keepdim: 是否保留缩减维度 (默认 False)
-
-    Returns:
-        平滑距离张量
-    """
-    sum_sq = torch.sum(r_diff ** 2, dim=-1, keepdim=keepdim)
-    return torch.sqrt(sum_sq + eps)
+try:
+    from .geometry import GeometricContext, smooth_distance
+except (ImportError, ValueError):
+    from geometry import GeometricContext, smooth_distance
 
 
 class ElectronFeatureEmbedding(nn.Module):
@@ -66,6 +50,7 @@ class ElectronFeatureEmbedding(nn.Module):
         r: torch.Tensor,
         nuclear_coords: torch.Tensor,
         nuclear_charges: Optional[torch.Tensor] = None,
+        geom_ctx: Optional[GeometricContext] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         提取单电子与双电子几何特征。
@@ -74,6 +59,7 @@ class ElectronFeatureEmbedding(nn.Module):
             r: 电子坐标, Shape: (B, N, 3)
             nuclear_coords: 原子核坐标, Shape: (M, 3)
             nuclear_charges: 原子核电荷, Shape: (M,), 可选
+            geom_ctx: 全局共享几何上下文 (可选)
 
         Returns:
             h1_input: 单电子流特征, Shape: (B, N, 5*M) 或 (B, N, 4*M)
@@ -83,12 +69,15 @@ class ElectronFeatureEmbedding(nn.Module):
         num_nuclei, _ = nuclear_coords.shape
 
         # 1. 电子-核特征
-        coords = nuclear_coords.to(device=r.device, dtype=r.dtype)
-        r_expanded = r.unsqueeze(2)                                 # (B, N, 1, 3)
-        nuclei_expanded = coords.unsqueeze(0).unsqueeze(0)          # (1, 1, M, 3)
-
-        r_en = r_expanded - nuclei_expanded                         # (B, N, M, 3)
-        d_en = smooth_distance(r_en, eps=self.eps, keepdim=True)    # (B, N, M, 1)
+        if geom_ctx is not None and geom_ctx.r_en is not None and geom_ctx.d_en is not None:
+            r_en = geom_ctx.r_en
+            d_en = geom_ctx.d_en
+        else:
+            coords = nuclear_coords.to(device=r.device, dtype=r.dtype)
+            r_expanded = r.unsqueeze(2)                                 # (B, N, 1, 3)
+            nuclei_expanded = coords.unsqueeze(0).unsqueeze(0)          # (1, 1, M, 3)
+            r_en = r_expanded - nuclei_expanded                         # (B, N, M, 3)
+            d_en = smooth_distance(r_en, eps=self.eps, keepdim=True)    # (B, N, M, 1)
 
         d_en_feature = (d_en ** 2) / (1.0 + d_en) if self.smooth_cuspless else d_en
 
@@ -105,12 +94,19 @@ class ElectronFeatureEmbedding(nn.Module):
         h1_input = h1_raw.reshape(batch_size, num_electrons, h1_raw.shape[-1] * num_nuclei)
 
         # 2. 电子-电子特征
-        r_i = r.unsqueeze(2)   # (B, N, 1, 3)
-        r_j = r.unsqueeze(1)   # (B, 1, N, 3)
-        r_ee = r_i - r_j       # (B, N, N, 3)
-        d_ee = smooth_distance(r_ee, eps=self.eps, keepdim=True)    # (B, N, N, 1)
-
-        d_ee_feature = (d_ee ** 2) / (1.0 + d_ee) if self.smooth_cuspless else d_ee
-        h2_input = torch.cat([r_ee, d_ee_feature], dim=-1)  # (B, N, N, 4)
+        if num_electrons > 1:
+            if geom_ctx is not None and geom_ctx.r_ee is not None and geom_ctx.d_ee is not None:
+                r_ee = geom_ctx.r_ee
+                d_ee = geom_ctx.d_ee
+            else:
+                r_i = r.unsqueeze(2)   # (B, N, 1, 3)
+                r_j = r.unsqueeze(1)   # (B, 1, N, 3)
+                r_ee = r_i - r_j       # (B, N, N, 3)
+                d_ee = smooth_distance(r_ee, eps=self.eps, keepdim=True)    # (B, N, N, 1)
+            d_ee_feature = (d_ee ** 2) / (1.0 + d_ee) if self.smooth_cuspless else d_ee
+            h2_input = torch.cat([r_ee, d_ee_feature], dim=-1)  # (B, N, N, 4)
+        else:
+            h2_input = torch.zeros(batch_size, 1, 1, 4, device=r.device, dtype=r.dtype)
 
         return h1_input, h2_input
+

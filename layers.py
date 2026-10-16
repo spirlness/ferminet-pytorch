@@ -116,6 +116,7 @@ class FermiInteractionLayer(nn.Module):
             torch.zeros_like(sum_h2_down),
         )
 
+
         # 3. 拼接并更新单电子流
         h1_agg = torch.cat(
             [h1, mean_h1_up_expanded, mean_h1_down_expanded, mean_h2_up, mean_h2_down],
@@ -134,6 +135,12 @@ class FermiInteractionLayer(nn.Module):
         return h1_next, h2_next
 
 
-# 别名兼容
+# 别名兼容与现代化组件导出
 FermiNetLayer = FermiInteractionLayer
+
+try:
+    from .layers_modern import FermiInteractionLayerModern
+except (ImportError, ValueError):
+    from layers_modern import FermiInteractionLayerModern
+
 

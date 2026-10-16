@@ -85,6 +85,7 @@ class NuclearEnvelope(nn.Module):
         self,
         r: torch.Tensor,
         nuclear_coords: torch.Tensor,
+        dist: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """
         计算指数包络衰减值。
@@ -92,15 +93,18 @@ class NuclearEnvelope(nn.Module):
         Args:
             r: 电子坐标, Shape: (B, N_spin, 3)
             nuclear_coords: 核坐标, Shape: (M, 3)
+            dist: 可选的预计算平滑距离 (B, N_spin, M) 或 (B, N_spin, M, 1)
 
         Returns:
             envelope: Shape: (B, K, N_spin, N_orb)
         """
-        coords = nuclear_coords.to(device=r.device, dtype=r.dtype)
-        diff = r.unsqueeze(2) - coords.unsqueeze(0).unsqueeze(0)  # (B, N_spin, M, 3)
-
-        # 平滑欧氏距离 (keepdim=False 保持 (B, N_spin, M))
-        dist = smooth_distance(diff, eps=self.eps, keepdim=False)
+        if dist is not None:
+            if dist.dim() == 4:
+                dist = dist.squeeze(-1)
+        else:
+            coords = nuclear_coords.to(device=r.device, dtype=r.dtype)
+            diff = r.unsqueeze(2) - coords.unsqueeze(0).unsqueeze(0)  # (B, N_spin, M, 3)
+            dist = smooth_distance(diff, eps=self.eps, keepdim=False)
 
         # softplus 保证衰减率为正
         alpha = F.softplus(self.decay_rates_raw)  # (K, N_orb, M)
@@ -117,3 +121,10 @@ class NuclearEnvelope(nn.Module):
         envelope = torch.sum(weights_expanded * exponent, dim=-1)  # (B, K, N_spin, N_orb)
 
         return envelope
+
+
+try:
+    from .envelope_modern import NuclearEnvelopeModern
+except (ImportError, ValueError):
+    from envelope_modern import NuclearEnvelopeModern
+

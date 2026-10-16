@@ -197,6 +197,39 @@ class MCMCSampler:
             self.current_log_abs_psi = log_abs_psi.clone().detach()
         return self.current_log_abs_psi
 
+    @staticmethod
+    def _metropolis_accept(
+        current_log_psi: torch.Tensor,
+        prop_log_psi: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        无分支安全 Metropolis 接受判定核函数 (DRY 原则重构)。
+
+        Args:
+            current_log_psi: 当前构型的对数波函数值, shape (W,)
+            prop_log_psi: 建议移动构型的对数波函数值, shape (W,)
+
+        Returns:
+            Tuple[accepted, updated_log_psi]:
+                accepted: 布尔张量, shape (W,)
+                updated_log_psi: 更新后的对数波函数值, shape (W,)
+        """
+        valid = torch.isfinite(prop_log_psi) & ~torch.isnan(prop_log_psi)
+        cur_is_node = torch.isneginf(current_log_psi)
+        safe_current = torch.where(
+            torch.isfinite(current_log_psi), current_log_psi, torch.zeros_like(current_log_psi)
+        )
+        safe_prop = torch.where(valid, prop_log_psi, torch.zeros_like(prop_log_psi))
+        log_ratio = torch.where(
+            cur_is_node & valid,
+            torch.zeros_like(prop_log_psi),
+            2.0 * (safe_prop - safe_current),
+        )
+        ratio = torch.where(valid, torch.exp(torch.clamp(log_ratio, max=0.0)), torch.zeros_like(prop_log_psi))
+        accepted = valid & (torch.rand_like(ratio) < ratio)
+        updated_log_psi = torch.where(accepted, prop_log_psi, current_log_psi)
+        return accepted, updated_log_psi
+
     def _step_all_electrons(self) -> float:
         """全电子一体化移动 (All-electron moves)。"""
         noise = torch.randn_like(self.walkers) * self.step_size
@@ -204,24 +237,12 @@ class MCMCSampler:
 
         with torch.no_grad():
             log_prop, _ = self.forward_log_psi_fn(prop_walkers)
-            valid = torch.isfinite(log_prop) & ~torch.isnan(log_prop)
-
-            cur_is_node = torch.isneginf(self.current_log_abs_psi)
-            safe_current = torch.where(
-                torch.isfinite(self.current_log_abs_psi), self.current_log_abs_psi, torch.zeros_like(self.current_log_abs_psi)
+            accepted, self.current_log_abs_psi = self._metropolis_accept(
+                self.current_log_abs_psi, log_prop
             )
-            safe_prop = torch.where(valid, log_prop, torch.zeros_like(log_prop))
-            log_ratio = torch.where(
-                cur_is_node & valid,
-                torch.zeros_like(log_prop),
-                2.0 * (safe_prop - safe_current),
-            )
-            ratio = torch.where(valid, torch.exp(torch.clamp(log_ratio, max=0.0)), torch.zeros_like(log_prop))
-            accepted = valid & (torch.rand_like(ratio) < ratio)
 
             acc_mask = accepted.unsqueeze(-1).unsqueeze(-1)
             self.walkers = torch.where(acc_mask, prop_walkers, self.walkers)
-            self.current_log_abs_psi = torch.where(accepted, log_prop, self.current_log_abs_psi)
 
             acc_rate = accepted.float().mean().item()
             accepted_count = int(accepted.sum().item())
@@ -235,41 +256,31 @@ class MCMCSampler:
         return acc_rate
 
     def _step_one_electron(self) -> float:
-        """逐电子轮换移动 (One-by-one moves)。"""
+        """逐电子轮换移动 (One-by-one moves, 优化单缓冲区复用)。"""
         total_electrons = max(self.system.total_electrons, 1)
         total_accepted = 0.0
         total_accepted_count = 0
 
         with torch.no_grad():
+            # 仅在步长开始时分配一次缓冲区，避免循环内 N 次全量克隆 (RED-17 修复)
+            prop_walkers = self.walkers.clone()
             for i in range(self.system.total_electrons):
                 noise_i = torch.randn(
                     self.num_walkers, 3, device=self.device, dtype=self.dtype
                 ) * self.step_size
 
-                prop_walkers = self.walkers.clone()
-                prop_walkers[:, i, :] = prop_walkers[:, i, :] + noise_i
-
+                prop_walkers[:, i, :] = self.walkers[:, i, :] + noise_i
                 log_prop, _ = self.forward_log_psi_fn(prop_walkers)
-                valid = torch.isfinite(log_prop) & ~torch.isnan(log_prop)
-
-                cur_is_node = torch.isneginf(self.current_log_abs_psi)
-                safe_current = torch.where(
-                    torch.isfinite(self.current_log_abs_psi), self.current_log_abs_psi, torch.zeros_like(self.current_log_abs_psi)
+                accepted, self.current_log_abs_psi = self._metropolis_accept(
+                    self.current_log_abs_psi, log_prop
                 )
-                safe_prop = torch.where(valid, log_prop, torch.zeros_like(log_prop))
-                log_ratio = torch.where(
-                    cur_is_node & valid,
-                    torch.zeros_like(log_prop),
-                    2.0 * (safe_prop - safe_current),
-                )
-                ratio = torch.where(valid, torch.exp(torch.clamp(log_ratio, max=0.0)), torch.zeros_like(log_prop))
-                accepted = valid & (torch.rand_like(ratio) < ratio)
 
                 acc_mask_i = accepted.unsqueeze(-1)
                 self.walkers[:, i, :] = torch.where(
                     acc_mask_i, prop_walkers[:, i, :], self.walkers[:, i, :]
                 )
-                self.current_log_abs_psi = torch.where(accepted, log_prop, self.current_log_abs_psi)
+                # 恢复未接受的坐标切片，保持 prop_walkers 与 self.walkers 严格对齐
+                prop_walkers[:, i, :] = self.walkers[:, i, :]
 
                 total_accepted += accepted.float().mean().item()
                 total_accepted_count += int(accepted.sum().item())
@@ -281,6 +292,7 @@ class MCMCSampler:
         self.proposed_moves += self.num_walkers * self.system.total_electrons
         self.accepted_moves += total_accepted_count
         return acc_rate
+
 
     def step(self) -> float:
         """执行单步 MCMC 移动，并动态自适应更新步长。"""

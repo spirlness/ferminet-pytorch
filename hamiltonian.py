@@ -14,9 +14,11 @@ import torch
 import torch.nn as nn
 
 try:
-    from .features import smooth_distance
+    from .geometry import GeometricContext, smooth_distance
+    from .kinetic_modern import KineticEnergyCalculator, KineticMode
 except (ImportError, ValueError):
-    from features import smooth_distance
+    from geometry import GeometricContext, smooth_distance
+    from kinetic_modern import KineticEnergyCalculator, KineticMode
 
 
 class _FreezeModelParameters:
@@ -90,13 +92,19 @@ class MolecularSystem:
         self.v_nn = self.v_nn.to(*args, **kwargs)
         return self
 
-    def compute_potential_energy(self, r: torch.Tensor, eps: float = 1e-24) -> torch.Tensor:
+    def compute_potential_energy(
+        self,
+        r: torch.Tensor,
+        eps: float = 1e-24,
+        geom_ctx: Optional[GeometricContext] = None,
+    ) -> torch.Tensor:
         """
         计算总库仑势能: V(r) = V_en + V_ee + V_nn。
 
         Args:
             r: 电子坐标, Shape: (B, N, 3)
             eps: 最小平方距离
+            geom_ctx: 可选的 GeometricContext 共享几何上下文
 
         Returns:
             v_total: 总势能, Shape: (B,)
@@ -104,27 +112,29 @@ class MolecularSystem:
         batch_size, num_electrons, _ = r.shape
         device, dtype = r.device, r.dtype
 
-        nuclear_coords = self.nuclear_coords.to(device=device, dtype=dtype)
         nuclear_charges = self.nuclear_charges.to(device=device, dtype=dtype)
 
         # 电子-核吸引: V_en = -sum_i sum_I Z_I / |r_i - R_I|
-        diff_en = r.unsqueeze(2) - nuclear_coords.unsqueeze(0).unsqueeze(0)
-        dist_en = smooth_distance(diff_en, eps=eps, keepdim=False)
+        if geom_ctx is not None and geom_ctx.d_en is not None:
+            dist_en = geom_ctx.d_en.squeeze(-1) if geom_ctx.d_en.dim() == 4 else geom_ctx.d_en
+        else:
+            nuclear_coords = self.nuclear_coords.to(device=device, dtype=dtype)
+            diff_en = r.unsqueeze(2) - nuclear_coords.unsqueeze(0).unsqueeze(0)
+            dist_en = smooth_distance(diff_en, eps=eps, keepdim=False)
+
         charges = nuclear_charges.unsqueeze(0).unsqueeze(0)
         v_en = -torch.sum(charges / dist_en, dim=(-1, -2))
 
         # 电子-电子排斥: V_ee = sum_{i<j} 1/|r_i - r_j|
         if num_electrons > 1:
-            diff_ee = r.unsqueeze(2) - r.unsqueeze(1)
-            dist_ee = smooth_distance(diff_ee, eps=eps, keepdim=False)
-            mask_ee = torch.triu(
-                torch.ones(num_electrons, num_electrons, device=device, dtype=torch.bool),
-                diagonal=1,
-            ).unsqueeze(0)
-            v_ee = torch.sum(
-                torch.where(mask_ee, 1.0 / dist_ee, torch.zeros_like(dist_ee)),
-                dim=(-1, -2),
-            )
+            if geom_ctx is not None and geom_ctx.d_ee is not None:
+                dist_ee = geom_ctx.d_ee.squeeze(-1) if geom_ctx.d_ee.dim() == 4 else geom_ctx.d_ee
+            else:
+                diff_ee = r.unsqueeze(2) - r.unsqueeze(1)
+                dist_ee = smooth_distance(diff_ee, eps=eps, keepdim=False)
+
+            triu_i, triu_j = torch.triu_indices(num_electrons, num_electrons, offset=1, device=device)
+            v_ee = torch.sum(1.0 / dist_ee[:, triu_i, triu_j], dim=-1)
         else:
             v_ee = torch.zeros(batch_size, device=device, dtype=dtype)
 
@@ -134,78 +144,100 @@ class MolecularSystem:
         return v_en + v_ee + v_nn
 
 
+
 def compute_local_energy(
     model: nn.Module,
     system: MolecularSystem,
     r: torch.Tensor,
     create_graph: bool = False,
+    geom_ctx: Optional[GeometricContext] = None,
+    kinetic_mode: KineticMode = KineticMode.REVERSE,
+    num_probes: int = 1,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     计算局域能量: E_L(r) = T_L(r) + V(r)。
 
-    使用经典反向模式逐维精确微分求拉普拉斯:
-        T_L = -0.5 * (∇²ln|Ψ| + |∇ln|Ψ||²)
+    支持经典反向精确微分、Hutchinson 随机估计与前向切线推进模式。
 
     Args:
         model: FermiNet 模型
         system: 分子体系
         r: 电子坐标, Shape: (B, N, 3), 必须 requires_grad=True
         create_graph: 是否保留高阶计算图
+        geom_ctx: 可选的 GeometricContext 共享几何上下文
+        kinetic_mode: 动能估计算法模式 (默认 KineticMode.REVERSE)
+        num_probes: Hutchinson 估计探针数
 
     Returns:
         e_local: 局域总能量, Shape: (B,)
         t_local: 局域动能, Shape: (B,)
         v_local: 局域势能, Shape: (B,)
     """
-    batch_size, num_electrons, _ = r.shape
     assert r.requires_grad, "输入 r 必须开启梯度追踪"
 
     freeze_ctx = _FreezeModelParameters(model) if not create_graph else nullcontext()
     with freeze_ctx:
-        # 1. log|Psi(r)|
-        log_abs_psi, _ = model.forward_log_psi(r)
+        # 仅当 geom_ctx 确实源自当前开启求导的坐标 r 时才可安全复用，防止无梯度外部上下文导致动能导数丢失
+        safe_geom_ctx = (
+            geom_ctx if (geom_ctx is not None and geom_ctx.r is r and geom_ctx.r.requires_grad) else None
+        )
 
-        # 2. 一阶梯度 ∇ln|Ψ|
-        ones = torch.ones_like(log_abs_psi)
-        grad_log_psi = torch.autograd.grad(
-            outputs=log_abs_psi,
-            inputs=r,
-            grad_outputs=ones,
-            create_graph=True,
-            retain_graph=True,
-        )[0]  # (B, N, 3)
+        def _call_model_forward(coords: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+            if safe_geom_ctx is not None:
+                try:
+                    return model.forward_log_psi(coords, geom_ctx=safe_geom_ctx)
+                except TypeError:
+                    return model.forward_log_psi(coords)
+            return model.forward_log_psi(coords)
 
-        grad_squared = torch.sum(grad_log_psi ** 2, dim=(-1, -2))  # (B,)
-
-        # 3. 拉普拉斯 ∇²ln|Ψ| (逐维精确二阶导)
-        grad_flat = grad_log_psi.reshape(batch_size, -1)
-        dim_total = grad_flat.shape[1]
-        laplacian = torch.zeros(batch_size, device=r.device, dtype=r.dtype)
-
-        for d in range(dim_total):
-            g_d = grad_flat[:, d]
-            sec_retain = True if create_graph else (d < dim_total - 1)
-            sec_grad = torch.autograd.grad(
-                outputs=g_d,
+        if kinetic_mode == KineticMode.REVERSE:
+            # 经典精确反向模式 (100% 逐 bit 吻合历史基准)
+            batch_size = r.shape[0]
+            log_abs_psi, _ = _call_model_forward(r)
+            ones = torch.ones_like(log_abs_psi)
+            grad_log_psi = torch.autograd.grad(
+                outputs=log_abs_psi,
                 inputs=r,
                 grad_outputs=ones,
+                create_graph=True,
+                retain_graph=True,
+            )[0]  # (B, N, 3)
+
+            grad_squared = torch.sum(grad_log_psi ** 2, dim=(-1, -2))  # (B,)
+            grad_flat = grad_log_psi.reshape(batch_size, -1)
+            dim_total = grad_flat.shape[1]
+            laplacian = torch.zeros(batch_size, device=r.device, dtype=r.dtype)
+
+            for d in range(dim_total):
+                g_d = grad_flat[:, d]
+                sec_retain = True if create_graph else (d < dim_total - 1)
+                sec_grad = torch.autograd.grad(
+                    outputs=g_d,
+                    inputs=r,
+                    grad_outputs=ones,
+                    create_graph=create_graph,
+                    retain_graph=sec_retain,
+                )[0]
+                sec_grad_flat = sec_grad.reshape(batch_size, -1)
+                laplacian = laplacian + sec_grad_flat[:, d]
+                del sec_grad, sec_grad_flat
+            del grad_flat
+            t_local = -0.5 * (laplacian + grad_squared)
+        else:
+            t_local, laplacian, grad_squared = KineticEnergyCalculator.compute_kinetic_energy(
+                log_abs_psi_fn=_call_model_forward,
+                r=r,
+                mode=kinetic_mode,
+                num_probes=num_probes,
                 create_graph=create_graph,
-                retain_graph=sec_retain,
-            )[0]
-            sec_grad_flat = sec_grad.reshape(batch_size, -1)
-            laplacian = laplacian + sec_grad_flat[:, d]
-            del sec_grad, sec_grad_flat
-        del grad_flat
+            )
 
-        # 4. 动能: T_L = -0.5 * (∇²ln|Ψ| + |∇ln|Ψ|²)
-        t_local = -0.5 * (laplacian + grad_squared)
-
-        # 5. 势能: V(r)
+        # 5. 势能: V(r) 复用 geom_ctx
         if create_graph:
-            v_local = system.compute_potential_energy(r)
+            v_local = system.compute_potential_energy(r, geom_ctx=geom_ctx)
         else:
             with torch.no_grad():
-                v_local = system.compute_potential_energy(r)
+                v_local = system.compute_potential_energy(r, geom_ctx=geom_ctx)
 
         e_local = t_local + v_local
         return e_local, t_local, v_local
@@ -215,6 +247,8 @@ def compute_kinetic_energy(
     model: nn.Module,
     r: torch.Tensor,
     create_graph: bool = False,
+    mode: KineticMode = KineticMode.REVERSE,
+    num_probes: int = 1,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     计算局域动能及分量:
@@ -224,6 +258,8 @@ def compute_kinetic_energy(
         model: 波函数模型
         r: 电子坐标, Shape: (B, N, 3), 必须 requires_grad=True
         create_graph: 是否保留二阶计算图
+        mode: 动能估计算法模式 (默认 REVERSE)
+        num_probes: Hutchinson 估计探针数
 
     Returns:
         t_local: 局域动能, Shape: (B,)
@@ -235,40 +271,50 @@ def compute_kinetic_energy(
 
     freeze_ctx = _FreezeModelParameters(model) if not create_graph else nullcontext()
     with freeze_ctx:
-        log_abs_psi, _ = model.forward_log_psi(r)
-        ones = torch.ones_like(log_abs_psi)
+        if mode == KineticMode.REVERSE:
+            log_abs_psi, _ = model.forward_log_psi(r)
+            ones = torch.ones_like(log_abs_psi)
 
-        grad_log_psi = torch.autograd.grad(
-            outputs=log_abs_psi,
-            inputs=r,
-            grad_outputs=ones,
-            create_graph=True,
-            retain_graph=True,
-        )[0]  # (B, N, 3)
-
-        grad_squared = torch.sum(grad_log_psi ** 2, dim=(-1, -2))  # (B,)
-
-        grad_flat = grad_log_psi.reshape(batch_size, -1)
-        dim_total = grad_flat.shape[1]
-        laplacian = torch.zeros(batch_size, device=r.device, dtype=r.dtype)
-
-        for d in range(dim_total):
-            g_d = grad_flat[:, d]
-            sec_retain = True if create_graph else (d < dim_total - 1)
-            sec_grad = torch.autograd.grad(
-                outputs=g_d,
+            grad_log_psi = torch.autograd.grad(
+                outputs=log_abs_psi,
                 inputs=r,
                 grad_outputs=ones,
-                create_graph=create_graph,
-                retain_graph=sec_retain,
-            )[0]
-            sec_grad_flat = sec_grad.reshape(batch_size, -1)
-            laplacian = laplacian + sec_grad_flat[:, d]
-            del sec_grad, sec_grad_flat
-        del grad_flat
+                create_graph=True,
+                retain_graph=True,
+            )[0]  # (B, N, 3)
 
-        t_local = -0.5 * (laplacian + grad_squared)
-        return t_local, laplacian, grad_squared
+            grad_squared = torch.sum(grad_log_psi ** 2, dim=(-1, -2))  # (B,)
+
+            grad_flat = grad_log_psi.reshape(batch_size, -1)
+            dim_total = grad_flat.shape[1]
+            laplacian = torch.zeros(batch_size, device=r.device, dtype=r.dtype)
+
+            for d in range(dim_total):
+                g_d = grad_flat[:, d]
+                sec_retain = True if create_graph else (d < dim_total - 1)
+                sec_grad = torch.autograd.grad(
+                    outputs=g_d,
+                    inputs=r,
+                    grad_outputs=ones,
+                    create_graph=create_graph,
+                    retain_graph=sec_retain,
+                )[0]
+                sec_grad_flat = sec_grad.reshape(batch_size, -1)
+                laplacian = laplacian + sec_grad_flat[:, d]
+                del sec_grad, sec_grad_flat
+            del grad_flat
+
+            t_local = -0.5 * (laplacian + grad_squared)
+            return t_local, laplacian, grad_squared
+        else:
+            return KineticEnergyCalculator.compute_kinetic_energy(
+                log_abs_psi_fn=model.forward_log_psi,
+                r=r,
+                mode=mode,
+                num_probes=num_probes,
+                create_graph=create_graph,
+            )
+
 
 
 def diagnose_cusp_divergence(

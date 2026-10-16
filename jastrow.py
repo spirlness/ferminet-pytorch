@@ -16,7 +16,7 @@ Kato 尖峰解析 Jastrow 因子模块。
 退化为仅需平滑拟合多体关联系数。
 """
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Any
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -108,6 +108,19 @@ class KatoCuspJastrow(nn.Module):
         self.register_buffer("gamma_ee", gamma_mat)
         self.register_buffer("is_parallel_ee", is_parallel_mat)
 
+        # 预注册严格上三角索引与成对物理参数，消除运行时动态掩码与 50% 冗余计算
+        if self.total_electrons >= 2:
+            triu_i, triu_j = torch.triu_indices(self.total_electrons, self.total_electrons, offset=1)
+            self.register_buffer("triu_i", triu_i)
+            self.register_buffer("triu_j", triu_j)
+            self.register_buffer("gamma_pairs", gamma_mat[triu_i, triu_j])
+            self.register_buffer("is_parallel_pairs", is_parallel_mat[triu_i, triu_j])
+        else:
+            self.register_buffer("triu_i", torch.empty(0, dtype=torch.long))
+            self.register_buffer("triu_j", torch.empty(0, dtype=torch.long))
+            self.register_buffer("gamma_pairs", torch.empty(0))
+            self.register_buffer("is_parallel_pairs", torch.empty(0, dtype=torch.bool))
+
         # 阻尼参数参数化 (通过 softplus 保证 > 0)
         # softplus^{-1}(y) = ln(exp(y) - 1)
         raw_b_par = torch.log(torch.exp(torch.tensor(float(init_b_ee_parallel))) - 1.0)
@@ -141,7 +154,12 @@ class KatoCuspJastrow(nn.Module):
         """各原子核电子-核阻尼因子向量 b > 0, Shape: (M,)。"""
         return F.softplus(self.raw_b_en)
 
-    def compute_en(self, r: torch.Tensor, nuclear_coords: torch.Tensor) -> torch.Tensor:
+    def compute_en(
+        self,
+        r: torch.Tensor,
+        nuclear_coords: torch.Tensor,
+        dist_en: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """
         计算电子-核 Kato 尖峰对数因子 U_en(r)。
 
@@ -151,6 +169,7 @@ class KatoCuspJastrow(nn.Module):
         Args:
             r: 电子坐标, Shape: (B, N, 3)
             nuclear_coords: 核坐标, Shape: (M, 3)
+            dist_en: 可选的平滑标量距离, Shape: (B, N, M)
 
         Returns:
             u_en: 电子-核对数贡献, Shape: (B,)
@@ -158,16 +177,18 @@ class KatoCuspJastrow(nn.Module):
         if not self.cusp_en or self.num_nuclei == 0 or self.total_electrons == 0:
             return torch.zeros(r.shape[0], device=r.device, dtype=r.dtype)
 
-        coords = nuclear_coords.to(device=r.device, dtype=r.dtype)
         charges = self.nuclear_charges.to(device=r.device, dtype=r.dtype)  # (M,)
         b_en = self.b_en.to(device=r.device, dtype=r.dtype)                # (M,)
 
-        # 计算 r_{iI} 相对位移与距离
-        # r: (B, N, 1, 3), coords: (1, 1, M, 3) -> diff: (B, N, M, 3)
-        diff_en = r.unsqueeze(2) - coords.unsqueeze(0).unsqueeze(0)
-        dist_en = torch.sqrt(torch.clamp(
-            torch.sum(diff_en ** 2, dim=-1), min=self.eps
-        ))  # (B, N, M)
+        if dist_en is not None:
+            if dist_en.dim() == 4:
+                dist_en = dist_en.squeeze(-1)
+        else:
+            coords = nuclear_coords.to(device=r.device, dtype=r.dtype)
+            diff_en = r.unsqueeze(2) - coords.unsqueeze(0).unsqueeze(0)
+            dist_en = torch.sqrt(torch.clamp(
+                torch.sum(diff_en ** 2, dim=-1), min=self.eps
+            ))  # (B, N, M)
 
         # 广播系数: charges -> (1, 1, M), b_en -> (1, 1, M)
         charges_b = charges.view(1, 1, -1)
@@ -179,15 +200,21 @@ class KatoCuspJastrow(nn.Module):
 
         return u_en
 
-    def compute_ee(self, r: torch.Tensor) -> torch.Tensor:
+    def compute_ee(
+        self,
+        r: torch.Tensor,
+        dist_ee: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """
         计算电子-电子 Kato 尖峰对数因子 U_ee(r)。
 
-        公式:
-            U_ee(r) = sum_{i < j} (gamma_{ij} * r_{ij}) / (1 + b_{ee, ij} * r_{ij})
+        优化机理:
+        基于预注册的严格上三角索引 triu_i, triu_j，仅对 P = N(N-1)/2 个电子对执行 Padé 求和，
+        消除全尺寸 (B, N, N) 计算以及动态 torch.ones、torch.triu 与 torch.where 掩码。
 
         Args:
             r: 电子坐标, Shape: (B, N, 3)
+            dist_ee: 可选的平滑电子-电子距离, Shape: (B, N, N) 或 (B, N, N, 1)
 
         Returns:
             u_ee: 电子-电子对数贡献, Shape: (B,)
@@ -196,46 +223,41 @@ class KatoCuspJastrow(nn.Module):
             return torch.zeros(r.shape[0], device=r.device, dtype=r.dtype)
 
         device, dtype = r.device, r.dtype
-        gamma_mat = self.gamma_ee.to(device=device, dtype=dtype)              # (N, N)
-        is_parallel = self.is_parallel_ee.to(device=device)                  # (N, N)
-        b_par = self.b_ee_parallel.to(device=device, dtype=dtype)            # scalar
-        b_anti = self.b_ee_antiparallel.to(device=device, dtype=dtype)        # scalar
+        gamma_p = self.gamma_pairs.to(device=device, dtype=dtype)
+        is_parallel_p = self.is_parallel_pairs.to(device=device)
+        b_par = self.b_ee_parallel.to(device=device, dtype=dtype)
+        b_anti = self.b_ee_antiparallel.to(device=device, dtype=dtype)
+        b_p = torch.where(is_parallel_p, b_par, b_anti)
 
-        # 构造有效 b 矩阵 (N, N)
-        b_mat = torch.where(is_parallel, b_par, b_anti)
-
-        # 计算 r_{ij} 距离
-        # r: (B, N, 1, 3) - (B, 1, N, 3) -> diff: (B, N, N, 3)
-        diff_ee = r.unsqueeze(2) - r.unsqueeze(1)
-        dist_ee = torch.sqrt(torch.clamp(
-            torch.sum(diff_ee ** 2, dim=-1), min=self.eps
-        ))  # (B, N, N)
-
-        # 只对严格上三角 i < j 进行加和 (避免重复计算与自身对)
-        mask = torch.triu(
-            torch.ones(self.total_electrons, self.total_electrons, device=device, dtype=torch.bool),
-            diagonal=1,
-        )  # (N, N)
-
-        gamma_active = gamma_mat.unsqueeze(0)  # (1, N, N)
-        b_active = b_mat.unsqueeze(0)          # (1, N, N)
+        if dist_ee is not None:
+            if dist_ee.dim() == 4:
+                dist_ee = dist_ee.squeeze(-1)
+            pair_dist = dist_ee[:, self.triu_i, self.triu_j]
+        else:
+            diff_p = r[:, self.triu_i, :] - r[:, self.triu_j, :]  # (B, P, 3)
+            pair_dist = torch.sqrt(torch.clamp(
+                torch.sum(diff_p ** 2, dim=-1), min=self.eps
+            ))  # (B, P)
 
         # Padé 形式: (gamma * r_{ij}) / (1 + b * r_{ij})
-        u_ee_elements = (gamma_active * dist_ee) / (1.0 + b_active * dist_ee)  # (B, N, N)
-        u_ee = torch.sum(
-            torch.where(mask.unsqueeze(0), u_ee_elements, torch.zeros_like(u_ee_elements)),
-            dim=(-1, -2),
-        )  # (B,)
+        u_ee_pairs = (gamma_p * pair_dist) / (1.0 + b_p * pair_dist)  # (B, P)
+        u_ee = torch.sum(u_ee_pairs, dim=-1)                          # (B,)
 
         return u_ee
 
-    def forward(self, r: torch.Tensor, nuclear_coords: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self,
+        r: torch.Tensor,
+        nuclear_coords: torch.Tensor,
+        geom_ctx: Optional[Any] = None,
+    ) -> torch.Tensor:
         """
         计算总 Jastrow 对数因子: ln J(r) = U_en(r) + U_ee(r)。
 
         Args:
             r: 电子坐标, Shape: (B, N, 3)
             nuclear_coords: 核坐标, Shape: (M, 3)
+            geom_ctx: 可选的 GeometricContext
 
         Returns:
             log_j: ln J(r), Shape: (B,)
@@ -248,3 +270,4 @@ class KatoCuspJastrow(nn.Module):
         u_en = self.compute_en(r, nuclear_coords)
         u_ee = self.compute_ee(r)
         return u_en + u_ee
+

@@ -199,6 +199,8 @@ class VMCLoss(nn.Module):
         model: nn.Module,
         system: MolecularSystem,
         walkers: torch.Tensor,
+        geom_ctx: Optional[Any] = None,
+        log_abs_psi: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, Dict[str, Any], torch.Tensor]:
         """
         一站式计算局域能量与变分代理损失。
@@ -207,6 +209,8 @@ class VMCLoss(nn.Module):
             model: FermiNet 模型
             system: 分子体系
             walkers: 电子坐标构型, Shape: (B, N, 3)
+            geom_ctx: 可选的 GeometricContext 共享几何上下文
+            log_abs_psi: 可选的已计算带梯度对数波函数值 (若提供则实现单次前向协议，消除二次前向)
 
         Returns:
             loss: 代理损失
@@ -216,14 +220,18 @@ class VMCLoss(nn.Module):
         # 1. 计算局部能量 (使用独立坐标计算图并隔离模型参数)
         r_for_energy = walkers.clone().detach().requires_grad_(True)
         with _FreezeModelParameters(model):
-            e_local, _, _ = compute_local_energy(model=model, system=system, r=r_for_energy)
+            e_local, _, _ = compute_local_energy(
+                model=model, system=system, r=r_for_energy, geom_ctx=geom_ctx
+            )
         e_local = e_local.detach()
 
-        # 2. 前向获取带模型参数梯度的 log|Psi(r)|
-        log_abs_psi, _ = model.forward_log_psi(walkers.detach())
+        # 2. 前向获取带模型参数梯度的 log|Psi(r)| (若传入则直接复用，单次前向)
+        if log_abs_psi is None:
+            log_abs_psi, _ = model.forward_log_psi(walkers.detach())
 
         # 3. 计算代理损失
         loss, stats = self.forward(log_abs_psi, e_local)
 
         return loss, stats, e_local
+
 
