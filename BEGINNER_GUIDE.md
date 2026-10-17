@@ -4,6 +4,11 @@
 > 如果你是一名计算机科学、人工智能或软件工程背景的同学，面对“量子力学”、“薛定谔方程”、“Slater 行列式”、“变分量子蒙特卡洛”这些看似高深晦涩的物理学名词，常常会望而却步。
 > 
 > **请放心！** 编写这份文档的目的，就是为了**彻底打破物理与人工智能之间的专业壁垒**。我们将抛弃枯燥难懂的物理教科书黑话，用程序员最容易理解的直白语言、生动的直觉比喻、清晰的 ASCII 架构图和可运行的代码，带你从零看懂 FermiNet（费米神经网络）是如何用深度学习破解量子化学世纪难题的！
+>
+> 🧭 **全景文档导航**：
+> - 🔰 **当前文档**：适合物理小白、深度学习初学者快速建立直觉与运行基础案例。
+> - 🛠️ [**开发者与二次开发全景指南 (DEVELOPER_GUIDE.md)**](file:///c:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/DEVELOPER_GUIDE.md)：适合算法工程师、科研人员进阶，学习四层正交解耦架构、自定义注意力/外场势能扩展及动能高阶微分。
+> - 📊 [**生产就绪度评估与性能 Benchmark 报告 (EVAL_REPORT.md)**](file:///c:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/FERMINET_REFACTORING_EVALUATION_AND_PRODUCTION_READINESS_REPORT.md)：查阅 21 项架构冗余消除细节、双环境 246 项测试审计与加速比对比。
 
 ---
 
@@ -43,7 +48,8 @@
    - 6.2 演示 2：氢分子 $H_2$ 端到端 VMC 变分训练 (`train_vmc.py`)
    - 6.3 演示 3：极性异核分子氢化锂 $LiH$ 变分优化
    - 6.4 演示 4：Kato 尖峰库仑奇异性诊断与动势能抵消验证 (`diagnose_cusp_divergence`)
-   - 6.5 训练输出物理指标白话对照表
+   - 6.5 演示 5：现代化解耦 API 实操 (`ComposableFermiNet` + `VMCDriver`)
+   - 6.6 训练输出物理指标白话对照表
 7. [❓ 第六章：新手高频问答 FAQ](#7-第六章新手高频问答-faq)
    - Q1: 为什么波函数的对数值 `log|Psi|` 经常是负几百？
    - Q2: 什么是 Hartree 原子单位制？怎么换算成熟悉的单位？
@@ -834,7 +840,55 @@ for d, e, t, v in zip(diag["distances"], diag["e_local"], diag["t_local"], diag[
 - 局域动能项 $T_L$ 由于精确的 Kato 尖峰导数斜率激发出微观正发散 $+10000$ Ha；
 - 两者相加后的总局域能量 $E_L = T_L + V$ 保持平稳有限，彻底证明了奇异点对消定理！
 
-### 6.5 训练输出物理指标白话对照表
+### 6.5 演示 5：现代化解耦 API 实操 (`ComposableFermiNet` + `VMCDriver`)
+
+当你熟悉了基础的经典单体模型后，可以体验项目现代化的**四层正交解耦架构**。通过将波函数模型（`ComposableFermiNet`）、变分状态容器（`VariationalState`）、物理哈密顿量（`HamiltonianComposite`）与高层调度引擎（`VMCDriver`）解耦，你可以更方便地进行二次开发：
+
+```python
+import torch
+import ferminet_pytorch as fp
+
+# 1. 创建物理系统与现代化可组合模型
+system = fp.build_h2_system()
+model = fp.ComposableFermiNet(
+    nuclear_coords=system.nuclear_coords,
+    nuclear_charges=system.nuclear_charges,
+    n_up=system.n_up,
+    n_down=system.n_down,
+    use_cusp_jastrow=True,
+    spin_adapted=True,
+)
+
+# 2. 状态容器与物理算符
+state = fp.VariationalState(model=model, system=system, num_walkers=256)
+hamiltonian = fp.HamiltonianComposite(system=system)
+
+# 3. 采样器与优化器
+sampler = fp.MetropolisSampler(variational_state=state, step_size=0.5)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+
+# 4. 高层解耦驱动引擎
+driver = fp.VMCDriver(
+    variational_state=state,
+    hamiltonian=hamiltonian,
+    sampler=sampler,
+    optimizer=optimizer,
+    clip_factor=5.0,
+    decorrelation_steps=5,
+)
+
+# 5. 执行一次变分迭代并查看丰富的物理与工程监控指标
+metrics = driver.step()
+print("VMC 单步迭代物理指标:")
+print(f"  能量均值: {metrics['energy_mean']:.5f} Hartree")
+print(f"  能量方差: {metrics['energy_std']**2:.4f}")
+print(f"  采样接受率: {metrics['acceptance_rate']*100:.1f}%")
+print(f"  单步耗时: {metrics['epoch_time']*1000:.2f} ms")
+```
+
+更多关于如何扩展自定义等变层、自定义势能和动能求解器的深度解析，欢迎参阅专门的 [**开发者指南 (DEVELOPER_GUIDE.md)**](file:///c:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/DEVELOPER_GUIDE.md)。
+
+### 6.6 训练输出物理指标白话对照表
 
 初学者在看训练日志时，常常不知道各项指标代表什么含义，请参考下表：
 
