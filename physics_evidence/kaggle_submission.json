@@ -1,0 +1,9 @@
+{
+  "checked_utc": "2026-10-22T07:35:18.395101+00:00",
+  "kernel": "hwbwhzbsh/ferminet-t4x2-multiseed",
+  "version": 1,
+  "status": "KernelWorkerStatus.QUEUED",
+  "failure_message": "",
+  "source_commit": "4682eedb79b9490cfd9d2a3e669d1defd0c31691",
+  "session_timeout_seconds": 36000
+}

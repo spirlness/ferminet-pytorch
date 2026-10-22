@@ -2,6 +2,12 @@
 
 日期：2026-10-22。训练和评估任务自动执行；提交成功不代表已经完成训练或达到化学精度。当前源码通过 GitHub 的完整 commit SHA 拉取，Kaggle notebook 默认为私有。
 
+## 实际提交记录
+
+- 固定训练源码：[4682eedb79b9490cfd9d2a3e669d1defd0c31691](https://github.com/spirlness/ferminet-pytorch/commit/4682eedb79b9490cfd9d2a3e669d1defd0c31691)，分支 `codex/kaggle-t4-multiseed`。
+- [双卡短流程](https://www.kaggle.com/code/hwbwhzbsh/ferminet-t4x2-smoke) version 1 已完成：真实两张 Tesla T4，Python 3.13.15、PyTorch 2.11.0+cu128、CUDA runtime 12.8。每卡 3 项运行时检查通过，无跳过；两个主干各完成 6 轮、阶段切换、checkpoint 与独立 FP64 评估，前后数值精度检查均通过。[摘要](physics_evidence/kaggle_t4x2_smoke/summary.json)、[GPU 0 测试](physics_evidence/kaggle_t4x2_smoke/runtime_tests_gpu0.log)、[GPU 1 测试](physics_evidence/kaggle_t4x2_smoke/runtime_tests_gpu1.log)。短流程的统计诊断为证据不足，不能作为精度结果。
+- [长期任务](https://www.kaggle.com/code/hwbwhzbsh/ferminet-t4x2-multiseed) version 1 已提交，10 小时会话上限；阶段性状态及核对时间保存在[提交记录](physics_evidence/kaggle_submission.json)。长期能量和统计结论以任务结束后的输出为准。
+
 ## 实验计划
 
 配置文件：[长期实验](configs/kaggle_t4x2.json)、[双卡短流程](configs/kaggle_smoke.json)。体系固定为 H₂、核间距 1.4 bohr、单重态；参考 BO 能量为 −1.174475714220 Ha。
