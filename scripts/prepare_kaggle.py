@@ -5,10 +5,29 @@ import json
 from pathlib import Path
 import re
 import subprocess
+from .verify_kaggle_smoke import plan_digest
 
 
-def prepare(owner, mode, output, revision=None, resume_kernel=None):
+def prepare(owner, mode, output, revision=None, resume_kernel=None, gate_path=None):
     root = Path(__file__).resolve().parents[1]
+    gate = None
+    if mode == "long":
+        if gate_path is None:
+            raise ValueError(
+                "A verified one-epoch smoke gate is required before a long submission"
+            )
+        gate = json.loads(Path(gate_path).read_text())
+        revision = revision or gate.get("source_commit")
+        large = json.loads((root / "configs/kaggle_t4x2.json").read_text())
+        if not (
+            gate.get("passed") is True
+            and gate.get("epochs_per_case") == 1
+            and gate.get("real_gpu_count") == 2
+            and gate.get("console_forwarding_verified") is True
+            and gate.get("source_commit") == revision
+            and gate.get("long_plan_sha256") == plan_digest(large)
+        ):
+            raise ValueError("Smoke gate does not match this source/configuration")
     revision = (
         revision
         or subprocess.check_output(
@@ -27,6 +46,8 @@ def prepare(owner, mode, output, revision=None, resume_kernel=None):
         'SOURCE_REPOSITORY = "https://github.com/spirlness/ferminet-pytorch.git"\n'
         f"SOURCE_COMMIT = {revision!r}\nCAMPAIGN_CONFIG = {config!r}\n\n"
     )
+    if gate is not None:
+        preamble += f"SMOKE_GATE = {gate!r}\n\n"
     if resume_kernel:
         if not re.fullmatch(r"[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+", resume_kernel):
             raise ValueError("Resume kernel must be owner/slug")
@@ -68,11 +89,19 @@ def main():
     parser.add_argument(
         "--resume-kernel", help="Mount prior output and resume matching cases"
     )
+    parser.add_argument(
+        "--gate", type=Path, help="Verified one-epoch receipt, mandatory for long mode"
+    )
     args = parser.parse_args()
     print(
         json.dumps(
             prepare(
-                args.owner, args.mode, args.output, args.revision, args.resume_kernel
+                args.owner,
+                args.mode,
+                args.output,
+                args.revision,
+                args.resume_kernel,
+                args.gate,
             ),
             indent=2,
         )

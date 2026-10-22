@@ -16,8 +16,15 @@ def main():
         raise RuntimeError(
             "Render this bootstrap with python -m scripts.prepare_kaggle"
         )
+    gate = globals().get("SMOKE_GATE")
+    if config.endswith("kaggle_t4x2.json") and not (
+        gate and gate.get("passed") is True and gate.get("source_commit") == revision
+    ):
+        raise RuntimeError(
+            "Long campaign requires a passed one-epoch smoke gate for this revision"
+        )
     root = Path("/kaggle/working")
-    source = root / "ferminet_source"
+    source = Path("/tmp/ferminet_source")
     output = root / "ferminet_results"
     output.mkdir(parents=True, exist_ok=True)
     if not source.exists():
@@ -79,10 +86,11 @@ def main():
     env = os.environ.copy()
     env.update(PYTHONUNBUFFERED="1", OMP_NUM_THREADS="1", MKL_NUM_THREADS="1")
     for device in range(2):
+        print(f"Runtime tests starting on physical GPU {device}", flush=True)
         test_env = dict(env, CUDA_VISIBLE_DEVICES=str(device))
         test_path = output / f"runtime_tests_gpu{device}.log"
         with test_path.open("w", encoding="utf-8") as log:
-            subprocess.run(
+            test_result = subprocess.run(
                 [
                     sys.executable,
                     "-m",
@@ -92,10 +100,14 @@ def main():
                 ],
                 cwd=source,
                 env=test_env,
-                stdout=log,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                check=True,
+                text=True,
             )
+            log.write(test_result.stdout)
+            print(test_result.stdout, flush=True)
+            test_result.check_returncode()
+        print(f"Runtime tests passed on physical GPU {device}", flush=True)
     subprocess.run(
         [
             sys.executable,

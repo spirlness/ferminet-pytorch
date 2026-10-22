@@ -1,0 +1,47 @@
+{
+  "cases": [
+    {
+      "interaction": "ferminet",
+      "seed": 11,
+      "status": "missing"
+    },
+    {
+      "interaction": "psiformer",
+      "seed": 11,
+      "status": "missing"
+    },
+    {
+      "interaction": "ferminet",
+      "seed": 22,
+      "status": "missing"
+    },
+    {
+      "interaction": "psiformer",
+      "seed": 22,
+      "status": "missing"
+    },
+    {
+      "interaction": "ferminet",
+      "seed": 33,
+      "status": "missing"
+    },
+    {
+      "interaction": "psiformer",
+      "seed": 33,
+      "status": "missing"
+    }
+  ],
+  "seed_summary": {
+    "ferminet": {
+      "planned": 3,
+      "completed": 0,
+      "all_completed": false
+    },
+    "psiformer": {
+      "planned": 3,
+      "completed": 0,
+      "all_completed": false
+    }
+  },
+  "all_completed": false
+}

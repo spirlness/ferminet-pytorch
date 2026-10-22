@@ -6,7 +6,11 @@
 
 - 固定训练源码：[4682eedb79b9490cfd9d2a3e669d1defd0c31691](https://github.com/spirlness/ferminet-pytorch/commit/4682eedb79b9490cfd9d2a3e669d1defd0c31691)，分支 `codex/kaggle-t4-multiseed`。
 - [双卡短流程](https://www.kaggle.com/code/hwbwhzbsh/ferminet-t4x2-smoke) version 1 已完成：真实两张 Tesla T4，Python 3.13.15、PyTorch 2.11.0+cu128、CUDA runtime 12.8。每卡 3 项运行时检查通过，无跳过；两个主干各完成 6 轮、阶段切换、checkpoint 与独立 FP64 评估，前后数值精度检查均通过。[摘要](physics_evidence/kaggle_t4x2_smoke/summary.json)、[GPU 0 测试](physics_evidence/kaggle_t4x2_smoke/runtime_tests_gpu0.log)、[GPU 1 测试](physics_evidence/kaggle_t4x2_smoke/runtime_tests_gpu1.log)。短流程的统计诊断为证据不足，不能作为精度结果。
-- [长期任务](https://www.kaggle.com/code/hwbwhzbsh/ferminet-t4x2-multiseed) version 1 已提交，10 小时会话上限；阶段性状态及核对时间保存在[提交记录](physics_evidence/kaggle_submission.json)。长期能量和统计结论以任务结束后的输出为准。
+- [长期任务](https://www.kaggle.com/code/hwbwhzbsh/ferminet-t4x2-multiseed) version 1 已按用户要求取消，Kaggle 已确认停止，见[取消记录](physics_evidence/kaggle_cancel_v1.json)。取消前的阶段性提交状态见[原提交记录](physics_evidence/kaggle_submission.json)。这些记录不构成独立冻结评估结果。
+
+2026-10-22 日志修复：worker 输出实时转发至 Kaggle 主控制台，同时保留独立日志；每 15 秒报告 GPU 利用率/显存、进程状态和当前实验阶段，每约 10 秒报告训练 epoch、批次能量、接受率、学习率及预算内 ETA。初始化、预热、精度检查、保存和评估均有阶段事件。失败会输出 traceback 并停止后续实验；未开始项显示 `pending`，不再将所有未完成项误标为 `missing`。
+
+新的提交顺序强制为：真实双 T4、两个主干各 **1 epoch**，核验实际输出并生成验收回执后，再提交同一源码和长期配置的大规模任务。小测试保持长期网络规模和 512 walkers，仅缩短迭代、预热及评估。测试通过不代表化学精度。
 
 ## 实验计划
 
@@ -48,23 +52,31 @@
 # 本机完整 CUDA 验收，任何 skip 都失败
 F:\conda\envs\torch\python.exe -m scripts.run_cuda_tests
 
-# 生成当前 HEAD 对应的短流程提交
+# 生成当前 HEAD 对应的 1 epoch 双卡测试
 F:\conda\envs\torch\python.exe -m scripts.prepare_kaggle --owner hwbwhzbsh --mode smoke --output .kaggle_deploy/smoke
 kaggle kernels push -p .kaggle_deploy/smoke --accelerator NvidiaTeslaT4 -t 1200
 kaggle kernels status hwbwhzbsh/ferminet-t4x2-smoke
 
-# 短流程确认两张 T4 均执行成功后，再启动长期实验
-F:\conda\envs\torch\python.exe -m scripts.prepare_kaggle --owner hwbwhzbsh --mode long --output .kaggle_deploy/long
+# 必须等待测试完成，下载实际输出并验证，失败时不会生成通过回执
+kaggle kernels output hwbwhzbsh/ferminet-t4x2-smoke -p campaign_runs/one_epoch --file-pattern '^ferminet_results/' --quiet
+F:\conda\envs\torch\python.exe -m scripts.verify_kaggle_smoke --download campaign_runs/one_epoch --kernel hwbwhzbsh/ferminet-t4x2-smoke --receipt campaign_runs/one_epoch_gate.json
+
+# 长任务必须使用通过的回执；默认固定到回执对应的源码 SHA
+F:\conda\envs\torch\python.exe -m scripts.prepare_kaggle --owner hwbwhzbsh --mode long --gate campaign_runs/one_epoch_gate.json --output .kaggle_deploy/long
 kaggle kernels push -p .kaggle_deploy/long --accelerator NvidiaTeslaT4 -t 36000
 kaggle kernels status hwbwhzbsh/ferminet-t4x2-multiseed
-kaggle kernels output hwbwhzbsh/ferminet-t4x2-multiseed -p campaign_runs/kaggle_download
+kaggle kernels output hwbwhzbsh/ferminet-t4x2-multiseed -p campaign_runs/kaggle_download --file-pattern '^ferminet_results/' --quiet
 ```
 
 Bootstrap 校验实际 GPU 必须恰好为两张 T4，没有 CPU 回退。分别在两卡执行 CUDA 断点恢复/分批评估测试，再启动两个实验进程。它记录源码 SHA、包版本和 GPU 名称，并校验实际 checkout 与提交一致。
 
+验收回执同时检查：实际双 T4 与两个主干、完整一轮参数更新、最终 checkpoint 哈希、有限 FP64 轨迹的形状、前后精度检查及主控制台确实收到两张卡的训练事件。缺少回执、源码 SHA 不符或长期配置改变，都会拒绝生成长期提交。源码 checkout 放在 `/tmp`，仅实验结果放在 `/kaggle/working`，避免输出重复源代码。
+
 官方提交格式和 T4×2 标识见 [Kaggle CLI kernels 文档](https://github.com/Kaggle/kaggle-cli/blob/main/docs/kernels.md)及[元数据规范](https://github.com/Kaggle/kaggle-cli/blob/main/docs/kernels_metadata.md)。
 
-本机最终完整 CUDA 验收：261 通过、0 失败、0 错误、0 跳过，94.64 秒，RTX 3060 Laptop GPU / PyTorch 2.14.0 / CUDA runtime 13.0。[原始日志](physics_evidence/kaggle_final_cuda/tests.log)与[源码哈希及结果](physics_evidence/kaggle_final_cuda/summary.json)已保留。该记录不能代替 Kaggle 实际双 T4 验收或长期收敛结果。
+初次部署的本机完整 CUDA 验收：261 通过、0 失败、0 错误、0 跳过，94.64 秒，RTX 3060 Laptop GPU / PyTorch 2.14.0 / CUDA runtime 13.0。[原始日志](physics_evidence/kaggle_final_cuda/tests.log)与[源码哈希及结果](physics_evidence/kaggle_final_cuda/summary.json)已保留。该记录不能代替后续日志修复验收、Kaggle 实际双 T4 验收或长期收敛结果。
+
+本次日志修复的完整 CUDA 验收：**267 通过、0 失败、0 错误、0 跳过，102.56 秒**。新增检查覆盖退出前日志转发、实时阶段区分、worker 失败即停、1 epoch 配置与长期网络/批次一致，以及长期提交回执约束；评估回调保持分批轨迹一致。[结果与源码哈希](physics_evidence/kaggle_logging_cuda/summary.json)、[完整日志](physics_evidence/kaggle_logging_cuda/tests.log)。
 
 ## 输出与判读
 
@@ -83,6 +95,7 @@ ferminet_seed11/ ...             每种主干和种子的独立目录
     precision_before/after.json  指定采样点的精度对照
     evaluation_trajectory.pt     未截断的 FP64 局域能量，保留时间/链结构
     result.json                  能量、SEM、区间、ESS、Rhat、分块、参考和失败原因
+    progress.json                当前阶段、epoch/评估记录数、最近 checkpoint 和更新时间
 ```
 
 单次评估要求至少 128 条时间记录、ESS ≥1000、能量 split-Rhat ≤1.01 和分块平台。满足这些诊断且 `abs(mean-reference) + 1.96*SEM ≤0.0015936 Ha`，并通过数值精度检查后，才标记达到化学精度。任何非有限评估能量都导致失败，不能丢弃后继续报告精度。
@@ -96,7 +109,7 @@ ferminet_seed11/ ...             每种主干和种子的独立目录
 Kaggle 新会话需要将前一次输出作为 kernel source 挂载，并使用原来的完整源码 SHA：
 
 ```powershell
-F:\conda\envs\torch\python.exe -m scripts.prepare_kaggle --owner hwbwhzbsh --mode long --revision <原完整SHA> --resume-kernel hwbwhzbsh/ferminet-t4x2-multiseed --output .kaggle_deploy/resume
+F:\conda\envs\torch\python.exe -m scripts.prepare_kaggle --owner hwbwhzbsh --mode long --gate campaign_runs/one_epoch_gate.json --revision <原完整SHA> --resume-kernel hwbwhzbsh/ferminet-t4x2-multiseed --output .kaggle_deploy/resume
 kaggle kernels push -p .kaggle_deploy/resume --accelerator NvidiaTeslaT4 -t 36000
 ```
 

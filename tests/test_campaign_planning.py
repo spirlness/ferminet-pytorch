@@ -8,6 +8,7 @@ import unittest
 
 from scripts.kaggle_campaign import planned_cases, summarize, write_json
 from scripts.prepare_kaggle import prepare
+from scripts.verify_kaggle_smoke import plan_digest
 
 
 class TestCampaignPlanning(unittest.TestCase):
@@ -66,12 +67,26 @@ class TestCampaignPlanning(unittest.TestCase):
 
     def test_resume_submission_mounts_original_output_and_keeps_revision(self):
         with tempfile.TemporaryDirectory() as directory:
+            receipt = Path(directory) / "gate.json"
+            receipt.write_text(
+                json.dumps(
+                    dict(
+                        passed=True,
+                        source_commit="b" * 40,
+                        epochs_per_case=1,
+                        real_gpu_count=2,
+                        console_forwarding_verified=True,
+                        long_plan_sha256=plan_digest(self.plan),
+                    )
+                )
+            )
             metadata = prepare(
                 "test-owner",
                 "long",
                 directory,
                 revision="b" * 40,
                 resume_kernel="test-owner/original-run",
+                gate_path=receipt,
             )
             source = (Path(directory) / "run.py").read_text()
         self.assertEqual(metadata["kernel_sources"], ["test-owner/original-run"])

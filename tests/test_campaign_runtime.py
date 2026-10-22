@@ -109,6 +109,7 @@ class CampaignRuntimeChecks:
             verbose=False,
             seed=610,
         )
+        updates = []
         with tempfile.TemporaryDirectory() as directory:
             full_path, chunk_path = (
                 Path(directory) / "full.pt",
@@ -118,7 +119,10 @@ class CampaignRuntimeChecks:
                 **kwargs, trajectory_path=str(full_path)
             )
             chunked = evaluate_frozen_wavefunction(
-                **kwargs, energy_batch_size=3, trajectory_path=str(chunk_path)
+                **kwargs,
+                energy_batch_size=3,
+                trajectory_path=str(chunk_path),
+                progress_callback=updates.append,
             )
             first, second = (
                 torch.load(full_path, weights_only=True),
@@ -126,6 +130,15 @@ class CampaignRuntimeChecks:
             )
             self.assertEqual(tuple(second.shape), (4, 8))
             torch.testing.assert_close(first, second, atol=1e-10, rtol=1e-10)
+            self.assertEqual(updates[0]["status"], "evaluation_burn_in")
+            self.assertEqual(
+                [
+                    row["time_records"]
+                    for row in updates
+                    if row["status"] == "evaluating"
+                ],
+                [1, 2, 3, 4],
+            )
         self.assertAlmostEqual(full["energy_mean"], chunked["energy_mean"], places=10)
         self.assertEqual(chunked["diagnostics_status"], "insufficient_evidence")
         for key, value in before.items():

@@ -2,7 +2,7 @@
 
 import os
 import time
-from typing import Any, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 import torch
 from torch import nn
@@ -33,6 +33,8 @@ def evaluate_frozen_wavefunction(
     max_seconds: Optional[float] = None,
     trajectory_path: Optional[str] = None,
     energy_batch_size: Optional[int] = None,
+    progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
+    should_stop: Optional[Callable[[], bool]] = None,
 ) -> Dict[str, Any]:
     """Approximate intervals conditional on this checkpoint, not training error.
 
@@ -66,9 +68,31 @@ def evaluate_frozen_wavefunction(
             device=target_device,
             dtype=dtype,
         )
-        sampler.burn_in(burn_in_steps)
+        if progress_callback is None:
+            sampler.burn_in(burn_in_steps)
+        else:
+            progress_callback(
+                dict(
+                    status="evaluation_burn_in",
+                    burn_in_steps=0,
+                    requested_burn_in_steps=burn_in_steps,
+                )
+            )
+            for step in range(0, burn_in_steps, 25):
+                if should_stop is not None and should_stop():
+                    raise InterruptedError("Frozen evaluation interrupted")
+                sampler.burn_in(min(25, burn_in_steps - step))
+                progress_callback(
+                    dict(
+                        status="evaluation_burn_in",
+                        burn_in_steps=min(step + 25, burn_in_steps),
+                        requested_burn_in_steps=burn_in_steps,
+                    )
+                )
         production_start = time.perf_counter()
         for _ in range(num_steps):
+            if should_stop is not None and should_stop():
+                raise InterruptedError("Frozen evaluation interrupted")
             if (
                 trajectory
                 and max_seconds is not None
@@ -88,6 +112,16 @@ def evaluate_frozen_wavefunction(
                     "Nonfinite energy in frozen evaluation; no observations were discarded"
                 )
             trajectory.append(energies.detach().cpu())
+            if progress_callback is not None:
+                progress_callback(
+                    dict(
+                        status="evaluating",
+                        time_records=len(trajectory),
+                        requested_time_records=num_steps,
+                        evaluation_seconds=time.perf_counter() - production_start,
+                        force=len(trajectory) in (1, num_steps),
+                    )
+                )
         series = torch.stack(trajectory)
         result = energy_statistics(series)
         result.update(

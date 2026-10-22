@@ -20,5 +20,8 @@
     "energy_batch_size": 128, "max_seconds": 1800
   },
   "precision_audit": {"num_points": 32, "max_log_difference": 0.001, "max_energy_rms_difference": 0.001},
-  "cpu_threads_per_worker": 1
+  "cpu_threads_per_worker": 1,
+  "log_seconds": 10,
+  "heartbeat_seconds": 15,
+  "max_wall_seconds": 34200
 }

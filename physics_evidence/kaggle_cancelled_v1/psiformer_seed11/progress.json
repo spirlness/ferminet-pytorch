@@ -1,0 +1,20 @@
+{
+  "epoch": 6376,
+  "training_seconds": 1500.7398656799999,
+  "last_metrics": {
+    "energy_mean": -1.1678587198257446,
+    "energy_std": 0.10354914212569151,
+    "energy_var": 0.01072242483496666,
+    "energy_clipped_mean": -1.1581603288650513,
+    "energy_median": -1.1540858745574951,
+    "energy_mad": 0.022131681442260742,
+    "loss": -0.008311990648508072,
+    "num_valid": 512,
+    "num_invalid": 0,
+    "epoch_time": 0.23192710500006797,
+    "stage": 2,
+    "mcmc_acceptance": 0.40234375,
+    "mcmc_step_size": 0.5566475735665368
+  },
+  "status": "training"
+}

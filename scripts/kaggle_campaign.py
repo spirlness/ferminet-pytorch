@@ -13,6 +13,7 @@ import math
 import os
 from pathlib import Path
 import platform
+import signal
 import statistics
 import subprocess
 import sys
@@ -27,6 +28,41 @@ from ferminet_pytorch.hamiltonian import compute_local_energy
 from ferminet_pytorch.loss import VMCLoss
 from ferminet_pytorch.mcmc import MCMCSampler
 from ferminet_pytorch.systems import build_h2_system
+from .campaign_logging import emit_event, gpu_snapshot, LoggedWorker
+
+
+STOP_REQUESTED = False
+
+
+def request_stop(signum, frame):
+    global STOP_REQUESTED
+    STOP_REQUESTED = True
+
+
+class CaseProgress:
+    def __init__(self, directory, interaction, seed, interval=10):
+        self.directory = directory
+        self.fields = dict(interaction=interaction, seed=seed, pid=os.getpid())
+        self.interval, self.last_emit = interval, 0.0
+
+    def update(self, status, force=False, event="progress", **fields):
+        previous = self.fields.get("status")
+        self.fields.update(status=status, **fields)
+        now = time.monotonic()
+        if force or status != previous or now - self.last_emit >= self.interval:
+            from datetime import datetime, timezone
+
+            self.fields["updated_utc"] = datetime.now(timezone.utc).isoformat()
+            write_json(self.directory / "progress.json", self.fields)
+            emit_event(
+                event,
+                interaction=self.fields["interaction"],
+                seed=self.fields["seed"],
+                pid=self.fields["pid"],
+                status=status,
+                **json_safe(fields),
+            )
+            self.last_emit = now
 
 
 def json_safe(value):
@@ -130,11 +166,13 @@ def summarize(plan, output):
     cases = []
     for interaction, seed in planned_cases(plan):
         path = Path(output) / f"{interaction}_seed{seed}" / "result.json"
-        cases.append(
-            json.loads(path.read_text())
-            if path.exists()
-            else dict(interaction=interaction, seed=seed, status="missing")
-        )
+        progress = path.with_name("progress.json")
+        row = dict(interaction=interaction, seed=seed, status="pending")
+        if progress.exists():
+            row.update(json.loads(progress.read_text()))
+        if path.exists():
+            row.update(json.loads(path.read_text()))
+        cases.append(row)
     groups = {}
     for interaction in plan["interactions"]:
         rows = [
@@ -188,6 +226,7 @@ def summarize(plan, output):
 def run_case(plan, interaction, seed, output, device):
     directory = Path(output) / f"{interaction}_seed{seed}"
     directory.mkdir(parents=True, exist_ok=True)
+    progress = CaseProgress(directory, interaction, seed, plan.get("log_seconds", 10))
     identity = dict(plan=plan, interaction=interaction, seed=seed, **source_identity())
     manifest = directory / "manifest.json"
     if manifest.exists() and json.loads(manifest.read_text()) != identity:
@@ -199,6 +238,7 @@ def run_case(plan, interaction, seed, output, device):
         and json.loads(result_path.read_text())["status"] == "completed"
     ):
         return
+    progress.update("initializing", event="case_start", device=device)
     torch.manual_seed(seed)
     if device.startswith("cuda"):
         torch.cuda.manual_seed_all(seed)
@@ -237,8 +277,19 @@ def run_case(plan, interaction, seed, output, device):
     checkpoint = directory / "resume.pt"
     if checkpoint.exists():
         driver.load_checkpoint(checkpoint)
+        progress.update("resumed", epoch=driver.epoch)
     else:
-        sampler.burn_in(config.burn_in_steps)
+        progress.update(
+            "burn_in", burn_in_steps=0, requested_burn_in_steps=config.burn_in_steps
+        )
+        for step in range(0, config.burn_in_steps, 25):
+            if STOP_REQUESTED:
+                raise InterruptedError("Stop requested during burn-in")
+            sampler.burn_in(min(25, config.burn_in_steps - step))
+            progress.update(
+                "burn_in", burn_in_steps=min(step + 25, config.burn_in_steps)
+            )
+    progress.update("precision_audit", epoch=driver.epoch)
     audit_before = precision_audit(
         model, system, sampler.walkers, plan["precision_audit"]
     )
@@ -247,30 +298,58 @@ def run_case(plan, interaction, seed, output, device):
         raise FloatingPointError("FP32/FP64 preflight failed; precision audit saved")
     previous_seconds = sum(row["epoch_time"] for row in driver.history)
     start, saved_at = time.perf_counter(), time.perf_counter()
+    progress.update("training", epoch=driver.epoch, num_epochs=config.num_epochs)
     while driver.epoch < config.num_epochs:
+        if STOP_REQUESTED:
+            driver.save_checkpoint(checkpoint)
+            progress.update("interrupted", force=True, epoch=driver.epoch)
+            raise InterruptedError("Stop requested; training checkpoint saved")
         elapsed = previous_seconds + time.perf_counter() - start
         if elapsed >= plan["training_seconds_per_case"]:
             break
         row = driver.step()
-        if driver.epoch % 100 == 0:
-            print(
-                f"{interaction}/{seed} epoch={driver.epoch} E={row['energy_mean']:.8f} stage={driver.stage}",
-                flush=True,
-            )
+        elapsed = previous_seconds + time.perf_counter() - start
+        progress.update(
+            "training",
+            force=driver.epoch == 1 or driver.epoch == config.num_epochs,
+            event="training_step",
+            epoch=driver.epoch,
+            num_epochs=config.num_epochs,
+            energy_mean=row["energy_mean"],
+            energy_var=row["energy_var"],
+            acceptance=row["mcmc_acceptance"],
+            stage=driver.stage,
+            step_seconds=row["epoch_time"],
+            training_seconds=elapsed,
+            learning_rates=[group["lr"] for group in driver.optimizer.param_groups],
+            remaining_budget_seconds=max(
+                0, plan["training_seconds_per_case"] - elapsed
+            ),
+            estimated_training_seconds_left=min(
+                (config.num_epochs - driver.epoch) * row["epoch_time"],
+                max(0, plan["training_seconds_per_case"] - elapsed),
+            ),
+        )
         if time.perf_counter() - saved_at >= plan["checkpoint_seconds"]:
             driver.save_checkpoint(checkpoint)
-            write_json(
-                directory / "progress.json",
-                dict(
-                    epoch=driver.epoch,
-                    training_seconds=elapsed,
-                    last_metrics=row,
-                    status="training",
-                ),
+            progress.update(
+                "training",
+                force=True,
+                event="checkpoint_saved",
+                epoch=driver.epoch,
+                checkpoint=str(checkpoint),
+                checkpoint_epoch=driver.epoch,
             )
             saved_at = time.perf_counter()
     driver.save_checkpoint(checkpoint)
     driver.save_checkpoint(directory / "final_checkpoint.pt")
+    progress.update(
+        "checkpoint_saved",
+        event="final_checkpoint_saved",
+        epoch=driver.epoch,
+        checkpoint=str(directory / "final_checkpoint.pt"),
+        checkpoint_epoch=driver.epoch,
+    )
     training_seconds = previous_seconds + time.perf_counter() - start
     write_json(directory / "training_history.json", driver.training_history)
     audit_after = precision_audit(
@@ -281,9 +360,7 @@ def run_case(plan, interaction, seed, output, device):
     # FP64 estimate, but never certify chemical accuracy for the failed audit.
     eval_model = copy.deepcopy(model).double()
     eval_system = copy.deepcopy(system).to(dtype=torch.float64)
-    write_json(
-        directory / "progress.json", dict(epoch=driver.epoch, status="evaluating")
-    )
+    progress.update("evaluation_preparing", epoch=driver.epoch)
     eval_seed = seed + (100000 if interaction == "ferminet" else 200000)
     checkpoint_hash = file_sha(directory / "final_checkpoint.pt")
     evaluation = evaluate_frozen_wavefunction(
@@ -295,6 +372,8 @@ def run_case(plan, interaction, seed, output, device):
         seed=eval_seed,
         verbose=True,
         trajectory_path=str(directory / "evaluation_trajectory.pt"),
+        progress_callback=lambda update: progress.update(**update),
+        should_stop=lambda: STOP_REQUESTED,
     )
     if not audit_after["passed"]:
         evaluation["chemical_accuracy_met"] = False
@@ -326,9 +405,21 @@ def run_case(plan, interaction, seed, output, device):
         name=torch.cuda.get_device_name() if device.startswith("cuda") else "CPU",
     )
     write_json(result_path, result)
+    progress.update(
+        "completed",
+        event="case_completed",
+        force=True,
+        epoch=driver.epoch,
+        evaluation_energy=evaluation["energy_mean"],
+        energy_sem=evaluation["energy_sem"],
+        diagnostics=evaluation["diagnostics_status"],
+        chemical_accuracy=evaluation["chemical_accuracy_status"],
+    )
 
 
 def worker(plan, output, index, count, device):
+    signal.signal(signal.SIGTERM, request_stop)
+    signal.signal(signal.SIGINT, request_stop)
     torch.set_num_threads(plan["cpu_threads_per_worker"])
     torch.set_float32_matmul_precision("highest")
     if device.startswith("cuda"):
@@ -337,26 +428,40 @@ def worker(plan, output, index, count, device):
         torch.cuda.set_device(0)
         torch.backends.cuda.matmul.allow_tf32 = False
         torch.backends.cudnn.allow_tf32 = False
-    failed = False
+    emit_event(
+        "worker_start",
+        worker=index,
+        pid=os.getpid(),
+        device=device,
+        visible_devices=os.environ.get("CUDA_VISIBLE_DEVICES"),
+    )
     for interaction, seed in planned_cases(plan)[index::count]:
         try:
             run_case(plan, interaction, seed, output, device)
         except Exception:
-            failed = True
+            status = "interrupted" if STOP_REQUESTED else "failed"
             write_json(
                 Path(output) / f"{interaction}_seed{seed}" / "result.json",
                 dict(
-                    status="failed",
+                    status=status,
                     interaction=interaction,
                     seed=seed,
                     traceback=traceback.format_exc(),
                 ),
             )
             traceback.print_exc()
+            emit_event(
+                "case_failed",
+                interaction=interaction,
+                seed=seed,
+                status=status,
+                traceback=traceback.format_exc(),
+            )
+            return 130 if STOP_REQUESTED else 1
         finally:
             if device.startswith("cuda"):
                 torch.cuda.empty_cache()
-    return 1 if failed else 0
+    return 0
 
 
 def main():
@@ -396,7 +501,7 @@ def main():
         ],
     )
     write_json(args.output / "campaign.json", manifest)
-    processes, logs = [], []
+    children = []
     for index in range(args.workers):
         env = os.environ.copy()
         env.update(
@@ -404,8 +509,6 @@ def main():
             OMP_NUM_THREADS=str(plan["cpu_threads_per_worker"]),
             PYTHONUNBUFFERED="1",
         )
-        log = (args.output / f"worker_{index}.log").open("w", encoding="utf-8")
-        logs.append(log)
         command = [
             sys.executable,
             "-m",
@@ -421,29 +524,61 @@ def main():
             "--device",
             "cpu" if args.allow_cpu else "cuda:0",
         ]
-        processes.append(
-            subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
+        children.append(
+            LoggedWorker(command, args.output / f"worker_{index}.log", index, env=env)
         )
+    started = time.monotonic()
+    emit_event("campaign_start", workers=[child.status() for child in children])
     try:
-        while any(p.poll() is None for p in processes):
+        while any(child.process.poll() is None for child in children):
             summary = summarize(plan, args.output)
-            print(
-                "Campaign:",
-                [(c["interaction"], c["seed"], c["status"]) for c in summary["cases"]],
-                flush=True,
+            emit_event(
+                "heartbeat",
+                cases=[
+                    {
+                        key: c.get(key)
+                        for key in (
+                            "interaction",
+                            "seed",
+                            "status",
+                            "epoch",
+                            "time_records",
+                            "updated_utc",
+                        )
+                    }
+                    for c in summary["cases"]
+                ],
+                workers=[child.status() for child in children],
+                gpus=[] if args.allow_cpu else gpu_snapshot(),
             )
-            time.sleep(30)
+            if any(
+                child.process.poll() not in (None, 0) or child.reader_error
+                for child in children
+            ):
+                emit_event(
+                    "campaign_failed",
+                    reason="Worker exited unsuccessfully; stopping remaining workers",
+                )
+                break
+            if time.monotonic() - started >= plan.get("max_wall_seconds", 34200):
+                emit_event(
+                    "campaign_failed", reason="Campaign wall-time budget exhausted"
+                )
+                break
+            time.sleep(plan.get("heartbeat_seconds", 15))
     finally:
-        for process in processes:
-            if process.poll() is None:
-                process.terminate()
-                process.wait()
-        for log in logs:
-            log.close()
+        for child in children:
+            child.stop()
     summary = summarize(plan, args.output)
+    emit_event(
+        "campaign_finished",
+        all_completed=summary["all_completed"],
+        workers=[child.status() for child in children],
+    )
     return (
         0
-        if summary["all_completed"] and all(p.returncode == 0 for p in processes)
+        if summary["all_completed"]
+        and all(child.process.returncode == 0 for child in children)
         else 1
     )
 

@@ -1,0 +1,16 @@
+[
+  {
+    "case": "ferminet_seed11",
+    "checkpoint_epoch": 7836,
+    "stage": 2,
+    "sha256": "7bac8e3bcbd78932f0cae34d3423bd5ea7a7c2c40e40f7652ba158acc224f74e",
+    "frozen_evaluation_completed": false
+  },
+  {
+    "case": "psiformer_seed11",
+    "checkpoint_epoch": 6376,
+    "stage": 2,
+    "sha256": "43b4d18e278dc4c00c6a747f590036fe35c01f1a1d1d83a85902bdbc2e2f78a4",
+    "frozen_evaluation_completed": false
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "kernel": "hwbwhzbsh/ferminet-t4x2-multiseed",
+  "version": 1,
+  "status": "KernelWorkerStatus.CANCEL_ACKNOWLEDGED",
+  "checked_utc": "2026-10-22T08:35:44.479997+00:00",
+  "requested_by_user": true
+}
