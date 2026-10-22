@@ -1,0 +1,11 @@
+{
+  "checked_utc": "2026-10-22T08:49:29.333489+00:00",
+  "kernel": "hwbwhzbsh/ferminet-t4x2-multiseed",
+  "version": 2,
+  "status": "KernelWorkerStatus.RUNNING",
+  "failure_message": "",
+  "source_commit": "d2618dfb6780f1da49f0bb4ab247d29ec15e41f8",
+  "one_epoch_gate": "kaggle_one_epoch_v2/gate_receipt.json",
+  "both_workers_training_confirmed": true,
+  "live_start_log_sha256": "11d5deb48702081b11ad120825285da282f51af94a39d1badbf8808c0f224366"
+}

@@ -1,0 +1,32 @@
+{
+  "interaction": "psiformer",
+  "seed": 11,
+  "pid": 48,
+  "status": "completed",
+  "device": "cuda:0",
+  "updated_utc": "2026-10-22T08:45:48.172845+00:00",
+  "burn_in_steps": 4,
+  "requested_burn_in_steps": 4,
+  "epoch": 1,
+  "num_epochs": 1,
+  "energy_mean": -2.4830539226531982,
+  "energy_var": 7.8226494789123535,
+  "acceptance": 0.30078125,
+  "stage": 1,
+  "step_seconds": 0.36344164499999465,
+  "training_seconds": 0.3641432929999837,
+  "learning_rates": [
+    1e-05
+  ],
+  "remaining_budget_seconds": 119.63585670700002,
+  "estimated_training_seconds_left": 0.0,
+  "checkpoint": "/kaggle/working/ferminet_results/psiformer_seed11/final_checkpoint.pt",
+  "checkpoint_epoch": 1,
+  "time_records": 8,
+  "requested_time_records": 8,
+  "evaluation_seconds": 2.4725658039999985,
+  "evaluation_energy": -1.5203459244084065,
+  "energy_sem": 0.34422415326083095,
+  "diagnostics": "insufficient_evidence",
+  "chemical_accuracy": "insufficient_evidence"
+}

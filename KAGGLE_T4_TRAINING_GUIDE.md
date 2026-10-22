@@ -4,13 +4,19 @@
 
 ## 实际提交记录
 
-- 固定训练源码：[4682eedb79b9490cfd9d2a3e669d1defd0c31691](https://github.com/spirlness/ferminet-pytorch/commit/4682eedb79b9490cfd9d2a3e669d1defd0c31691)，分支 `codex/kaggle-t4-multiseed`。
+- 初次部署源码：[4682eedb79b9490cfd9d2a3e669d1defd0c31691](https://github.com/spirlness/ferminet-pytorch/commit/4682eedb79b9490cfd9d2a3e669d1defd0c31691)，分支 `codex/kaggle-t4-multiseed`。
 - [双卡短流程](https://www.kaggle.com/code/hwbwhzbsh/ferminet-t4x2-smoke) version 1 已完成：真实两张 Tesla T4，Python 3.13.15、PyTorch 2.11.0+cu128、CUDA runtime 12.8。每卡 3 项运行时检查通过，无跳过；两个主干各完成 6 轮、阶段切换、checkpoint 与独立 FP64 评估，前后数值精度检查均通过。[摘要](physics_evidence/kaggle_t4x2_smoke/summary.json)、[GPU 0 测试](physics_evidence/kaggle_t4x2_smoke/runtime_tests_gpu0.log)、[GPU 1 测试](physics_evidence/kaggle_t4x2_smoke/runtime_tests_gpu1.log)。短流程的统计诊断为证据不足，不能作为精度结果。
 - [长期任务](https://www.kaggle.com/code/hwbwhzbsh/ferminet-t4x2-multiseed) version 1 已按用户要求取消，Kaggle 已确认停止，见[取消记录](physics_evidence/kaggle_cancel_v1.json)。取消前的阶段性提交状态见[原提交记录](physics_evidence/kaggle_submission.json)。这些记录不构成独立冻结评估结果。
 
 2026-10-22 日志修复：worker 输出实时转发至 Kaggle 主控制台，同时保留独立日志；每 15 秒报告 GPU 利用率/显存、进程状态和当前实验阶段，每约 10 秒报告训练 epoch、批次能量、接受率、学习率及预算内 ETA。初始化、预热、精度检查、保存和评估均有阶段事件。失败会输出 traceback 并停止后续实验；未开始项显示 `pending`，不再将所有未完成项误标为 `missing`。
 
 新的提交顺序强制为：真实双 T4、两个主干各 **1 epoch**，核验实际输出并生成验收回执后，再提交同一源码和长期配置的大规模任务。小测试保持长期网络规模和 512 walkers，仅缩短迭代、预热及评估。测试通过不代表化学精度。
+
+修复后的实际验收与重新提交：
+
+- 固定源码为 [d2618dfb6780f1da49f0bb4ab247d29ec15e41f8](https://github.com/spirlness/ferminet-pytorch/commit/d2618dfb6780f1da49f0bb4ab247d29ec15e41f8)。
+- Smoke version 2 已完成：两张真实 T4 分别执行 FermiNet/Psiformer，均恰好 1 epoch；每卡 3 项 CUDA 运行时检查通过。最终 checkpoint、有限的 FP64 `(8,32)` 评估轨迹、前后精度检查和主控制台实时转发均已核验。[验收回执](physics_evidence/kaggle_one_epoch_v2/gate_receipt.json)、[实际摘要](physics_evidence/kaggle_one_epoch_v2/ferminet_results/summary.json)、[Kaggle 主日志](physics_evidence/kaggle_one_epoch_v2/console.log)。评估统计诊断为证据不足，未声称化学精度。
+- 在上述回执通过后，提交了同一源码的长期 version 2；已实际观察到两张卡分别输出首轮 `training_step`。后续每组仍按计划独立冻结评估。[提交状态快照](physics_evidence/kaggle_submission_v2.json)、[双 worker 启动训练原始日志](physics_evidence/kaggle_long_v2_start.log)。这表示重新启动成功，不表示长期实验已经结束。
 
 ## 实验计划
 
