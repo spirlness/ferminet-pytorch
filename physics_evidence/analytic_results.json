@@ -1,0 +1,51 @@
+{
+  "torch": "2.14.0",
+  "devices": {
+    "cpu": {
+      "singular_log_first": 1.0,
+      "singular_log_second": 1.0,
+      "models": [
+        {
+          "model": "FermiNet",
+          "interaction": "ferminet",
+          "reverse_jvp_max_difference": 0.0
+        },
+        {
+          "model": "ComposableFermiNet",
+          "interaction": "ferminet",
+          "reverse_jvp_max_difference": 0.0
+        },
+        {
+          "model": "ComposableFermiNet",
+          "interaction": "psiformer",
+          "reverse_jvp_max_difference": 4.263256414560601e-14
+        }
+      ],
+      "hydrogen_max_absolute_energy_error": 0.0,
+      "hydrogen_variance": 0.0
+    },
+    "cuda": {
+      "singular_log_first": 1.0,
+      "singular_log_second": 1.0,
+      "models": [
+        {
+          "model": "FermiNet",
+          "interaction": "ferminet",
+          "reverse_jvp_max_difference": 0.0
+        },
+        {
+          "model": "ComposableFermiNet",
+          "interaction": "ferminet",
+          "reverse_jvp_max_difference": 0.0
+        },
+        {
+          "model": "ComposableFermiNet",
+          "interaction": "psiformer",
+          "reverse_jvp_max_difference": 0.0
+        }
+      ],
+      "hydrogen_max_absolute_energy_error": 0.0,
+      "hydrogen_variance": 0.0
+    }
+  }
+}

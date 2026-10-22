@@ -1,0 +1,406 @@
+F:\conda\envs\torch\Lib\site-packages\torch\jit\_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+F:\conda\envs\torch\Lib\site-packages\mpmath\rational.py:4: DeprecationWarning: the rational private module is deprecated
+  warnings.warn("the rational private module is deprecated",
+F:\conda\envs\torch\Lib\site-packages\mpmath\math2.py:4: DeprecationWarning: the math2 module is deprecated, use libfp instead
+  warnings.warn("the math2 module is deprecated, use libfp instead",
+======================================================================
+FAIL: test_massive_batch_1024_walkers_stress (test_adversarial_dynamo.TestAdversarialLargeBatches.test_massive_batch_1024_walkers_stress)
+超大规模 Walker 批次 (B=1024) 极端压力下 Dynamo 追踪 0 图断裂.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_adversarial_dynamo.py", line 122, in test_massive_batch_1024_walkers_stress
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        explanation.graph_break_count,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0,
+        ^^
+        f"超大规模批次 (B=1024) 存在图断裂: {explanation.break_reasons}",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 6 != 0 : 超大规模批次 (B=1024) 存在图断裂: [GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\spin.py, line 172 in project_log_psi>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 319 in <lambda>>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 284 in _forward_log_psi_unprojected>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True)]
+
+======================================================================
+FAIL: test_massive_batch_512_mixed_singularities (test_adversarial_dynamo.TestAdversarialLargeBatches.test_massive_batch_512_mixed_singularities)
+大规模 Walker 批次 (B=512) 混合 6 类极端奇异构型的 Dynamo 图断裂严格为 0.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_adversarial_dynamo.py", line 83, in test_massive_batch_512_mixed_singularities
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        explanation.graph_break_count,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0,
+        ^^
+        f"大规模混合奇异批次 (B=512) 存在图断裂: {explanation.break_reasons}",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 6 != 0 : 大规模混合奇异批次 (B=512) 存在图断裂: [GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\spin.py, line 172 in project_log_psi>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 319 in <lambda>>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 284 in _forward_log_psi_unprojected>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True)]
+
+======================================================================
+FAIL: test_fully_spin_polarized_ferromagnetic (test_adversarial_dynamo.TestAdversarialOpenShellMultiplets.test_fully_spin_polarized_ferromagnetic)
+全自旋极化体系 (纯自旋向上: n_up=4, n_down=0, d_down=None 极端分支) 0 图断裂.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_adversarial_dynamo.py", line 215, in test_fully_spin_polarized_ferromagnetic
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        explanation.graph_break_count,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0,
+        ^^
+        f"全自旋极化体系 (n_down=0) 存在图断裂: {explanation.break_reasons}",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 3 != 0 : 全自旋极化体系 (n_down=0) 存在图断裂: [GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True)]
+
+======================================================================
+FAIL: test_heteronuclear_open_shell_lih_ion (test_adversarial_dynamo.TestAdversarialOpenShellMultiplets.test_heteronuclear_open_shell_lih_ion)
+双核开壳层高自旋体系 (LiH 离子/激发态: n_up=3, n_down=1) 0 图断裂.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_adversarial_dynamo.py", line 268, in test_heteronuclear_open_shell_lih_ion
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        explanation.graph_break_count,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0,
+        ^^
+        f"双核开壳层体系存在图断裂: {explanation.break_reasons}",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 4 != 0 : 双核开壳层体系存在图断裂: [GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True)]
+
+======================================================================
+FAIL: test_li_ground_state_doublet_s_half (test_adversarial_dynamo.TestAdversarialOpenShellMultiplets.test_li_ground_state_doublet_s_half)
+开壳层未配对体系 (Li 原子 3 电子: n_up=2, n_down=1, S=1/2) 0 图断裂.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_adversarial_dynamo.py", line 158, in test_li_ground_state_doublet_s_half
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        explanation.graph_break_count,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0,
+        ^^
+        f"Li 原子 (up=2, down=1) 存在图断裂: {explanation.break_reasons}",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 4 != 0 : Li 原子 (up=2, down=1) 存在图断裂: [GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True)]
+
+======================================================================
+FAIL: test_quadruplet_high_spin_four_electrons (test_adversarial_dynamo.TestAdversarialOpenShellMultiplets.test_quadruplet_high_spin_four_electrons)
+高自旋四重态体系 (4 电子: n_up=3, n_down=1, S=3/2) 0 图断裂.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_adversarial_dynamo.py", line 186, in test_quadruplet_high_spin_four_electrons
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        explanation.graph_break_count,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0,
+        ^^
+        f"四重态高自旋 (up=3, down=1) 存在图断裂: {explanation.break_reasons}",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 4 != 0 : 四重态高自旋 (up=3, down=1) 存在图断裂: [GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True)]
+
+======================================================================
+FAIL: test_single_electron_extreme_boundary (test_adversarial_dynamo.TestAdversarialOpenShellMultiplets.test_single_electron_extreme_boundary)
+单电子极端边界体系 (类氢原子: n_up=1, n_down=0, 1x1 行列式) 0 图断裂.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_adversarial_dynamo.py", line 241, in test_single_electron_extreme_boundary
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        explanation.graph_break_count,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0,
+        ^^
+        f"单电子体系 (n_up=1, n_down=0) 存在图断裂: {explanation.break_reasons}",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 3 != 0 : 单电子体系 (n_up=1, n_down=0) 存在图断裂: [GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True)]
+
+======================================================================
+FAIL: test_quadrant_1_base_ferminet (test_adversarial_dynamo.TestAdversarialSpinAndJastrowMatrix.test_quadrant_1_base_ferminet)
+象限 1: spin_adapted=False, use_cusp_jastrow=False.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_adversarial_dynamo.py", line 312, in test_quadrant_1_base_ferminet
+    self._test_combination(spin_adapted=False, use_cusp_jastrow=False)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_adversarial_dynamo.py", line 303, in _test_combination
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        explanation.graph_break_count,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0,
+        ^^
+        f"组合 [spin_adapted={spin_adapted}, jastrow={use_cusp_jastrow}] 存在图断裂: {explanation.break_reasons}",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 3 != 0 : 组合 [spin_adapted=False, jastrow=False] 存在图断裂: [GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True)]
+
+======================================================================
+FAIL: test_quadrant_2_spin_adapted_only (test_adversarial_dynamo.TestAdversarialSpinAndJastrowMatrix.test_quadrant_2_spin_adapted_only)
+象限 2: spin_adapted=True, use_cusp_jastrow=False.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_adversarial_dynamo.py", line 316, in test_quadrant_2_spin_adapted_only
+    self._test_combination(spin_adapted=True, use_cusp_jastrow=False)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_adversarial_dynamo.py", line 303, in _test_combination
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        explanation.graph_break_count,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0,
+        ^^
+        f"组合 [spin_adapted={spin_adapted}, jastrow={use_cusp_jastrow}] 存在图断裂: {explanation.break_reasons}",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 5 != 0 : 组合 [spin_adapted=True, jastrow=False] 存在图断裂: [GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\spin.py, line 172 in project_log_psi>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 319 in <lambda>>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 284 in _forward_log_psi_unprojected>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True)]
+
+======================================================================
+FAIL: test_quadrant_3_cusp_jastrow_only (test_adversarial_dynamo.TestAdversarialSpinAndJastrowMatrix.test_quadrant_3_cusp_jastrow_only)
+象限 3: spin_adapted=False, use_cusp_jastrow=True.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_adversarial_dynamo.py", line 320, in test_quadrant_3_cusp_jastrow_only
+    self._test_combination(spin_adapted=False, use_cusp_jastrow=True)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_adversarial_dynamo.py", line 303, in _test_combination
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        explanation.graph_break_count,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0,
+        ^^
+        f"组合 [spin_adapted={spin_adapted}, jastrow={use_cusp_jastrow}] 存在图断裂: {explanation.break_reasons}",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 4 != 0 : 组合 [spin_adapted=False, jastrow=True] 存在图断裂: [GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True)]
+
+======================================================================
+FAIL: test_quadrant_4_both_spin_and_jastrow (test_adversarial_dynamo.TestAdversarialSpinAndJastrowMatrix.test_quadrant_4_both_spin_and_jastrow)
+象限 4: spin_adapted=True, use_cusp_jastrow=True.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_adversarial_dynamo.py", line 324, in test_quadrant_4_both_spin_and_jastrow
+    self._test_combination(spin_adapted=True, use_cusp_jastrow=True)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_adversarial_dynamo.py", line 303, in _test_combination
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        explanation.graph_break_count,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0,
+        ^^
+        f"组合 [spin_adapted={spin_adapted}, jastrow={use_cusp_jastrow}] 存在图断裂: {explanation.break_reasons}",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 6 != 0 : 组合 [spin_adapted=True, jastrow=True] 存在图断裂: [GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\spin.py, line 172 in project_log_psi>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 319 in <lambda>>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 284 in _forward_log_psi_unprojected>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True)]
+
+======================================================================
+FAIL: test_h2_closed_shell_graph_breaks_zero (test_compile.TestDynamoGraphBreaks.test_h2_closed_shell_graph_breaks_zero)
+闭壳层 H2 分子 (2 电子) forward_log_psi 图断裂数严格为 0.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_compile.py", line 59, in test_h2_closed_shell_graph_breaks_zero
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        explanation.graph_break_count,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0,
+        ^^
+        f"H2 闭壳层前向存在图断裂: {explanation.break_reasons}",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 3 != 0 : H2 闭壳层前向存在图断裂: [GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True)]
+
+======================================================================
+FAIL: test_li_open_shell_graph_breaks_zero (test_compile.TestDynamoGraphBreaks.test_li_open_shell_graph_breaks_zero)
+开壳层未配对体系 (Li 原子: 3 电子, up=2, down=1) 图断裂数严格为 0.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_compile.py", line 86, in test_li_open_shell_graph_breaks_zero
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        explanation.graph_break_count,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0,
+        ^^
+        f"开壳层 Li 前向存在图断裂: {explanation.break_reasons}",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 3 != 0 : 开壳层 Li 前向存在图断裂: [GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True)]
+
+======================================================================
+FAIL: test_singular_overlap_graph_breaks_zero (test_compile.TestDynamoGraphBreaks.test_singular_overlap_graph_breaks_zero)
+同自旋电子坐标完全重合奇异构型 (det=0) 图断裂数严格为 0.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_compile.py", line 112, in test_singular_overlap_graph_breaks_zero
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        explanation.graph_break_count,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0,
+        ^^
+        f"奇异构型下存在图断裂: {explanation.break_reasons}",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 3 != 0 : 奇异构型下存在图断裂: [GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True)]
+
+======================================================================
+FAIL: test_spin_adapted_and_cusp_jastrow_graph_breaks_zero (test_compile.TestDynamoGraphBreaks.test_spin_adapted_and_cusp_jastrow_graph_breaks_zero)
+开启自旋纯态投影与 Kato Cusp Jastrow 因子时图断裂数严格为 0.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_compile.py", line 138, in test_spin_adapted_and_cusp_jastrow_graph_breaks_zero
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        explanation.graph_break_count,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0,
+        ^^
+        f"开启 Spin+Jastrow 存在图断裂: {explanation.break_reasons}",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 6 != 0 : 开启 Spin+Jastrow 存在图断裂: [GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\spin.py, line 172 in project_log_psi>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 319 in <lambda>>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 284 in _forward_log_psi_unprojected>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\model.py, line 274 in _forward_log_psi_base>, <FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True), GraphCompileReason(reason='Unsupported custom jvp\n  Explanation: Dynamo does not support tracing `torch.autograd.Function` subclasses that define a custom `jvp` method.\n  Hint: Remove the custom `jvp` method if possible.\n  Hint: It may be possible to write Dynamo tracing rules for this code. Please report an issue to PyTorch if you encounter this graph break often and it is causing performance issues.\n\n  Developer debug context: call_apply AutogradFunctionVariable() [TensorVariable(), TensorVariable()] {}\n\n For more details about this graph break, please visit: https://meta-pytorch.github.io/compile-graph-break-site/gb/gb0144.html', user_stack=[<FrameSummary file C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\determinants.py, line 97 in signed_determinant_sum>], graph_break=True)]
+
+======================================================================
+FAIL: test_mcmc_decorrelation_step_kernel_zero_breaks (test_graph_breaks_verification.TestDecorrelationAndHamiltonianDynamoBehavior.test_mcmc_decorrelation_step_kernel_zero_breaks)
+评估去相关采样循环中的 MCMC 转移与接受判定核心算子图断裂数严格为 0.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_graph_breaks_verification.py", line 219, in test_mcmc_decorrelation_step_kernel_zero_breaks
+    self.assertEqual(exp.graph_break_count, 0)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 6 != 0
+
+======================================================================
+FAIL: test_ferminet_forward_log_psi_stages_zero_breaks (test_graph_breaks_verification.TestTwoStageJastrowDynamoZeroBreaks.test_ferminet_forward_log_psi_stages_zero_breaks)
+FermiNet.forward_log_psi 在 Stage 1 (冻结 Jastrow) 与 Stage 2 (解冻 Jastrow) 下图断裂严格为 0.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_graph_breaks_verification.py", line 73, in test_ferminet_forward_log_psi_stages_zero_breaks
+    self.assertEqual(exp_s1.graph_break_count, 0)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 4 != 0
+
+======================================================================
+FAIL: test_ferminet_forward_psi_zero_breaks (test_graph_breaks_verification.TestTwoStageJastrowDynamoZeroBreaks.test_ferminet_forward_psi_zero_breaks)
+FermiNet.forward (直接输出波函数 Psi) 在两阶段 Jastrow 下图断裂严格为 0.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_graph_breaks_verification.py", line 123, in test_ferminet_forward_psi_zero_breaks
+    self.assertEqual(exp_fwd_s1.graph_break_count, 0)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 5 != 0
+
+======================================================================
+FAIL: test_ferminet_spin_adapted_and_jastrow_stages_zero_breaks (test_graph_breaks_verification.TestTwoStageJastrowDynamoZeroBreaks.test_ferminet_spin_adapted_and_jastrow_stages_zero_breaks)
+自旋适配投影 + 两阶段 Jastrow 策略下图断裂严格为 0.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_graph_breaks_verification.py", line 100, in test_ferminet_spin_adapted_and_jastrow_stages_zero_breaks
+    self.assertEqual(exp_s1.graph_break_count, 0)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 6 != 0
+
+======================================================================
+FAIL: test_singular_overlap_zero_breaks (test_graph_breaks_verification.TestTwoStageJastrowDynamoZeroBreaks.test_singular_overlap_zero_breaks)
+含 Jastrow 模型在极端奇异碰撞坐标 (det=0) 下图断裂严格为 0.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_graph_breaks_verification.py", line 146, in test_singular_overlap_zero_breaks
+    self.assertEqual(exp.graph_break_count, 0)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 4 != 0
+
+======================================================================
+FAIL: test_coincident_same_spin_electrons_higher_order_derivatives (test_p2_regressions.TestNodalSurfaceRegressions.test_coincident_same_spin_electrons_higher_order_derivatives)
+Verify that higher-order gradient propagation (create_graph=True) through
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_p2_regressions.py", line 460, in test_coincident_same_spin_electrons_higher_order_derivatives
+    self.assertTrue(torch.isfinite(e_local).all())
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: tensor(False) is not true
+
+======================================================================
+FAIL: test_nodal_surface_zero_determinant_autograd_finite_and_no_nan (test_p2_regressions.TestNodalSurfaceRegressions.test_nodal_surface_zero_determinant_autograd_finite_and_no_nan)
+Verify that on wavefunction nodal surfaces (where det -> 0 or exactly 0),
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_p2_regressions.py", line 425, in test_nodal_surface_zero_determinant_autograd_finite_and_no_nan
+    self.assertTrue(torch.isfinite(energy).all(), "Local energy is not finite on nodal surface")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: tensor(False) is not true : Local energy is not finite on nodal surface
+
+----------------------------------------------------------------------
+Ran 260 tests in 88.572s
+
+FAILED (failures=22, skipped=27)
+[Test 1.3 PASS] FermiNet 8-电子泡利节点全流程反向传播平稳，耗时: 5.312 ms
+[Test 1.2 PASS] size=10 奇异矩阵 (det=0) 反向传播平稳执行，耗时: 0.868 ms，梯度全有限 (无阶乘爆炸/无 OOM)
+
+[Test 1.1 PASS] size=8 奇异矩阵 (det=0) 反向传播平稳执行，耗时: 0.624 ms，梯度全有限
+[Test 3.3 PASS] 精确零方差极限边界平稳执行: loss=0.0, grad=0.0
+[Test 3.2 PASS] hard 截断模式下退化方差梯度非零有限: grad=-2.994235e-07
+[Test 3.1 PASS] 尺度 sigma=1.0e-03: grad=+4.666234e-04, 理论一致性相对误差: 5.16e-03
+[Test 3.1 PASS] 尺度 sigma=1.0e-05: grad=+4.686225e-06, 理论一致性相对误差: 0.00e+00
+[Test 3.1 PASS] 尺度 sigma=1.0e-07: grad=+2.623110e-08, 理论一致性相对误差: 0.00e+00
+[Test 2.3 PASS] 自适应 vs 冻结对比鲜明: 初始 10.0 -> 自适应调整至 7.7880 -> 冻结保持 7.7880
+[Test 2.2 PASS] 极端高接受率 (100.0%) 挑战下，step_size 严格冻结: 0.0001 == 0.0001
+
+[Test 2.1 PASS] 极端低接受率 (0.0%) 挑战下，step_size 严格冻结: 20.0 == 20.0
+
+[Decorrelation Test] decorrelation_steps=1:  rho_1 = 0.6315, ESS = 224/1920
+[Decorrelation Test] decorrelation_steps=10: rho_1 = 0.2132, ESS = 970/1920
+
+[Empirical Check] Proposed fix for FermiInteractionLayer successfully preserves opposite-spin correlation!
+
+[Empirical Check] n_up=1, n_down=1:
+Modern mean_h2_up max: 0.0
+Original mean_h2_up max: 1.0
+Original mean_h2_up for electron 1 (down seeing up): 1.0
+>>> CONFIRMED BUG in Prototype 2: n_up=1 erroneously zeroes opposite-spin mean_h2_up!
+
+[Empirical Check] Kinetic Energy Laplacian:
+Analytical: 12.0000
+Reverse:    12.0000
+Forward JVP:12.0000
+Hutchinson (500 probes): 12.0000
+
+[Empirical Check] Kinetic Energy Mode Comparison (N=6, dim_total=18):
+Reverse Mode:     Time = 3.31 ms, Forward Calls = 1
+Forward JVP Mode: Time = 3.46 ms, Forward Calls = 19
+>>> CONFIRMED: Forward JVP in Prototype 4 is SLOWER than Reverse because of 3N additional forward calls!
+
+[Empirical Check] NuclearEnvelope parameter mismatch: Original uses 'decay_rates_raw' (softplus), Modern uses 'log_alpha' (exp)
+
+[Empirical Check] NuclearEnvelopeModern 'decay' tensor dimensions:
+decay.shape: torch.Size([4, 6, 4, 4, 2]) (ndim=5)
+Total elements: 768
+>>> CONFIRMED: NuclearEnvelopeModern STILL constructs a 5D tensor! Einsum claim is not implemented.
+
+[Empirical Check] Psiformer Permutation Equivariance Max Diff: 2.38e-07

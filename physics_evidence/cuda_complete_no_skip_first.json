@@ -1,0 +1,12 @@
+{
+  "tests_run": 270,
+  "failures": 1,
+  "errors": 0,
+  "skipped": [],
+  "elapsed_seconds": 125.43567259999963,
+  "torch": "2.14.0",
+  "cuda": "13.0",
+  "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+  "no_skip_requirement_met": true,
+  "successful": false
+}

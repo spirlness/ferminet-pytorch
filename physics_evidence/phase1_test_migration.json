@@ -1,0 +1,33 @@
+{
+  "Geometry shapes and single electron": [
+    "tests.test_geometry_cache"
+  ],
+  "Self-excluded spin pooling, N_up=1, N_down=1, open shells, second derivatives": [
+    "tests.test_production_contracts",
+    "tests.test_layers_modern",
+    "tests.test_m1_challenger_empirical"
+  ],
+  "Envelope shapes, charge initialization, values and derivatives": [
+    "tests.test_envelope",
+    "tests.test_cuda.TestCudaEnvelope"
+  ],
+  "Analytic harmonic kinetic energy and REVERSE/JVP/HUTCHINSON": [
+    "tests.test_kinetic_modern",
+    "tests.test_physical_matrix"
+  ],
+  "Spin-aware attention, same-spin permutations, single electron": [
+    "tests.test_production_contracts",
+    "tests.test_psiformer_integration"
+  ],
+  "Exact physical singularities, antisymmetry, S^2 and full cusp limits": [
+    "tests.test_physical_correctness",
+    "tests.test_physical_matrix",
+    "tests.test_p2_regressions",
+    "tests.test_cuda"
+  ],
+  "Removed obligations": [
+    "Legacy adapter signatures and cross-version parameter compatibility are not supported",
+    "Prototype-only tests of known bugs and fixed timing expectations are retired",
+    "No claim that five-dimensional envelope intermediates have been eliminated"
+  ]
+}

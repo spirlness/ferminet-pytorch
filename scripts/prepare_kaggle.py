@@ -1,0 +1,83 @@
+"""Render a private Kaggle submission that fetches this exact public commit."""
+
+import argparse
+import json
+from pathlib import Path
+import re
+import subprocess
+
+
+def prepare(owner, mode, output, revision=None, resume_kernel=None):
+    root = Path(__file__).resolve().parents[1]
+    revision = (
+        revision
+        or subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=root, text=True
+        ).strip()
+    )
+    if not re.fullmatch(r"[0-9a-f]{40}", revision):
+        raise ValueError("Use a full immutable Git commit SHA")
+    if not re.fullmatch(r"[a-zA-Z0-9_-]+", owner):
+        raise ValueError("Invalid Kaggle owner")
+    smoke = mode == "smoke"
+    title = "FermiNet T4x2 Smoke" if smoke else "FermiNet T4x2 Multiseed"
+    slug = title.lower().replace(" ", "-")
+    config = "configs/kaggle_smoke.json" if smoke else "configs/kaggle_t4x2.json"
+    preamble = (
+        'SOURCE_REPOSITORY = "https://github.com/spirlness/ferminet-pytorch.git"\n'
+        f"SOURCE_COMMIT = {revision!r}\nCAMPAIGN_CONFIG = {config!r}\n\n"
+    )
+    if resume_kernel:
+        if not re.fullmatch(r"[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+", resume_kernel):
+            raise ValueError("Resume kernel must be owner/slug")
+        preamble += f"RESUME_KERNEL = {resume_kernel!r}\n\n"
+    output = Path(output)
+    output.mkdir(parents=True, exist_ok=True)
+    (output / "run.py").write_text(
+        preamble + (root / "kaggle/bootstrap.py").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    metadata = dict(
+        id=f"{owner}/{slug}",
+        title=title,
+        code_file="run.py",
+        language="python",
+        kernel_type="script",
+        is_private=True,
+        enable_gpu=True,
+        enable_internet=True,
+        machine_shape="NvidiaTeslaT4",
+        dataset_sources=[],
+        competition_sources=[],
+        kernel_sources=[resume_kernel] if resume_kernel else [],
+    )
+    (output / "kernel-metadata.json").write_text(
+        json.dumps(metadata, indent=2), encoding="utf-8"
+    )
+    return metadata
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--owner", required=True)
+    parser.add_argument("--mode", choices=["smoke", "long"], default="smoke")
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--revision", help="Full SHA; preserve the original source on resume"
+    )
+    parser.add_argument(
+        "--resume-kernel", help="Mount prior output and resume matching cases"
+    )
+    args = parser.parse_args()
+    print(
+        json.dumps(
+            prepare(
+                args.owner, args.mode, args.output, args.revision, args.resume_kernel
+            ),
+            indent=2,
+        )
+    )
+
+
+if __name__ == "__main__":
+    main()

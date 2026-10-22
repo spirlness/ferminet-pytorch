@@ -1,0 +1,44 @@
+test_cuda_numerical_equivalence_float64 (test_compile.TestCompileNumericalEquivalence.test_cuda_numerical_equivalence_float64)
+GPU (CUDA) 双精度下 Inductor 编译与 Eager 模式绝对误差严格 < 1e-6 且符号完全一致. ... remark: c4dgenfjlhsud4hqkpigzvpqg4i3lonfudd6jldfstbrwuqkf6l5.py:18:0: 119 instructions in function
+remark: chgrjjxxxzlhi25rjvdrvmrhifs3fvoclneghckqgx67ty3ie6i2.py:18:0: 31 instructions in function
+remark: chgrjjxxxzlhi25rjvdrvmrhifs3fvoclneghckqgx67ty3ie6i2.py:18:0: 16 instructions in function
+remark: cuvmauutj3m75377qr33zfina2pzauetvlbzub3rgxlqcar4qnsu.py:18:0: 202 instructions in function
+remark: cuvmauutj3m75377qr33zfina2pzauetvlbzub3rgxlqcar4qnsu.py:18:0: 140 instructions in function
+remark: cwpfoiibfcv52gczcgnibu7k6nbxsck67eld6cdiuvhyty33tivy.py:18:0: 179 instructions in function
+remark: cwpfoiibfcv52gczcgnibu7k6nbxsck67eld6cdiuvhyty33tivy.py:18:0: 117 instructions in function
+remark: c6l4hdzppeai5w7c7alkrjqykkgmkkrgvkp5omdl2buvorvnejhw.py:18:0: 85 instructions in function
+remark: c6l4hdzppeai5w7c7alkrjqykkgmkkrgvkp5omdl2buvorvnejhw.py:18:0: 74 instructions in function
+remark: cuqwvtzu5fenydhpa4h36mmhl2qpct2xjbtgxglnnmsgbkg4ps2a.py:18:0: 181 instructions in function
+remark: cuqwvtzu5fenydhpa4h36mmhl2qpct2xjbtgxglnnmsgbkg4ps2a.py:18:0: 96 instructions in function
+remark: cegxbdt3wldpin2wnuxoqpubpriwwewmjeftm5xrigneqyy5rbcm.py:18:0: 922 instructions in function
+remark: cegxbdt3wldpin2wnuxoqpubpriwwewmjeftm5xrigneqyy5rbcm.py:18:0: 489 instructions in function
+remark: c4je2dqsem56zfxuunu2r3ltvwivbtnqkdakfcw3fzlmzrcntos6.py:18:0: 35 instructions in function
+remark: c4je2dqsem56zfxuunu2r3ltvwivbtnqkdakfcw3fzlmzrcntos6.py:18:0: 28 instructions in function
+remark: chtkkeoqtaiwn7n42fibmswyist5njodkrpiqv5buk434nthaahx.py:18:0: 57 instructions in function
+remark: chtkkeoqtaiwn7n42fibmswyist5njodkrpiqv5buk434nthaahx.py:18:0: 28 instructions in function
+remark: c3obyobaawna4zop32byavufgfk3a7ogkzno7qupz45s26xr5rit.py:18:0: 23 instructions in function
+remark: c73kend5fvsyyqpmjij6osozx7mrlbh45vqttj2g333fpium622y.py:18:0: 291 instructions in function
+remark: c73kend5fvsyyqpmjij6osozx7mrlbh45vqttj2g333fpium622y.py:18:0: 159 instructions in function
+remark: cdrcawe7lr7j42lsp7vq4fo5yohi3bamdulbtxnq25zpvgbmlzy6.py:18:0: 28 instructions in function
+remark: cdrcawe7lr7j42lsp7vq4fo5yohi3bamdulbtxnq25zpvgbmlzy6.py:18:0: 18 instructions in function
+remark: csqzdrvzpkew2lutjyoorq4r7sighcgndcljfr3cpreuiwmrlb56.py:18:0: 48 instructions in function
+remark: csqzdrvzpkew2lutjyoorq4r7sighcgndcljfr3cpreuiwmrlb56.py:18:0: 44 instructions in function
+remark: czzkd3ummq2ksotr3au2lj2ulqod7cdwykhcpfaemecizl4yy6hz.py:18:0: 228 instructions in function
+remark: czzkd3ummq2ksotr3au2lj2ulqod7cdwykhcpfaemecizl4yy6hz.py:18:0: 124 instructions in function
+remark: cnxcaiiih3a5zvcb5ar3rawgx5ieopiufw5lteuxu5jmgt35zjo4.py:18:0: 40 instructions in function
+remark: cnxcaiiih3a5zvcb5ar3rawgx5ieopiufw5lteuxu5jmgt35zjo4.py:18:0: 38 instructions in function
+remark: cn7ldzndf32jctv3zl5zmtfqcicubqofcj4tvlitiyoxlivmyv3e.py:18:0: 8 instructions in function
+remark: ch2nvmmnjycczqea7godc575rmuiyzl5m552gs43xc3or2uwxpsf.py:18:0: 17 instructions in function
+remark: cjwny2mviemdtlqhjya7pibc5qxhd3nwbq4frzx5nin63as6h3k7.py:18:0: 135 instructions in function
+remark: cvhfghkwpghyw6j5wkkyuj64eudgquykbvuqjqtg6y3f6l3xcttf.py:18:0: 625 instructions in function
+remark: cvhfghkwpghyw6j5wkkyuj64eudgquykbvuqjqtg6y3f6l3xcttf.py:18:0: 331 instructions in function
+remark: c3duzm6zs7btrkwzuxind65dvevyy5regchtqnmau7ozblg2f6qk.py:18:0: 1169 instructions in function
+remark: cysmj5exnw24l6u63e3ys4l7som7v3qc4xlyqw6ktwwasuzgb4rz.py:18:0: 201 instructions in function
+remark: cxiuorveo4u3h7jd34izwhu3mocdyhj2z6kiwbgunsczz2qzoymq.py:18:0: 294 instructions in function
+remark: caahacfgif3nya7ricvygqvi4crxyys2a45ifnszmpnfufgxnx3v.py:18:0: 154 instructions in function
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 26.915s
+
+OK

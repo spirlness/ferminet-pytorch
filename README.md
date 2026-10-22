@@ -1,297 +1,137 @@
-# FermiNet-PyTorch: 高性能、可组合的量子化学深度学习波函数框架
+# FermiNet PyTorch
 
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
-[![Python](https://img.shields.io/badge/Python-3.9+-3776ab.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-246%20Passing-brightgreen.svg)](#-自动化测试验证)
-[![Readiness](https://img.shields.io/badge/Production%20Readiness-Level%205-gold.svg)](FERMINET_REFACTORING_EVALUATION_AND_PRODUCTION_READINESS_REPORT.md)
+用于固定核、非相对论多电子薛定谔方程的 PyTorch 研究框架。支持 FermiNet 和 Psiformer 主干，以及显式 Kato Jastrow、自旋投影和 VMC 优化。
 
-**FermiNet-PyTorch** 是一个基于 PyTorch 构建的现代化、高性能第一性原理量子化学深度神经网络波函数框架。项目融合了从教学级极简原型到工业生产级（Level 5）解耦架构的全景演进，支持通过变分量子蒙特卡洛 (VMC) 高精度求解多电子薛定谔方程 $\hat{H}\Psi = E\Psi$。
+当前版本为 **0.3.0**。本轮采用破坏性包结构重构，删除顶层模块导入、重复包络、Modern/Composable 模块和旧适配器，不提供兼容门面。物理正确性测试与训练收敛证据分别验收；目前的短时实验未证明普遍化学精度。
 
-核心特性囊括：**自旋纯态投影算符 ($\hat{S}^2 \Psi = 0$)**、**显式 Kato 尖峰 Jastrow 因子**、**全局共享几何上下文引擎**、**Psiformer 自注意力机制**、**Hutchinson 随机迹估计动能求解器** 以及 **四层正交解耦的 VMC 驱动引擎**。
+## 安装与运行
 
-> 📖 **经典论文参考**：  
-> **Ab-Initio Solution of the Many-Electron Schrödinger Equation with Deep Neural Networks**  
-> *David Pfau, James S. Spencer, Alexander G. de G. Matthews, W. M. C. Foulkes*  
-> *Physical Review Research* 2, 033429 (2020) · [DOI: 10.1103/PhysRevResearch.2.033429](https://doi.org/10.1103/PhysRevResearch.2.033429)
-
----
-
-## 🗺️ 文档导航地图 (Documentation Map)
-
-为了方便不同背景的学习者与科研开发者快速检索，本项目提供分层清晰的文档索引：
-
-```text
-                                  【README.md】
-                             项目主门户与双轨快速上手
-                                      │
-        ┌─────────────────────────────┼─────────────────────────────┐
-        ▼                             ▼                             ▼
-【BEGINNER_GUIDE.md】       【DEVELOPER_GUIDE.md】        【评估与审查报告】
-新手入门与物理直觉宝典        系统架构与二次开发指南        生产就绪度与性能评测
-• 量子力学极简直觉比喻       • 四层正交解耦架构设计        • 21项冗余消除落地矩阵
-• 泡利原理与波函数可视化     • 四大可扩展点实战 (GNN/势能)  • 双环境 246 用例审计
-• 5分钟快速上手实操          • 动能求解器高阶微分进阶      • 显存削峰与 Benchmark
-• 物理指标白话对照表         • Single-Forward 显存契约     • Level 5 准予交付评级
+```powershell
+uv sync --locked
+uv run python -m examples.example_h2
+uv run python -m ferminet_pytorch.train_vmc --epochs 5 --walkers 64
 ```
 
-| 文档名称 | 核心定位与适用人群 | 重点内容章节 |
-| :--- | :--- | :--- |
-| 🔰 [**新手入门宝典 (BEGINNER_GUIDE.md)**](file:///c:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/BEGINNER_GUIDE.md) | **初学者 / 跨学科入门**：零物理黑话，以程序员最容易理解的视角剖析 VMC 与深度波函数。 | 薛定谔方程通俗解释、Slater 行列式原理、MCMC 随机游走、输出指标解读、高频 FAQ。 |
-| 🛠️ [**开发者与扩展指南 (DEVELOPER_GUIDE.md)**](file:///c:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/DEVELOPER_GUIDE.md) | **算法工程师 / 科研二次开发**：深入模块设计模式，指导如何编写新层、新势能和新优化流程。 | 四层正交架构拓扑、四大扩展实操案例、现代动能算符模式比较、向后兼容适配器。 |
-| 📊 [**生产就绪度评估报告 (EVAL_REPORT.md)**](file:///c:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/FERMINET_REFACTORING_EVALUATION_AND_PRODUCTION_READINESS_REPORT.md) | **架构师 / 技术审计员**：全维度定量评估报告，记录项目生产级重构演进轨迹与 Benchmark。 | 21 项冗余缺陷消除实证、CPU/GPU 双环境基线压测、PyTorch 导数内存深度剖析。 |
-| 🤖 [**智能体与规范准则 (AGENTS.md)**](file:///c:/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/AGENTS.md) | **AI Coding Agent / 核心贡献者**：代码风格、测试规范与跨平台运行约束。 | PEP 8 命名规范、单前向契约、CUDA 开发环境路径、提交与 PR 规约。 |
-
----
-
-## 🌟 核心特性与架构亮点
-
-### 1. 严格物理不变量保证
-- **泡利不相容原理**：通过神经网络构建单电子分子轨道并馈入 Slater 行列式，同自旋电子对坐标重合时波函数严格为零；
-- **自旋纯态投影 (`spin.py`, `SpinProjector`)**：双电子单重态施加空间置换严格对称化 $\frac{1}{2}(I + P_{12})$，多电子体系利用自旋谱投影多项式排除高自旋杂质，消除自旋污染并严格保证 $\hat{S}^2 \Psi = 0$；
-- **显式 Kato 尖峰边界条件 (`jastrow.py`, `KatoCuspJastrow`)**：采用 Padé 阻尼解析因子，在微观粒子碰撞点 ($r_{iI} \to 0$ 或 $r_{ij} \to 0$) 严格抵消库仑势能奇点，释放神经网络对奇异尖峰的拟合压力；
-- **无尖峰平滑特征 (`features.py`)**：支持平滑特征变换 $d^2 / (1+d)$，杜绝特征层在原点的高阶拉普拉斯算子发散。
-
-### 2. 现代可组合架构与显存优化 (Gen2 升级)
-- **单批次共享几何引擎 (`geometry.py`)**：全局单次抽取不可变相对位移与平滑欧氏距离，彻底消除 4 次重复几何计算；
-- **可组合解耦波函数拟设 (`composable_model.py`)**：
-  - 经典两流等变层与 Psiformer 自注意力等变层自由切换；
-  - 0 Graph Break 纯张量代数余子式伴随导数装配 (`BranchlessCofactorDeterminant`)；
-- **多后端物理动能算子 (`kinetic_modern.py`)**：
-  - `REVERSE`：经典精确反向模式（默认基准，逐 bit 吻合回归基准）；
-  - `HUTCHINSON`：Rademacher 随机迹估计，将二阶导反向复杂度由 $\mathcal{O}(3N)$ 降至常数 $\mathcal{O}(1)$，大体系显存与吞吐大幅跃升；
-  - `FORWARD_JVP`：基于前向切线推进。
-- **现代化四层正交解耦引擎 (`vmc_driver.py`)**：
-  - `VariationalState`（变分态与几何上下文）+ `HamiltonianComposite`（复合物理哈密顿量）+ `MetropolisSampler`（几何采样器）+ `VMCDriver`（训练驱动主循环）。
-
----
-
-## ⚡ 双轨快速上手 (Dual-Track Quickstart)
-
-本项目提供两条使用路径：**经典极简 API**（适合教学演示与快速脚本验证）与 **现代化解耦 API**（适合生产级训练与算法扩展）。
-
-### 方式一：经典极简 API (5 行代码直接上手)
-
-适合快速进行前向评估与脚本实验：
+安装后也可使用 `ferminet-train` 和 `ferminet-validate` 命令。库内模块统一从 `ferminet_pytorch` 导入：
 
 ```python
 import torch
-from ferminet_pytorch import build_h2_system, FermiNet, compute_local_energy
+from ferminet_pytorch import FermiNet
+from ferminet_pytorch.systems import build_h2_system
+from ferminet_pytorch.hamiltonian import compute_local_energy
 
-# 1. 构建氢分子 (H2) 物理体系
-system = build_h2_system()
-
-# 2. 实例化经典 FermiNet (启用 Kato 尖峰 Jastrow 与自旋投影)
+system = build_h2_system(dtype=torch.float64)
 model = FermiNet(
-    nuclear_coords=system.nuclear_coords,
-    nuclear_charges=system.nuclear_charges,
-    n_up=system.n_up,
-    n_down=system.n_down,
-    use_cusp_jastrow=True,
-    spin_adapted=True,
-)
-
-# 3. 构造 4 个电子构型采样点并计算局域能量 E_L(r)
-r = torch.randn(4, system.total_electrons, 3, requires_grad=True)
-e_local, t_local, v_local = compute_local_energy(model=model, system=system, r=r)
-
-print(f"H2 局域能量均值: {e_local.mean().item():.5f} Hartree")
+    system.nuclear_coords, system.nuclear_charges, 1, 1,
+    num_determinants=4, hidden_dim_one=32, hidden_dim_two=8,
+    use_cusp_jastrow=True, spin_adapted=True,
+).double()
+r = torch.randn(8, 2, 3, dtype=torch.float64, requires_grad=True)
+log_abs, sign = model.forward_log_psi(r)
+energy, kinetic, potential = compute_local_energy(model, system, r)
 ```
 
-也可直接运行预设教学脚本：
-```bash
-# 运行 H2 快速前向推理与能量拆解
-uv run python example_h2.py
-
-# 运行经典端到端 50 轮 VMC 优化
-uv run python train_vmc.py --epochs 50 --walkers 512 --cusp_jastrow --spin_adapted
-```
-
----
-
-### 方式二：现代化解耦 API (可组合生产级框架)
-
-通过四层正交引擎 `VMCDriver` 灵活调度物理算符、变分态与采样器：
+## 训练 API
 
 ```python
-import torch
-import ferminet_pytorch as fp
+from ferminet_pytorch import TrainingConfig, train_vmc
 
-# 1. 物理体系与可组合模型
-system = fp.build_h2_system()
-model = fp.ComposableFermiNet(
-    nuclear_coords=system.nuclear_coords,
-    nuclear_charges=system.nuclear_charges,
-    n_up=system.n_up,
-    n_down=system.n_down,
-    use_cusp_jastrow=True,
-    spin_adapted=True,
-)
-
-# 2. 装配变分态与物理哈密顿量算符
-state = fp.VariationalState(model=model, system=system, num_walkers=512)
-hamiltonian = fp.HamiltonianComposite(system=system)
-
-# 3. 装配采样器与优化器
-sampler = fp.MetropolisSampler(variational_state=state, step_size=0.5)
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-scheduler = fp.build_cosine_scheduler(optimizer, max_epochs=50)
-
-# 4. 组装现代 VMC 驱动引擎
-driver = fp.VMCDriver(
-    variational_state=state,
-    hamiltonian=hamiltonian,
-    sampler=sampler,
-    optimizer=optimizer,
-    scheduler=scheduler,
-    clip_factor=5.0,
-    clip_method="tanh",
-    decorrelation_steps=10,
-)
-
-# 5. 执行端到端变分迭代
-for epoch in range(1, 51):
-    metrics = driver.step()
-    if epoch % 10 == 0:
-        print(f"Epoch {epoch:2d} | 能量: {metrics['energy_mean']:.5f} Ha | 方差: {metrics['energy_std']**2:.4f} | 接受率: {metrics['acceptance_rate']*100:.1f}%")
+result = train_vmc(config=TrainingConfig(
+    num_epochs=20, num_walkers=128, device="cpu",
+    interaction_type="psiformer", use_cusp_jastrow=True, spin_adapted=True,
+    two_stage_jastrow=True, jastrow_stage1_epochs=10,
+))
 ```
 
----
+显式模型可用 `train_vmc(system=system, model=model, config=config)` 训练。更低层的 `VMCDriver(model, system, sampler, ...)` 使用同一更新核心。旧的 `train_vmc(num_epochs=..., ...)` 和 `train_two_stage_jastrow` 接口不再提供。
 
-## 🏗️ 端到端数据流与架构拓扑
+## 目录
 
 ```text
-               ┌─────────────────────────────────────────────────────────────┐
-               │                电子三维空间坐标 r: (B, N, 3)                │
-               │               原子核坐标与电荷 R, Z: (M, 3), (M,)           │
-               └──────────────────────────────┬──────────────────────────────┘
-                                              │
-                      【全局共享几何上下文 GeometricContext geometry.py】
-                             (单次计算相对位移 r_en, r_ee 与平滑距离)
-                                              │
-               ┌──────────────────────────────┴──────────────────────────────┐
-               │ 单电子流特征 h1: (B, N, 5M)   │ 双电子流特征 h2: (B, N, N, 4) │
-               └──────────────────────┬───────┴──────────────┬───────────────┘
-                                      │                      │
-                        【等变主干交互层 FermiInteractionLayerModern】
-                        (可选 PsiformerAttentionBlock 自注意力机制)
-                                      │                      │
-                                      ▼                      ▼
-               ┌─────────────────────────────────────────────────────────────┐
-               │    高阶单电子隐藏表征: h1_final (B, N, hidden_dim_one)       │
-               └──────────────────────┬──────────────────────┬───────────────┘
-                                      │                      │
-                         (自旋向上电子切片)     (自旋向下电子切片)
-                                      │                      │
-                       ┌────────────────┴────┐            ┌────┴────────────────┐
-                       │ 分子轨道投影器 (Up) │            │ 分子轨道投影器(Down)│
-                       └────────┬────────────┘            └────────┬────────────┘
-                                │                                  │
-                                ▼                                  ▼
-                   ┌─────────────────────────┐        ┌─────────────────────────┐
-                   │ 分子轨道矩阵 D_up       │        │ 分子轨道矩阵 D_down     │
-                   │ Shape: (B, K, n_up, n_up)│        │ Shape: (B, K, n_dn, n_dn)│
-                   └────────────┬────────────┘        └────────────┬────────────┘
-                                │                                  │
-                                └────────────────┬─────────────────┘
-                                                 │
-                               【无分支伴随余子式行列式求导与加权求和】
-                                                 │
-                                                 ▼
-                               ┌──────────────────────────────────┐
-                               │  基础波函数: log|Psi_base|       │
-                               └────────────────┬─────────────────┘
-                                                 │
-                                 【Kato 尖峰 Jastrow 因子 jastrow.py】
-                                 ln J(r) = U_en(r) + U_ee(r) (解析对消)
-                                                 │
-                                                 ▼
-                                 【自旋空间群投影 SpinProjector spin.py】
-                                 Psi_proj = sum_k w_k * Psi(P_k r)
-                                                 │
-                                                 ▼
-                               ┌──────────────────────────────────┐
-                               │  最终严格物理波函数:             │
-                               │  log_abs_psi: (B,)  | sign: (B,) │
-                               └──────────────────────────────────┘
+ferminet_pytorch/     # 唯一的运行库，包内使用相对导入
+    envelope.py      # 唯一的 NuclearEnvelope 实现
+    model.py         # 唯一的 FermiNet，支持两种交互主干
+    geometry.py, features.py, layers.py, psiformer_attention.py
+    jastrow.py, spin.py, determinants.py
+    hamiltonian.py, kinetic_modern.py
+    mcmc.py, loss.py, vmc_driver.py, train_vmc.py, systems.py
+    evaluation.py, vmc_statistics.py, physics_validation.py
+tests/               # 正式实现的物理、数值、编译和分发测试
+scripts/             # 基准、诊断与严格 CUDA 测试入口
+examples/            # 可运行示例
+physics_evidence/    # 原始日志、训练结果和不可改写的历史源码快照
 ```
 
----
+交互层、模型组装和训练核心均已统一。`interaction_type="ferminet"` 与 `"psiformer"` 选择不同主干；两者共用物理因子与 VMC 更新逻辑。
 
-## 📊 命令行 CLI 参数完整字典
+## 核包络接口
 
-通过 `train_vmc.py` 执行端到端训练时，支持以下全量参数配置：
+包络只接收已经计算的电子—核距离，不负责坐标、核位置或平滑参数：
 
-| 参数名 | 类型 | 默认值 | 作用与说明 |
-| :--- | :--- | :--- | :--- |
-| `--system` | `str` | `h2` | 目标物理体系，内置支持 `h2` ($H_2$) 或 `lih` ($LiH$) |
-| `--epochs` | `int` | `50` | VMC 变分优化总迭代轮数 |
-| `--walkers` | `int` | `512` | MCMC 并行构型采样数量 (Batch Size) |
-| `--mcmc_steps` | `int` | `10` | 每次参数更新前执行的 MCMC 随机游走去相关步数 |
-| `--burn_in` | `int` | `50` | 训练前初始热身平衡步数 |
-| `--lr` | `float` | `1e-3` | 初始学习率 (配合 Cosine 退火调度) |
-| `--step_size` | `float` | `0.5` | MCMC 初始移动步长 (自动调谐至 50% 接受率) |
-| `--move_mode` | `str` | `all` | MCMC 移动模式：`all` (全电子一体化移动) 或 `one_by_one` (逐电子移动) |
-| `--clip_factor` | `float` | `5.0` | 局域能量平滑截断半宽倍数 $\Delta = c \times \text{MAD}$ |
-| `--clip_method` | `str` | `tanh` | 截断方案：`tanh` (Umrigar 平滑截断)、`hard` 或 `none` |
-| `--grad_clip` | `float` | `1.0` | 优化器全局梯度范数裁剪阈值 |
-| `--cusp_jastrow` | `flag` | `False` | **启用显式 Kato 尖峰 Jastrow 因子**，抵消粒子碰撞库仑发散 |
-| `--spin_adapted` | `flag` | `False` | **启用自旋纯态投影**，消除自旋污染并保证 $\hat{S}^2=0$ |
-| `--envelope_type` | `str` | `None` | 核包络类型：`gaussian` (平滑高斯) 或 `exponential` (经典指数) |
-| `--smooth_cuspless` | `flag` | `False` | 强制几何特征使用平滑无尖峰距离 $d^2 / (1+d)$ |
-| `--device` | `str` | `None` | 指定运行设备 (`cuda` 或 `cpu`) |
-| `--seed` | `int` | `42` | 全局随机数种子 |
+```python
+from ferminet_pytorch.envelope import NuclearEnvelope
 
----
-
-## 🧪 自动化测试验证
-
-本项目拥有严苛的自动化测试套件（**25 个独立测试模块，共 246+ 项物理与工程测试**），涵盖物理不变量、导数极限定理、奇异行列式稳定性、向后兼容性以及 GPU CUDA 精度验证：
-
-```bash
-# 1. 运行 CPU 环境完整测试套件 (自动跳过 CUDA 测试)
-uv run python -m unittest discover -s . -p "test_*.py" -v
-
-# 2. 运行现代解耦组件专用回归测试
-uv run python -m unittest test_refactor_review_regressions.py test_envelope_modern.py test_layers_modern.py test_kinetic_modern.py -v
-
-# 3. 运行经典物理不变量与尖峰极限测试
-uv run python -m unittest test_spin_and_cusp.py -v
+envelope = NuclearEnvelope(4, 2, 1, envelope_type="gaussian")
+distances = torch.rand(8, 2, 1)  # (batch, electrons, nuclei)
+values = envelope(distances)     # (batch, determinants, electrons, orbitals)
 ```
 
-### CUDA / GPU 开发环境与全量回归 (RTX 3060+ / CUDA 12.x)
+指数与 Gaussian 使用同一个实现。`NuclearEnvelopeModern`、`legacy_adapters` 以及旧的 `envelope(r, nuclear_coords, dist=...)` 调用已删除。
 
-如需启用完整 GPU 加速与 18 项专门的 CUDA 数值回归测试，可使用预配置的 Conda `torch` 环境：
+## 验证
 
-```bash
-# 执行 GPU 端到端变分训练
-F:\conda\envs\torch\python.exe train_vmc.py --device cuda --epochs 5 --walkers 128
+```powershell
+# CPU 环境：CUDA 项按环境跳过，输出实际数量
+uv run python -m unittest discover -s tests -t . -v
 
-# 执行 18 项专门的 CUDA 物理与梯度回归测试
-F:\conda\envs\torch\python.exe -m unittest test_cuda.py -v
+# CUDA 数值、梯度与包络检查
+F:\conda\envs\torch\python.exe -m unittest tests.test_cuda -v
 
-# 执行 GPU 硬件加速下的完整测试套件 (246 项全部通过，0 skipped)
-F:\conda\envs\torch\python.exe -m unittest discover -s . -p "test_*.py" -v
+# 全套严格 CUDA 验收：必须存在 GPU，任何 skipped 项均失败
+F:\conda\envs\torch\python.exe -m scripts.run_cuda_tests
+
+# 构建 sdist 和 wheel
+uv build
 ```
 
----
+严格 CUDA 入口仅为子进程隔离 Windows 编译器环境，并将日志、运行环境、结果及源码哈希写入新的 `physics_evidence/cuda_*/` 目录。完整套件包含 CPU 检查和真正执行 CUDA 的检查，不表示每项均在 GPU 上执行。
 
-## ❓ 常见问题 FAQ
+## 物理与统计约束
 
-- **Q: 什么是 Hartree 原子单位制？**  
-  量子化学中令 $\hbar = m_e = e = 1$。$1 \text{ Hartree (Ha)} \approx 27.2114 \text{ eV} \approx 627.51 \text{ kcal/mol}$；长度单位 $1 \text{ Bohr} \approx 0.529177 \text{ \AA}$。
+- 电子坐标统一为 `(batch, electrons, 3)`，核坐标为 `(nuclei, 3)`。
+- 局域能量使用独立坐标求导图，脱离计算图后进入参数代理损失；优化和恢复模型后刷新采样缓存。
+- 特征距离的平滑规则不改变真实库仑势；正式 MCMC 采样冻结步长自适应。
+- 核及异自旋非零 s-wave 尖峰按球平均分量解释；同自旋的 `1/4` 是移除 p-wave 零点后的径向系数。精确节点处不定义局域能量。
+- 冻结评估保留 `(time, walker)` 结构，报告自相关、ESS、split-Rhat、分块平台和不确定度；参考能量必须匹配体系和几何。
+- Gaussian 默认包络用于避免与显式核 Jastrow 重复引入核尖峰。完整波函数的有限距离聚并检查不等于严格极限证明。
 
-- **Q: 为什么对数波函数 `log|Psi|` 经常是负数十甚至负几百？**  
-  多电子联合概率密度是微观连续微元的乘积，在多维空间中真实振幅极其微小（如 $10^{-50}$）。使用 `torch.linalg.slogdet` 在对数空间下存储与运算，能彻底杜绝浮点下溢。
+## 实验和文档
 
-- **Q: 为什么要同时使用 Kato Cusp Jastrow 与自旋投影？**  
-  Slater 行列式只能保证同自旋反对称，无法天然消除反平行自旋对碰撞时的库仑奇点发散（需要 Jastrow 因子），也无法自动消除高自旋态混合（需要自旋投影算符）。二者结合能从物理底层保证波函数处处解析且自旋严格守恒。
+```powershell
+uv run python -m ferminet_pytorch.physics_validation --device cpu --budget-seconds 120
+F:\conda\envs\torch\python.exe -m ferminet_pytorch.physics_validation --device cuda --budget-seconds 1500
+uv run python -m scripts.benchmark_m4_vmc_convergence --help
+```
 
-- **Q: 训练中如何判断模型是否收敛？**  
-  依据量子力学零方差原理（Zero-Variance Principle）：当波函数收敛至精确本征态时，空间各处的局域能量均为常数，$E_L(\mathbf{r}) \equiv E_0$。因此，**局域能量均值下降的同时，能量方差 $\text{Var}(E_L)$ 趋向于 0** 是变分收敛的最关键判据。
+- [当前重构架构与迁移清单（0.3.0）](ARCHITECTURE_REDUNDANCY_REVIEW_AND_REFACTORING_PROPOSAL.md)
+- [第二轮统一核心与验收](REFACTOR_PHASE2_REPORT.md)
+- [入门指南](BEGINNER_GUIDE.md)
+- [开发指南](DEVELOPER_GUIDE.md)
+- [Kaggle 双 T4 多种子训练与冻结评估](KAGGLE_T4_TRAINING_GUIDE.md)
+- [贡献规范](AGENTS.md)
 
----
+第二轮已记录的严格 CUDA 完整验收为 **251 通过、0 失败、0 错误、0 跳过**；[原始结果与源码哈希](physics_evidence/phase2_cuda_complete/summary.json)可核查。完整套件包含 CPU 与 CUDA 检查，长期收敛证据另行验收。
 
-## 📜 许可证
+历史记录：
 
-本项目遵循 MIT 开源许可证。欢迎引用与二次开发！
+- [第一轮包结构与包络重构](REFACTOR_PHASE1_REPORT.md)
+- [物理正确性修复与历史训练证据](PHYSICS_CORRECTNESS_REPORT.md)
+- [旧架构方案原文](ARCHITECTURE_REFACTORING_PROPOSAL_HISTORY.md)
+- [旧生产就绪报告](FERMINET_REFACTORING_EVALUATION_AND_PRODUCTION_READINESS_REPORT.md)
+- [初期代码审查](CODE_REVIEW.md)
+
+历史记录保留当时的接口与结果，不能作为当前性能或化学精度认证。第二轮没有新增长期收敛实验。
+
+## 许可证
+
+MIT。

@@ -1,0 +1,38 @@
+{
+  "test_challenger_reverify.py": [
+    "test_bug01_adversarial_spin_pooling_mathematical_oracle",
+    "test_bug01_autograd_and_finiteness",
+    "test_bug02_kinetic_calculator_reverse_exact_harmonic",
+    "test_bug02_kinetic_calculator_hutchinson_unbiasedness",
+    "test_bug02_kinetic_calculator_forward_jvp_correctness",
+    "test_bug03_nuclear_envelope_softplus_and_charge_alignment",
+    "test_bug03_nuclear_envelope_checkpoint_bidirectional_state_dict",
+    "test_bug04_psiformer_spin_differentiation",
+    "test_bug04_psiformer_same_spin_permutation_equivariance",
+    "test_checklist5_ferminet_legacy_adapter_end_to_end",
+    "test_checklist5_interaction_legacy_adapter_delegation"
+  ],
+  "test_envelope_modern.py": [
+    "test_modern_envelope_shapes_and_state_dict_keys",
+    "test_modern_and_legacy_numerical_match"
+  ],
+  "test_modernization_prototypes.py": [
+    "test_geometric_context_shapes_and_values",
+    "test_geometric_context_device_and_dtype_mismatch",
+    "test_fermi_interaction_layer_h2_molecule_bug",
+    "test_fermi_interaction_layer_autograd_second_derivative",
+    "test_nuclear_envelope_shapes_and_5d_broadcast",
+    "test_kinetic_calculator_all_modes_numeric",
+    "test_kinetic_calculator_forward_jvp_speed_and_overhead",
+    "test_psiformer_attention_equivariance_and_n1",
+    "test_nuclear_envelope_still_allocates_5d_tensor",
+    "test_fermi_interaction_layer_fix_verification"
+  ],
+  "test_refined_prototypes_and_adapters.py": [
+    "test_bug01_fixed_h2_molecule",
+    "test_bug03_fixed_checkpoint_compatibility",
+    "test_bug02_kinetic_calculator_default_reverse",
+    "test_bug04_psiformer_spin_embedding",
+    "test_legacy_adapters"
+  ]
+}
