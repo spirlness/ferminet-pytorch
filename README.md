@@ -2,7 +2,18 @@
 
 用于固定核、非相对论多电子薛定谔方程的 PyTorch 研究框架。支持 FermiNet 和 Psiformer 主干，以及显式 Kato Jastrow、自旋投影和 VMC 优化。
 
-当前版本为 **0.3.0**。本轮采用破坏性包结构重构，删除顶层模块导入、重复包络、Modern/Composable 模块和旧适配器，不提供兼容门面。物理正确性测试与训练收敛证据分别验收；目前的短时实验未证明普遍化学精度。
+当前版本为 **0.3.0**。本轮采用破坏性包结构重构，删除顶层模块导入、重复包络、Modern/Composable 模块和旧适配器，不提供兼容门面。物理正确性测试与训练收敛证据分别验收；2026-10-22 已完成 H₂ 的双 T4 多种子长期训练和独立冻结评估，尚未证明跨种子稳定达到化学精度。
+
+## 已完成的 H₂ 精度结果
+
+H₂ 核间距 1.4 bohr、单重态，两种主干各运行种子 11/22/33，每组训练 20000 轮并用独立 FP64 采样评估 1,048,576 个样本：
+
+| 主干 | 三个种子的参考偏差（mHa） | 平均偏差（mHa） | 化学精度通过数 |
+|---|---|---:|---:|
+| FermiNet | 1.370 / 2.330 / 1.687 | **1.796** | **1/3** |
+| Psiformer | 4.133 / 2.923 / 4.692 | **3.916** | **0/3** |
+
+六组采样诊断及前后数值精度审计均通过。化学精度要求 `abs(E − E_ref) + 1.96 × SEM ≤ 1.5936 mHa`；参考能量为 −1.174475714220 Ha。均值描述三个不同 checkpoint，不是合并样本后的单个波函数结果。结论限于这组 H₂ 配置，完整误差条、实验身份与证据见[最终实验报告](KAGGLE_T4_FINAL_RESULTS.md)。
 
 ## 安装与运行
 
@@ -118,6 +129,8 @@ uv run python -m scripts.benchmark_m4_vmc_convergence --help
 - [入门指南](BEGINNER_GUIDE.md)
 - [开发指南](DEVELOPER_GUIDE.md)
 - [Kaggle 双 T4 多种子训练与冻结评估](KAGGLE_T4_TRAINING_GUIDE.md)
+- [Kaggle H₂ 六组最终精度与原始证据](KAGGLE_T4_FINAL_RESULTS.md)
+- [延长训练、末期学习率和自动双卡测试流程](CONTINUATION_TRAINING_GUIDE.md)
 - [贡献规范](AGENTS.md)
 
 第二轮已记录的严格 CUDA 完整验收为 **251 通过、0 失败、0 错误、0 跳过**；[原始结果与源码哈希](physics_evidence/phase2_cuda_complete/summary.json)可核查。完整套件包含 CPU 与 CUDA 检查，长期收敛证据另行验收。

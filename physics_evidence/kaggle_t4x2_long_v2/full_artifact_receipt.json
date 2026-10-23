@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "created_at_utc": "2026-10-22T14:32:46.529420+00:00",
+  "source_commit": "d2618dfb6780f1da49f0bb4ab247d29ec15e41f8",
+  "kernel": "hwbwhzbsh/ferminet-t4x2-multiseed",
+  "kernel_version": 2,
+  "archive_path": "campaign_runs/archives/kaggle_t4x2_long_v2_20261022.zip",
+  "archive_bytes": 89819081,
+  "archive_sha256": "c83c62708b3d843e11b9a15cd1b9f0b641e4d31da0ad939bafa1427a796eb165",
+  "remote_files": 61,
+  "remote_bytes": 148713756,
+  "checkpoint_files": 12,
+  "trajectory_files": 6,
+  "raw_trajectory_statistics_recomputed": true,
+  "zip_crc_and_all_payload_hashes_verified": true,
+  "unpacked_directory": "campaign_runs/kaggle_artifacts_v2",
+  "limits": "Server did not provide per-file MD5; final checkpoint hashes match remote result.json; other file hashes are locally generated. No continuation training was executed."
+}

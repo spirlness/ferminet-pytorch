@@ -1,0 +1,14 @@
+{
+  "validated_at_utc": "2026-10-22T14:13:21.562786+00:00",
+  "raw_files_hash_verified": 18,
+  "completed_cases": 6,
+  "epochs_per_case": 20000,
+  "samples_per_case": 1048576,
+  "nonfinite_evaluation_energies": 0,
+  "all_sampling_diagnostics_passed": true,
+  "all_before_after_precision_audits_passed": true,
+  "chemical_accuracy_passed_cases": 1,
+  "report_rows_verified": 6,
+  "local_markdown_links_checked": 53,
+  "scope": "Documentation and downloaded evidence consistency only; no new CUDA tests, training, or raw trajectory recomputation"
+}

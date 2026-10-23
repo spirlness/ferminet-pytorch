@@ -1,6 +1,17 @@
 # Kaggle 双 T4：多种子长期训练与独立冻结评估
 
-日期：2026-10-22。训练和评估任务自动执行；提交成功不代表已经完成训练或达到化学精度。当前源码通过 GitHub 的完整 commit SHA 拉取，Kaggle notebook 默认为私有。
+日期：2026-10-22。长期 version 2 的六个实验已全部完成训练和独立冻结评估；详细结果见[最终实验报告](KAGGLE_T4_FINAL_RESULTS.md)。源码通过 GitHub 的完整 commit SHA 拉取，Kaggle notebook 默认为私有。后续提交仍需区分提交成功、执行完成和精度达标。
+
+## Version 2 最终结果
+
+Kaggle 状态为 `COMPLETE`，最后一组于香港时间 **2026-10-22 21:57:42** 完成。六组均训练满 20000 轮、评估满 2048 × 512 个样本，非有限能量数为零，采样诊断及前后 FP32/FP64 固定点审计全部通过。
+
+| 主干 | seed 11 偏差（mHa） | seed 22 偏差（mHa） | seed 33 偏差（mHa） | 平均偏差（mHa） | 化学精度通过数 |
+|---|---:|---:|---:|---:|---:|
+| FermiNet | 1.370 | 2.330 | 1.687 | **1.796** | **1/3** |
+| Psiformer | 4.133 | 2.923 | 4.692 | **3.916** | **0/3** |
+
+偏差相对于 H₂ BO 单重态、R=1.4 bohr 的 −1.174475714220 Ha；只有 FermiNet seed 11 满足含统计误差裕量的化学精度判据。没有证明跨种子稳定达标。这里的平均值描述不同优化后 checkpoint，不是合并轨迹的评估结果。[原始最终摘要](physics_evidence/kaggle_t4x2_long_v2/ferminet_results/summary.json)、[完整日志](physics_evidence/kaggle_t4x2_long_v2/console.log)、[归档清单](physics_evidence/kaggle_t4x2_long_v2/archive_manifest.json)已保留，逐组能量、SEM、区间和局限见最终报告。
 
 ## 实际提交记录
 
@@ -16,7 +27,7 @@
 
 - 固定源码为 [d2618dfb6780f1da49f0bb4ab247d29ec15e41f8](https://github.com/spirlness/ferminet-pytorch/commit/d2618dfb6780f1da49f0bb4ab247d29ec15e41f8)。
 - Smoke version 2 已完成：两张真实 T4 分别执行 FermiNet/Psiformer，均恰好 1 epoch；每卡 3 项 CUDA 运行时检查通过。最终 checkpoint、有限的 FP64 `(8,32)` 评估轨迹、前后精度检查和主控制台实时转发均已核验。[验收回执](physics_evidence/kaggle_one_epoch_v2/gate_receipt.json)、[实际摘要](physics_evidence/kaggle_one_epoch_v2/ferminet_results/summary.json)、[Kaggle 主日志](physics_evidence/kaggle_one_epoch_v2/console.log)。评估统计诊断为证据不足，未声称化学精度。
-- 在上述回执通过后，提交了同一源码的长期 version 2；已实际观察到两张卡分别输出首轮 `training_step`。后续每组仍按计划独立冻结评估。[提交状态快照](physics_evidence/kaggle_submission_v2.json)、[双 worker 启动训练原始日志](physics_evidence/kaggle_long_v2_start.log)。这表示重新启动成功，不表示长期实验已经结束。
+- 在上述回执通过后，提交了同一源码的长期 version 2；两张卡均输出首轮 `training_step`，随后六组训练与独立冻结评估全部完成。[提交状态快照](physics_evidence/kaggle_submission_v2.json)、[双 worker 启动训练原始日志](physics_evidence/kaggle_long_v2_start.log)保留的是启动时状态；最终状态与精度以[完整最终摘要](physics_evidence/kaggle_t4x2_long_v2/ferminet_results/summary.json)为准。
 
 ## 实验计划
 
@@ -109,6 +120,8 @@ ferminet_seed11/ ...             每种主干和种子的独立目录
 跨种子摘要保留所有计划项；失败、缺失或诊断不足不能当作成功。三次完整训练会报告 checkpoint 能量均值及考虑种子间变化的 Student t 区间，它不是把不同波函数的样本拼成一条轨迹。单 checkpoint 的 Monte Carlo SEM 不包含优化误差。
 
 ## 断点继续
+
+已完成第 20000 轮的 version 2 若要延长训练和重新设计学习率，应使用[显式续训迁移与自动测试流程](CONTINUATION_TRAINING_GUIDE.md)。下面的相同配置恢复用于中断后的继续执行，不用于改变已完成任务的训练上限。
 
 同一 checkout、同一配置、同一输出目录再次运行时，会跳过已完成实验，并从 `resume.pt` 继续未完成训练。schema-2 续训恢复默认 Adam/余弦调度、Jastrow 阶段、最佳记录、采样计数与 Torch CPU/当前 CUDA 设备随机状态，恢复后刷新缓存；必须在相同 dtype、CPU/CUDA 后端下创建新的 Driver。CPU 与 CUDA 回归分别验证同一软件/硬件环境内的后续参数、walkers 和随机状态一致，不保证跨硬件或 PyTorch 版本逐位相同。
 

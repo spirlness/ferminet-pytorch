@@ -1,0 +1,137 @@
+{
+  "verified_at_utc": "2026-10-22T14:32:21.788041+00:00",
+  "source_commit": "d2618dfb6780f1da49f0bb4ab247d29ec15e41f8",
+  "passed": true,
+  "remote_files_verified": 61,
+  "checkpoint_files_verified": 12,
+  "trajectory_files_verified": 6,
+  "total_evaluation_samples": 6291456,
+  "environment": {
+    "python": "3.13.15",
+    "torch": "2.14.0",
+    "statistics_device": "cpu"
+  },
+  "scope": "Downloaded artifact integrity and statistics recomputation with pinned source; no new training or cross-environment bitwise resume claim",
+  "cases": [
+    {
+      "interaction": "ferminet",
+      "seed": 11,
+      "checkpoint_hash_matched": true,
+      "final_and_resume_models_identical": true,
+      "checkpoint_epoch": 20000,
+      "optimizer_scheduler_rng_present": true,
+      "full_training_history_matched": true,
+      "trajectory_shape": [
+        2048,
+        512
+      ],
+      "trajectory_dtype": "torch.float64",
+      "nonfinite_observations": 0,
+      "statistics_recomputed": true,
+      "energy_mean": -1.1731060441058103,
+      "energy_sem": 5.540625397921115e-05,
+      "diagnostics": "passed",
+      "chemical_accuracy": "met"
+    },
+    {
+      "interaction": "ferminet",
+      "seed": 22,
+      "checkpoint_hash_matched": true,
+      "final_and_resume_models_identical": true,
+      "checkpoint_epoch": 20000,
+      "optimizer_scheduler_rng_present": true,
+      "full_training_history_matched": true,
+      "trajectory_shape": [
+        2048,
+        512
+      ],
+      "trajectory_dtype": "torch.float64",
+      "nonfinite_observations": 0,
+      "statistics_recomputed": true,
+      "energy_mean": -1.1721455015680202,
+      "energy_sem": 6.634519288540283e-05,
+      "diagnostics": "passed",
+      "chemical_accuracy": "not_met"
+    },
+    {
+      "interaction": "ferminet",
+      "seed": 33,
+      "checkpoint_hash_matched": true,
+      "final_and_resume_models_identical": true,
+      "checkpoint_epoch": 20000,
+      "optimizer_scheduler_rng_present": true,
+      "full_training_history_matched": true,
+      "trajectory_shape": [
+        2048,
+        512
+      ],
+      "trajectory_dtype": "torch.float64",
+      "nonfinite_observations": 0,
+      "statistics_recomputed": true,
+      "energy_mean": -1.1727887586516657,
+      "energy_sem": 6.930949863063388e-05,
+      "diagnostics": "passed",
+      "chemical_accuracy": "not_met"
+    },
+    {
+      "interaction": "psiformer",
+      "seed": 11,
+      "checkpoint_hash_matched": true,
+      "final_and_resume_models_identical": true,
+      "checkpoint_epoch": 20000,
+      "optimizer_scheduler_rng_present": true,
+      "full_training_history_matched": true,
+      "trajectory_shape": [
+        2048,
+        512
+      ],
+      "trajectory_dtype": "torch.float64",
+      "nonfinite_observations": 0,
+      "statistics_recomputed": true,
+      "energy_mean": -1.1703428688158517,
+      "energy_sem": 0.00010660811476030812,
+      "diagnostics": "passed",
+      "chemical_accuracy": "not_met"
+    },
+    {
+      "interaction": "psiformer",
+      "seed": 22,
+      "checkpoint_hash_matched": true,
+      "final_and_resume_models_identical": true,
+      "checkpoint_epoch": 20000,
+      "optimizer_scheduler_rng_present": true,
+      "full_training_history_matched": true,
+      "trajectory_shape": [
+        2048,
+        512
+      ],
+      "trajectory_dtype": "torch.float64",
+      "nonfinite_observations": 0,
+      "statistics_recomputed": true,
+      "energy_mean": -1.1715531783224002,
+      "energy_sem": 9.228019396728614e-05,
+      "diagnostics": "passed",
+      "chemical_accuracy": "not_met"
+    },
+    {
+      "interaction": "psiformer",
+      "seed": 33,
+      "checkpoint_hash_matched": true,
+      "final_and_resume_models_identical": true,
+      "checkpoint_epoch": 20000,
+      "optimizer_scheduler_rng_present": true,
+      "full_training_history_matched": true,
+      "trajectory_shape": [
+        2048,
+        512
+      ],
+      "trajectory_dtype": "torch.float64",
+      "nonfinite_observations": 0,
+      "statistics_recomputed": true,
+      "energy_mean": -1.1697832519014055,
+      "energy_sem": 0.0001186614272399524,
+      "diagnostics": "passed",
+      "chemical_accuracy": "not_met"
+    }
+  ]
+}
