@@ -94,6 +94,8 @@ driver.run(20)
 
 `TrainingConfig` 默认 `clip_method="tanh"`；截断会改变梯度目标，不能称为严格无偏估计。使用 `clip_method="none"` 关闭能量截断。默认 `grad_clip=1.0`，设为 0 关闭梯度裁剪。
 
+完成训练后的学习率迁移使用 `extend_from_checkpoint(path, expected_sha256=...)`，而非放宽 `load_checkpoint` 的配置检查。新 `lr_schedule="warmup_inverse"` 支持温和预热和缓慢末期衰减；Adam 状态、walkers、缓存及随机状态继续保留，新的调度从迁移起点计数。详见[续训与开发工作流](CONTINUATION_TRAINING_GUIDE.md)。`driver.run()` 无参数只执行到累计目标轮数，显式 `run(n)` 在当前状态上新增 n 步。
+
 ## 验证与证据
 
 ```powershell

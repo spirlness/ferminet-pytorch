@@ -1,14 +1,17 @@
 """One VMC optimization core shared by CLI, experiments and direct use."""
 
 import copy
-from dataclasses import asdict, dataclass
+import hashlib
 import math
 import os
-from pathlib import Path
 import time
+from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Optional
+
 import torch
 from torch import nn
+
 from .kinetic_modern import KineticMode
 from .loss import VMCLoss
 from .mcmc import MCMCSampler
@@ -43,12 +46,22 @@ class TrainingConfig:
     checkpoint_path: Optional[str] = None
     interaction_type: str = "ferminet"
     compile_sampler: bool = False
+    lr_schedule: str = "cosine"
+    lr_warmup_epochs: int = 500
+    lr_decay_epochs: int = 10000
+    lr_min_ratio: float = 0.1
     device: Optional[str] = None
     dtype: torch.dtype = torch.float32
     seed: int = 42
     verbose: bool = True
 
     def __post_init__(self):
+        if self.lr_schedule not in ("cosine", "warmup_inverse"):
+            raise ValueError("Unknown learning-rate schedule")
+        if self.lr_warmup_epochs < 0 or self.lr_decay_epochs < 1:
+            raise ValueError("Invalid learning-rate warmup/decay length")
+        if not 0 < self.lr_min_ratio <= 1:
+            raise ValueError("Learning-rate minimum ratio must lie in (0, 1]")
         if (
             self.num_walkers < 1
             or self.num_epochs < 0
@@ -71,6 +84,21 @@ def build_cosine_scheduler(optimizer, total_steps, min_ratio=0.01):
     def factor(step):
         fraction = min(max(step, 0) / max(total_steps, 1), 1.0)
         return min_ratio + 0.5 * (1 - min_ratio) * (1 + math.cos(math.pi * fraction))
+
+    return torch.optim.lr_scheduler.LambdaLR(optimizer, factor)
+
+
+def build_training_scheduler(optimizer, total_steps, config):
+    if config.lr_schedule == "cosine":
+        return build_cosine_scheduler(optimizer, total_steps)
+
+    def factor(step):
+        if step < config.lr_warmup_epochs:
+            return config.lr_min_ratio + (1 - config.lr_min_ratio) * (
+                step / config.lr_warmup_epochs
+            )
+        decay = (step - config.lr_warmup_epochs) / config.lr_decay_epochs
+        return max(config.lr_min_ratio, 1.0 / (1.0 + decay))
 
     return torch.optim.lr_scheduler.LambdaLR(optimizer, factor)
 
@@ -100,6 +128,7 @@ class VMCDriver:
         self.kinetic_mode, self.num_probes = kinetic_mode, num_probes
         self.epoch, self.stage = 0, 1
         self.history, self.best = [], {}
+        self.continuation = None
         self.is_two_stage = (
             self.config.two_stage_jastrow and model.has_trainable_jastrow()
         )
@@ -118,9 +147,10 @@ class VMCDriver:
         self.optimizer = optimizer or torch.optim.Adam(
             [p for p in model.parameters() if p.requires_grad], lr=self.config.lr
         )
-        self.scheduler = scheduler or build_cosine_scheduler(
+        self.scheduler = scheduler or build_training_scheduler(
             self.optimizer,
             self.stage1_epochs if self.is_two_stage else self.config.num_epochs,
+            self.config,
         )
 
     def restore(self, state):
@@ -143,8 +173,8 @@ class VMCDriver:
             else self.config.lr * 0.1,
         )
         self.optimizer = torch.optim.Adam(groups)
-        self.scheduler = build_cosine_scheduler(
-            self.optimizer, self.config.num_epochs - self.stage1_epochs
+        self.scheduler = build_training_scheduler(
+            self.optimizer, self.config.num_epochs - self.stage1_epochs, self.config
         )
 
     def step(self):
@@ -263,6 +293,7 @@ class VMCDriver:
                     )
                 },
                 stage=self.stage,
+                continuation=self.continuation,
             ),
             target.with_name(target.name + ".tmp"),
         )
@@ -275,13 +306,74 @@ class VMCDriver:
         this is not a cross-version or cross-hardware reproducibility guarantee.
         """
         saved = torch.load(path, map_location="cpu", weights_only=True)
+        return self._restore_checkpoint(saved)
+
+    def extend_from_checkpoint(self, path, *, expected_sha256):
+        """Explicit schedule migration; preserve Adam, walkers/RNG and lineage.
+
+        This starts a new experiment from a verified completed stage-2 state.
+        It is distinct from exact same-configuration checkpoint resumption.
+        """
+        digest = hashlib.sha256(Path(path).read_bytes()).hexdigest()
+        if digest != expected_sha256:
+            raise ValueError("Parent checkpoint SHA-256 mismatch")
+        saved = torch.load(path, map_location="cpu", weights_only=True)
+        if (
+            saved.get("stage") != 2
+            or saved.get("epoch") != saved["config"]["num_epochs"]
+            or saved.get("continuation") is not None
+            or self.config.num_epochs <= saved["epoch"]
+            or self.config.lr_schedule != "warmup_inverse"
+        ):
+            raise ValueError(
+                "Extension requires a completed stage-2 parent and a longer tail schedule"
+            )
+        self._restore_checkpoint(saved, extending=True)
+        self.continuation = dict(
+            parent_checkpoint_sha256=digest,
+            parent_epoch=saved["epoch"],
+            parent_config=saved["config"],
+            optimizer_state_preserved=True,
+            schedule="warmup_inverse",
+        )
+        for group in self.optimizer.param_groups:
+            peak = (
+                (
+                    self.config.jastrow_lr
+                    if self.config.jastrow_lr is not None
+                    else self.config.lr * 0.1
+                )
+                if group.get("name") == "jastrow"
+                else self.config.lr
+            )
+            group["lr"] = group["initial_lr"] = peak
+        self.scheduler = build_training_scheduler(
+            self.optimizer, self.config.num_epochs - self.epoch, self.config
+        )
+        return self
+
+    def _restore_checkpoint(self, saved, extending=False):
         if self.epoch or self.history:
             raise ValueError("Load a checkpoint into a freshly constructed driver")
         if saved.get("schema_version") != 2:
             raise ValueError("Resume requires checkpoint schema version 2")
         ignored = {"device", "checkpoint_path", "verbose"}
+        if extending:
+            ignored |= {
+                "num_epochs",
+                "lr",
+                "jastrow_lr",
+                "lr_schedule",
+                "lr_warmup_epochs",
+                "lr_decay_epochs",
+                "lr_min_ratio",
+            }
         current = {k: v for k, v in asdict(self.config).items() if k not in ignored}
-        prior = {k: v for k, v in saved["config"].items() if k not in ignored}
+        prior = {
+            k: v
+            for k, v in asdict(TrainingConfig(**saved["config"])).items()
+            if k not in ignored
+        }
         if current != prior:
             raise ValueError("Checkpoint training configuration does not match")
         loss_settings = {
@@ -317,6 +409,7 @@ class VMCDriver:
         self.optimizer.load_state_dict(saved["optimizer_state_dict"])
         self.scheduler.load_state_dict(saved["scheduler_state_dict"])
         self.history, self.best = saved["history_rows"], saved["best_records"]
+        self.continuation = saved.get("continuation")
         self.sampler.walkers = walkers.to(self.sampler.device)
         self.sampler.step_size = saved["step_size"]
         for name, value in saved["sampler_settings"].items():
@@ -328,7 +421,11 @@ class VMCDriver:
         return self
 
     def run(self, num_epochs=None, callback=None):
-        count = self.config.num_epochs if num_epochs is None else num_epochs
+        count = (
+            max(0, self.config.num_epochs - self.epoch)
+            if num_epochs is None
+            else num_epochs
+        )
         for _ in range(count):
             row = self.step()
             if self.config.checkpoint_path is not None:

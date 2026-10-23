@@ -242,8 +242,8 @@ class MCMCSampler:
         updated_log_psi = torch.where(accepted, prop_log_psi, current_log_psi)
         return accepted, updated_log_psi
 
-    def _step_all_electrons(self) -> float:
-        """全电子一体化移动 (All-electron moves)。"""
+    def _propose_all_electrons(self) -> torch.Tensor:
+        """One identical Metropolis transition, with counts kept on device."""
         noise = torch.randn_like(self.walkers) * self.step_size
         prop_walkers = self.walkers + noise
 
@@ -256,16 +256,17 @@ class MCMCSampler:
             acc_mask = accepted.unsqueeze(-1).unsqueeze(-1)
             self.walkers = torch.where(acc_mask, prop_walkers, self.walkers)
 
-            acc_rate = accepted.float().mean().item()
-            accepted_count = int(accepted.sum().item())
-            self.accepted_steps += accepted_count
+            return accepted.sum()
 
-            # 微观移动统计 (每个全电子移动包含 total_electrons 个微观坐标位移)
-            total_electrons = self.system.total_electrons
-            self.proposed_moves += self.num_walkers * total_electrons
-            self.accepted_moves += accepted_count * total_electrons
+    def _record_all_moves(self, accepted_count, steps):
+        self.accepted_steps += accepted_count
+        self.proposed_moves += steps * self.num_walkers * self.system.total_electrons
+        self.accepted_moves += accepted_count * self.system.total_electrons
 
-        return acc_rate
+    def _step_all_electrons(self) -> float:
+        accepted_count = int(self._propose_all_electrons().item())
+        self._record_all_moves(accepted_count, 1)
+        return accepted_count / self.num_walkers
 
     def _step_one_electron(self) -> float:
         """逐电子轮换移动 (One-by-one moves, 优化单缓冲区复用)。"""
@@ -330,6 +331,18 @@ class MCMCSampler:
 
         默认在正式抽样期间冻结步长调整，保障马尔可夫链时齐性与细致平衡。
         """
+        if not adapt and self.move_mode == "all" and num_steps > 0:
+            # No proposal adaptation or host decisions inside production moves.
+            # Preserve RNG calls, last-step acceptance and every integer counter.
+            with torch.no_grad():
+                counts = torch.stack(
+                    [self._propose_all_electrons() for _ in range(num_steps)]
+                )
+                total, last = torch.stack((counts.sum(), counts[-1])).tolist()
+            self._record_all_moves(total, num_steps)
+            self.total_steps += num_steps
+            self.last_acceptance_rate = last / self.num_walkers
+            return self.walkers.clone().detach()
         prev_adapt = self.adapt_step_size
         self.adapt_step_size = adapt
         try:

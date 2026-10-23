@@ -1,0 +1,123 @@
+{
+  "plan": {
+    "schema_version": 1,
+    "seeds": [
+      11
+    ],
+    "interactions": [
+      "ferminet",
+      "psiformer"
+    ],
+    "model": {
+      "num_determinants": 8,
+      "hidden_dim_one": 64,
+      "hidden_dim_two": 16,
+      "num_layers": 3
+    },
+    "training": {
+      "num_epochs": 20001,
+      "num_walkers": 512,
+      "mcmc_steps_per_epoch": 10,
+      "burn_in_steps": 500,
+      "lr": 0.0001,
+      "grad_clip": 1.0,
+      "clip_factor": 5.0,
+      "clip_method": "tanh",
+      "two_stage_jastrow": true,
+      "jastrow_stage1_epochs": 1000,
+      "jastrow_lr": 1e-05,
+      "restore_best": false,
+      "lr_schedule": "warmup_inverse",
+      "lr_warmup_epochs": 500,
+      "lr_decay_epochs": 10000,
+      "lr_min_ratio": 0.1
+    },
+    "training_dtype": "float32",
+    "training_seconds_per_case": 120,
+    "checkpoint_seconds": 300,
+    "evaluation": {
+      "num_walkers": 32,
+      "num_steps": 8,
+      "burn_in_steps": 4,
+      "decorrelation_steps": 1,
+      "energy_batch_size": 16,
+      "max_seconds": 90
+    },
+    "precision_audit": {
+      "num_points": 8,
+      "max_log_difference": 0.001,
+      "max_energy_rms_difference": 0.001
+    },
+    "cpu_threads_per_worker": 1,
+    "log_seconds": 1,
+    "heartbeat_seconds": 2,
+    "max_wall_seconds": 1200,
+    "balance_workers": true,
+    "evaluation_seed_offset": 300000,
+    "continuation": {
+      "source_kernel": "hwbwhzbsh/ferminet-t4x2-multiseed",
+      "source_commit": "d2618dfb6780f1da49f0bb4ab247d29ec15e41f8",
+      "source_epochs": 20000,
+      "checkpoint_sha256": {
+        "ferminet_seed11": "c406cc4b7ee819848d2b9364aebc79372ee163034e7cb5cf201f8bf0776a1953",
+        "ferminet_seed22": "1330714e73cb6c89717dc0a3abbfe6852c48a43f64dc6d1be75cac82927cdf5b",
+        "ferminet_seed33": "f20a52169046764fb5e0ed26a5d7c10f4d14569f0f26eda537938f82a6b6937e",
+        "psiformer_seed11": "bd27f05b681b927802b95740862f75822572f8d6a9c44f10f151edad53a2725d",
+        "psiformer_seed22": "250f0405f6a9484081dbc20fe6978c0585ac3a842420406f573cc65eae903141",
+        "psiformer_seed33": "ba51d4f1cdc4884f5baaf8889399e08a5d226987fac5b0283a8ae6d9eccac52a"
+      }
+    },
+    "sampling_execution": "auto",
+    "sampling_benchmark_horizon": 30000
+  },
+  "commit": "2acca5fe1f4ea48dbeb2aff55c3ea15cdcefc331",
+  "source_sha256": {
+    "ferminet_pytorch\\__init__.py": "81570250c895a204aeef37e81325bc8e0bcfeba013057d33a4381af84732e9fc",
+    "ferminet_pytorch\\determinants.py": "0d8ff438b1f91c4f5b86fc63326cad9b50a6c9693986d576f9c4b84f54d68bdc",
+    "ferminet_pytorch\\envelope.py": "7bf149a119be9a274a8af42a6c7756fa60ea971dea95cc0d45841a25f05e13eb",
+    "ferminet_pytorch\\evaluation.py": "7fcf56787c0c4b6d2ec11262fdf1eb74f8dd81f7b3e95e957a68a0c47b11ea51",
+    "ferminet_pytorch\\features.py": "49281b9c138a39f02997212f365c867e115d9be97104a7a72a7f78392d7aac38",
+    "ferminet_pytorch\\geometry.py": "681387a6b48fa4595d23474e027afb519787c0fcab972adc46ad9a775caeab41",
+    "ferminet_pytorch\\hamiltonian.py": "ef54fd9f9eb8a13c7fe76149f8a7382d1611e8554e75d7665bb554b79b35a5f1",
+    "ferminet_pytorch\\jastrow.py": "bcb9d0a99ff83ce80fe77b95b0d0a5d25fde68641d80fee435dcdbfe43bee123",
+    "ferminet_pytorch\\kinetic_modern.py": "44fbd1c25885f9c28b8ad4e52b26c0569df158d7128b18af7ba0d1a9a3d2a882",
+    "ferminet_pytorch\\layers.py": "2f51723a2bd8cf9067d4078b39eb598c09c9f28393e2f5367b93f4589257f0c1",
+    "ferminet_pytorch\\loss.py": "ed98fa59a21483aee6f3bf3c19888ad01049523b597f95a9ba50a3bca25d7325",
+    "ferminet_pytorch\\mcmc.py": "1e54984353a4a816eb154a597497f157bdf9e36b69a38cfcacdc2e560f240154",
+    "ferminet_pytorch\\model.py": "8975ae7d1c246beb0a4eb64d6701c74c5ebbab6f3a95b19edc29710a98cb66c8",
+    "ferminet_pytorch\\physical_config.py": "a3801ff2b5e6bdde9163a932c0f219bfa9aeae01e4baf162f89363367914257b",
+    "ferminet_pytorch\\physics_validation.py": "be040e24583794f44f24b1e462e96427a532d406853d51ee753fab7139397497",
+    "ferminet_pytorch\\psiformer_attention.py": "502c65e4cf951bbc30763f801f95e29cdb4fe3f169d9b8faccc72ebe634a345f",
+    "ferminet_pytorch\\spin.py": "e83087dafbb178315f3782b6f78c0a4313174cebf8fdb1f8dbbe3fb350eb0806",
+    "ferminet_pytorch\\systems.py": "47719a491aeb148674cc9124df98a78e66928f63c4b382131cbc983bad370382",
+    "ferminet_pytorch\\train_vmc.py": "1bbf8e33eccd41bd45310ab24766f01f53f4d2dea912791834524433c0e1ba84",
+    "ferminet_pytorch\\vmc_driver.py": "b112f9f4a1dc7bcc1d792c6034e6721c5f4233847186c1febb1e8e2e9a0750da",
+    "ferminet_pytorch\\vmc_statistics.py": "796463a322acc8aeadb291bb26f1886a1e85d8472b4c8e77adf70ebe3a6061f8",
+    "scripts\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scripts\\benchmark_compile.py": "d58c7279a08fcc1498b90ebf6a724b733ad47089254adf80bc2c7111af110c04",
+    "scripts\\benchmark_comprehensive_m3.py": "534db8e97846fbf76e889f0abbdf21f5b02207347e6c650c573ec6337fc889d5",
+    "scripts\\benchmark_continuation.py": "b76ce0b390e394055dca0d27b0dca8167673c1cb4a244f3dc8fa90a045353dc3",
+    "scripts\\benchmark_h2_long_convergence.py": "3b4734b2e827b080b2cd61d470e03adb6b079282b40ec089a9d397118d406382",
+    "scripts\\benchmark_m4_vmc_convergence.py": "b49f87d23e36a8b0e0ca45056ccd3be61d3523864eee5b23922702da52cd2754",
+    "scripts\\campaign_logging.py": "48577fa12b9b09ebf5f42a891a49329c774c3d4b8e9fbdcf84652f804cfec6b4",
+    "scripts\\diagnose_graph_breaks.py": "62b9d4944ae1e2e197f21cf745ddafd97f3312d1c3298248ad8cca3dbbd5b12c",
+    "scripts\\kaggle_campaign.py": "fd1b80212050723261c97403018cd1d2aff9aa83d9d3f7da9a6cbcb3ab3d4989",
+    "scripts\\kaggle_pipeline.py": "22bacb0f1ab0d7bbaf7bbe06917f74641a700f13c16f62f179e9dfc58f53aa2b",
+    "scripts\\prepare_kaggle.py": "5e8299ae9e5d2462ddd58ffb71d11cafe6ded6bc3065f9c0c399a3c540f3bb34",
+    "scripts\\run_cuda_tests.py": "159979f7011f5a81c14659167e0e0aed9dedc90702ed1847f938cf7e0323b5cf",
+    "scripts\\sampling_performance.py": "e20fa3db76e911bfe445ada06887aa48df4ef2c382b7cbeef7b3912bf2ebe3bb",
+    "scripts\\summarize_results.py": "46b399d5df9662a37c7776b6b555606f5111e9d0b18616a43e643e4ed534c165",
+    "scripts\\verify_kaggle_smoke.py": "1f624ea20e48a215056d8cdd793fd585883fc51e681df6bd3f440c5d8d362aa9",
+    "scripts\\verify_phase2_refactor.py": "f6401c018cfa75aff4c46d6005df474209baba27acaa3c00fb5b21cb6f18135e",
+    "configs\\kaggle_continue_smoke.json": "cd1e1aa27dbf0c00f111b86a9281bb9a3023103b3674bdc9518472fcd011c7ee",
+    "configs\\kaggle_continue_t4x2.json": "4297653ad8fb54ed75ec94f1c6d00d46292ced956b7990d0480eb6c075c2bb6e",
+    "configs\\kaggle_smoke.json": "ffdda16f35dbbd3ecd7807c09c2e2910b8c3c8cfe27a1b1c3bf2bb0a436adfbc",
+    "configs\\kaggle_t4x2.json": "47ef4da1b6ff93c350a184e17086e1ef1bf340694d089428b03a26c28fa8f567"
+  },
+  "python": "3.13.15",
+  "torch": "2.14.0",
+  "cuda": "13.0",
+  "gpu_names": [
+    "NVIDIA GeForce RTX 3060 Laptop GPU"
+  ]
+}

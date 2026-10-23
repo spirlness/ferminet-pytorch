@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "seeds": [
+    11,
+    22,
+    33
+  ],
+  "interactions": [
+    "ferminet",
+    "psiformer"
+  ],
+  "model": {
+    "num_determinants": 8,
+    "hidden_dim_one": 64,
+    "hidden_dim_two": 16,
+    "num_layers": 3
+  },
+  "training": {
+    "num_epochs": 50000,
+    "num_walkers": 512,
+    "mcmc_steps_per_epoch": 10,
+    "burn_in_steps": 500,
+    "lr": 0.0001,
+    "grad_clip": 1.0,
+    "clip_factor": 5.0,
+    "clip_method": "tanh",
+    "two_stage_jastrow": true,
+    "jastrow_stage1_epochs": 1000,
+    "jastrow_lr": 1e-05,
+    "restore_best": false,
+    "lr_schedule": "warmup_inverse",
+    "lr_warmup_epochs": 500,
+    "lr_decay_epochs": 10000,
+    "lr_min_ratio": 0.1
+  },
+  "training_dtype": "float32",
+  "training_seconds_per_case": 8400,
+  "checkpoint_seconds": 300,
+  "evaluation": {
+    "num_walkers": 512,
+    "num_steps": 2048,
+    "burn_in_steps": 1000,
+    "decorrelation_steps": 20,
+    "energy_batch_size": 128,
+    "max_seconds": 1800
+  },
+  "precision_audit": {
+    "num_points": 32,
+    "max_log_difference": 0.001,
+    "max_energy_rms_difference": 0.001
+  },
+  "cpu_threads_per_worker": 1,
+  "log_seconds": 10,
+  "heartbeat_seconds": 15,
+  "max_wall_seconds": 34200,
+  "balance_workers": true,
+  "evaluation_seed_offset": 300000,
+  "continuation": {
+    "source_kernel": "hwbwhzbsh/ferminet-t4x2-multiseed",
+    "source_commit": "d2618dfb6780f1da49f0bb4ab247d29ec15e41f8",
+    "source_epochs": 20000,
+    "checkpoint_sha256": {
+      "ferminet_seed11": "c406cc4b7ee819848d2b9364aebc79372ee163034e7cb5cf201f8bf0776a1953",
+      "ferminet_seed22": "1330714e73cb6c89717dc0a3abbfe6852c48a43f64dc6d1be75cac82927cdf5b",
+      "ferminet_seed33": "f20a52169046764fb5e0ed26a5d7c10f4d14569f0f26eda537938f82a6b6937e",
+      "psiformer_seed11": "bd27f05b681b927802b95740862f75822572f8d6a9c44f10f151edad53a2725d",
+      "psiformer_seed22": "250f0405f6a9484081dbc20fe6978c0585ac3a842420406f573cc65eae903141",
+      "psiformer_seed33": "ba51d4f1cdc4884f5baaf8889399e08a5d226987fac5b0283a8ae6d9eccac52a"
+    }
+  },
+  "sampling_execution": "auto",
+  "sampling_benchmark_horizon": 30000
+}

@@ -17,7 +17,7 @@ def main():
             "Render this bootstrap with python -m scripts.prepare_kaggle"
         )
     gate = globals().get("SMOKE_GATE")
-    if config.endswith("kaggle_t4x2.json") and not (
+    if config.endswith(("kaggle_t4x2.json", "kaggle_continue_t4x2.json")) and not (
         gate and gate.get("passed") is True and gate.get("source_commit") == revision
     ):
         raise RuntimeError(
@@ -50,6 +50,21 @@ def main():
     import torch
     import numpy as np
 
+    if globals().get("PARENT_KERNEL"):
+        plan = json.loads((source / config).read_text())
+        parent_commit = plan["continuation"]["source_commit"]
+        candidates = [
+            p.parent
+            for p in Path("/kaggle/input").rglob("campaign.json")
+            if p.parent.name == "ferminet_results"
+            and json.loads(p.read_text()).get("commit") == parent_commit
+        ]
+        if len(candidates) != 1:
+            raise RuntimeError(
+                "Continuation requires exactly one mounted parent campaign"
+            )
+        os.environ["FERMINET_PARENT_OUTPUT"] = str(candidates[0])
+
     if globals().get("RESUME_KERNEL"):
         candidates = [
             p.parent
@@ -74,6 +89,7 @@ def main():
         gpu_names=names,
         config=config,
         resume_kernel=globals().get("RESUME_KERNEL"),
+        parent_kernel=globals().get("PARENT_KERNEL"),
     )
     (output / "bootstrap.json").write_text(
         json.dumps(environment, indent=2), encoding="utf-8"
@@ -96,6 +112,7 @@ def main():
                     "-m",
                     "unittest",
                     "tests.test_campaign_runtime.TestCampaignCUDA",
+                    "tests.test_continuation.TestContinuationCUDA",
                     "-v",
                 ],
                 cwd=source,

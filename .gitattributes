@@ -1,0 +1,4 @@
+# Evidence inventories hash the original bytes; preserve them across platforms.
+physics_evidence/kaggle_t4x2_long_v2/** -text
+physics_evidence/continuation_*/** -text
+physics_evidence/continuation_*.json -text

@@ -48,6 +48,12 @@ def parse_args() -> argparse.Namespace:
         "--lr", type=float, default=1e-3, help="优化器学习率 (默认: 1e-3)"
     )
     parser.add_argument(
+        "--lr_schedule", choices=["cosine", "warmup_inverse"], default="cosine"
+    )
+    parser.add_argument("--lr_warmup_epochs", type=int, default=500)
+    parser.add_argument("--lr_decay_epochs", type=int, default=10000)
+    parser.add_argument("--lr_min_ratio", type=float, default=0.1)
+    parser.add_argument(
         "--step_size", type=float, default=0.5, help="MCMC 初始移动步长 (默认: 0.5)"
     )
     parser.add_argument(

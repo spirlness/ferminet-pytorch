@@ -2,23 +2,40 @@
 
 import argparse
 import json
-from pathlib import Path
 import re
 import subprocess
+from pathlib import Path
+
 from .verify_kaggle_smoke import plan_digest
 
 
 def prepare(owner, mode, output, revision=None, resume_kernel=None, gate_path=None):
     root = Path(__file__).resolve().parents[1]
     gate = None
-    if mode == "long":
+    continuing = mode.startswith("continue-")
+    smoke = mode in ("smoke", "continue-smoke")
+    config = (
+        (
+            "configs/kaggle_continue_smoke.json"
+            if smoke
+            else "configs/kaggle_continue_t4x2.json"
+        )
+        if continuing
+        else ("configs/kaggle_smoke.json" if smoke else "configs/kaggle_t4x2.json")
+    )
+    large_config = (
+        "configs/kaggle_continue_t4x2.json"
+        if continuing
+        else "configs/kaggle_t4x2.json"
+    )
+    if not smoke:
         if gate_path is None:
             raise ValueError(
                 "A verified one-epoch smoke gate is required before a long submission"
             )
         gate = json.loads(Path(gate_path).read_text())
         revision = revision or gate.get("source_commit")
-        large = json.loads((root / "configs/kaggle_t4x2.json").read_text())
+        large = json.loads((root / large_config).read_text())
         if not (
             gate.get("passed") is True
             and gate.get("epochs_per_case") == 1
@@ -38,16 +55,28 @@ def prepare(owner, mode, output, revision=None, resume_kernel=None, gate_path=No
         raise ValueError("Use a full immutable Git commit SHA")
     if not re.fullmatch(r"[a-zA-Z0-9_-]+", owner):
         raise ValueError("Invalid Kaggle owner")
-    smoke = mode == "smoke"
-    title = "FermiNet T4x2 Smoke" if smoke else "FermiNet T4x2 Multiseed"
+    title = (
+        (
+            "FermiNet T4x2 Continue Smoke"
+            if smoke
+            else "FermiNet T4x2 Continue Multiseed"
+        )
+        if continuing
+        else ("FermiNet T4x2 Smoke" if smoke else "FermiNet T4x2 Multiseed")
+    )
     slug = title.lower().replace(" ", "-")
-    config = "configs/kaggle_smoke.json" if smoke else "configs/kaggle_t4x2.json"
     preamble = (
         'SOURCE_REPOSITORY = "https://github.com/spirlness/ferminet-pytorch.git"\n'
         f"SOURCE_COMMIT = {revision!r}\nCAMPAIGN_CONFIG = {config!r}\n\n"
     )
     if gate is not None:
         preamble += f"SMOKE_GATE = {gate!r}\n\n"
+    parent_kernel = None
+    if continuing:
+        parent_kernel = json.loads((root / config).read_text())["continuation"][
+            "source_kernel"
+        ]
+        preamble += f"PARENT_KERNEL = {parent_kernel!r}\n\n"
     if resume_kernel:
         if not re.fullmatch(r"[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+", resume_kernel):
             raise ValueError("Resume kernel must be owner/slug")
@@ -70,7 +99,9 @@ def prepare(owner, mode, output, revision=None, resume_kernel=None, gate_path=No
         machine_shape="NvidiaTeslaT4",
         dataset_sources=[],
         competition_sources=[],
-        kernel_sources=[resume_kernel] if resume_kernel else [],
+        kernel_sources=list(
+            dict.fromkeys(x for x in (parent_kernel, resume_kernel) if x)
+        ),
     )
     (output / "kernel-metadata.json").write_text(
         json.dumps(metadata, indent=2), encoding="utf-8"
@@ -81,7 +112,11 @@ def prepare(owner, mode, output, revision=None, resume_kernel=None, gate_path=No
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--owner", required=True)
-    parser.add_argument("--mode", choices=["smoke", "long"], default="smoke")
+    parser.add_argument(
+        "--mode",
+        choices=["smoke", "long", "continue-smoke", "continue-long"],
+        default="smoke",
+    )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument(
         "--revision", help="Full SHA; preserve the original source on resume"

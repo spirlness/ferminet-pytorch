@@ -1,0 +1,22 @@
+{
+  "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+  "torch": "2.14.0",
+  "cuda": "13.0",
+  "measured_steps": 40,
+  "warmup_steps": 10,
+  "results": [
+    {
+      "interaction": "ferminet",
+      "step_loop": 0.25400740000000044,
+      "batched_counts": 0.24877797750000355,
+      "speedup": 1.021020439801577
+    },
+    {
+      "interaction": "psiformer",
+      "step_loop": 0.32705377499999033,
+      "batched_counts": 0.34865957749998416,
+      "speedup": 0.9380318112730036
+    }
+  ],
+  "scope": "Same checkpoint/configuration, complete exact-kinetic VMC updates; step_loop is the current reference, not a different physical estimator"
+}

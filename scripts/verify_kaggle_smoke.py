@@ -1,11 +1,11 @@
 """Validate downloaded real two-T4, one-epoch artifacts before a long launch."""
 
 import argparse
-from datetime import datetime, timezone
 import hashlib
 import json
-from pathlib import Path
 import re
+from datetime import datetime, timezone
+from pathlib import Path
 
 import torch
 
@@ -16,14 +16,33 @@ def plan_digest(plan):
     ).hexdigest()
 
 
-def verify(download, kernel, expected_revision=None):
+def verify(download, kernel, expected_revision=None, continuation=False):
     root = Path(__file__).resolve().parents[1]
     download = Path(download)
     base = download / "ferminet_results"
     environment = json.loads((base / "bootstrap.json").read_text())
     summary = json.loads((base / "summary.json").read_text())
-    small = json.loads((root / "configs/kaggle_smoke.json").read_text())
-    large = json.loads((root / "configs/kaggle_t4x2.json").read_text())
+    small = json.loads(
+        (
+            root
+            / (
+                "configs/kaggle_continue_smoke.json"
+                if continuation
+                else "configs/kaggle_smoke.json"
+            )
+        ).read_text()
+    )
+    large = json.loads(
+        (
+            root
+            / (
+                "configs/kaggle_continue_t4x2.json"
+                if continuation
+                else "configs/kaggle_t4x2.json"
+            )
+        ).read_text()
+    )
+    origin = small["continuation"]["source_epochs"] if continuation else 0
     revision = environment["source_commit"]
     if expected_revision is not None and revision != expected_revision:
         raise ValueError("Smoke source revision does not match")
@@ -34,7 +53,7 @@ def verify(download, kernel, expected_revision=None):
     if not summary["all_completed"] or len(summary["cases"]) != 2:
         raise ValueError("Both smoke cases must complete")
     if (
-        small["training"]["num_epochs"] != 1
+        small["training"]["num_epochs"] != origin + 1
         or small["model"] != large["model"]
         or small["training"]["num_walkers"] != large["training"]["num_walkers"]
     ):
@@ -51,7 +70,7 @@ def verify(download, kernel, expected_revision=None):
                 "Smoke manifest or configuration differs from the tested source"
             )
         if (
-            case["epochs"] != 1
+            case["epochs"] != origin + 1
             or not case["precision_before"]["passed"]
             or not case["precision_after"]["passed"]
         ):
@@ -63,8 +82,32 @@ def verify(download, kernel, expected_revision=None):
         ):
             raise ValueError("Final checkpoint hash mismatch")
         saved = torch.load(checkpoint, map_location="cpu", weights_only=True)
-        if saved["epoch"] != 1 or len(saved["history_rows"]) != 1:
+        if saved["epoch"] != origin + 1 or len(saved["history_rows"]) != origin + 1:
             raise ValueError("Checkpoint does not contain exactly one update")
+        if continuation:
+            parent_hash = large["continuation"]["checkpoint_sha256"][
+                f"{case['interaction']}_seed{case['seed']}"
+            ]
+            if (
+                case.get("updates_this_campaign") != 1
+                or saved.get("continuation", {}).get("parent_checkpoint_sha256")
+                != parent_hash
+                or case.get("continuation", {}).get("parent_epoch") != origin
+                or saved["scheduler_state_dict"]["last_epoch"] != 1
+            ):
+                raise ValueError(
+                    "Continuation smoke did not preserve the parent/schedule origin"
+                )
+            performance = case.get("sampling_performance")
+            if not performance or performance.get("selected") not in (
+                "eager",
+                "compiled",
+            ):
+                raise ValueError("Sampling execution was not measured")
+            if performance["selected"] == "compiled" and not performance.get(
+                "signs_equal"
+            ):
+                raise ValueError("Compiled sampling numerical comparison is missing")
         trajectory = torch.load(
             directory / "evaluation_trajectory.pt", weights_only=True
         )
@@ -116,6 +159,8 @@ def verify(download, kernel, expected_revision=None):
         smoke_kernel=kernel,
         source_commit=revision,
         epochs_per_case=1,
+        parent_epoch=origin,
+        continuation=continuation,
         real_gpu_count=2,
         console_forwarding_verified=True,
         long_plan_sha256=plan_digest(large),
@@ -130,8 +175,9 @@ def main():
     parser.add_argument("--kernel", required=True)
     parser.add_argument("--revision")
     parser.add_argument("--receipt", type=Path, required=True)
+    parser.add_argument("--continuation", action="store_true")
     args = parser.parse_args()
-    receipt = verify(args.download, args.kernel, args.revision)
+    receipt = verify(args.download, args.kernel, args.revision, args.continuation)
     args.receipt.write_text(json.dumps(receipt, indent=2), encoding="utf-8")
     print(json.dumps(receipt, indent=2))
 

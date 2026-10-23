@@ -6,12 +6,10 @@ are selected at the predeclared end of training, never by evaluation energy.
 
 import argparse
 import copy
-from dataclasses import asdict
 import hashlib
 import json
 import math
 import os
-from pathlib import Path
 import platform
 import signal
 import statistics
@@ -19,6 +17,8 @@ import subprocess
 import sys
 import time
 import traceback
+from dataclasses import asdict
+from pathlib import Path
 
 import torch
 
@@ -28,8 +28,9 @@ from ferminet_pytorch.hamiltonian import compute_local_energy
 from ferminet_pytorch.loss import VMCLoss
 from ferminet_pytorch.mcmc import MCMCSampler
 from ferminet_pytorch.systems import build_h2_system
-from .campaign_logging import emit_event, gpu_snapshot, LoggedWorker
 
+from .campaign_logging import LoggedWorker, emit_event, gpu_snapshot
+from .sampling_performance import configure_driver_sampling
 
 STOP_REQUESTED = False
 
@@ -129,6 +130,44 @@ def planned_cases(plan):
         for seed in plan["seeds"]
         for interaction in plan["interactions"]
     ]
+
+
+def worker_cases(plan, index, count):
+    cases = planned_cases(plan)
+    if plan.get("balance_workers"):
+        # Pair opposite orders on successive seeds to avoid a permanently
+        # slower backbone owning an entire GPU. Summary order stays unchanged.
+        cases = [
+            (interaction, seed)
+            for i, seed in enumerate(plan["seeds"])
+            for interaction in (
+                plan["interactions"][::-1] if i % 2 else plan["interactions"]
+            )
+        ]
+    return cases[index::count]
+
+
+def extend_case(driver, plan, interaction, seed):
+    settings = plan["continuation"]
+    parent = Path(os.environ["FERMINET_PARENT_OUTPUT"])
+    case = f"{interaction}_seed{seed}"
+    manifest = json.loads((parent / case / "manifest.json").read_text())
+    result = json.loads((parent / case / "result.json").read_text())
+    expected = settings["checkpoint_sha256"][case]
+    if (
+        manifest["commit"] != settings["source_commit"]
+        or manifest["interaction"] != interaction
+        or manifest["seed"] != seed
+        or manifest["plan"]["model"] != plan["model"]
+        or manifest["plan"]["training_dtype"] != plan["training_dtype"]
+        or result["status"] != "completed"
+        or result["epochs"] != settings["source_epochs"]
+        or result["checkpoint_sha256"] != expected
+    ):
+        raise ValueError("Parent experiment identity/configuration does not match")
+    driver.extend_from_checkpoint(
+        parent / case / "final_checkpoint.pt", expected_sha256=expected
+    )
 
 
 def precision_audit(model, system, coordinates, settings):
@@ -278,6 +317,16 @@ def run_case(plan, interaction, seed, output, device):
     if checkpoint.exists():
         driver.load_checkpoint(checkpoint)
         progress.update("resumed", epoch=driver.epoch)
+    elif plan.get("continuation"):
+        extend_case(driver, plan, interaction, seed)
+        progress.update(
+            "continued",
+            force=True,
+            event="continuation_loaded",
+            epoch=driver.epoch,
+            parent_sha256=driver.continuation["parent_checkpoint_sha256"],
+            learning_rates=[g["lr"] for g in driver.optimizer.param_groups],
+        )
     else:
         progress.update(
             "burn_in", burn_in_steps=0, requested_burn_in_steps=config.burn_in_steps
@@ -289,6 +338,23 @@ def run_case(plan, interaction, seed, output, device):
             progress.update(
                 "burn_in", burn_in_steps=min(step + 25, config.burn_in_steps)
             )
+    performance = None
+    if plan.get("sampling_execution"):
+        progress.update("sampling_benchmark", epoch=driver.epoch)
+        performance_path = directory / "sampling_performance.json"
+        mode = plan["sampling_execution"]
+        if checkpoint.exists():
+            mode = json.loads(performance_path.read_text())["selected"]
+        driver, performance = configure_driver_sampling(
+            driver,
+            directory,
+            plan.get("sampling_benchmark_horizon", config.num_epochs - driver.epoch),
+            mode=mode,
+        )
+        write_json(performance_path, performance)
+        emit_event(
+            "sampling_execution", interaction=interaction, seed=seed, **performance
+        )
     progress.update("precision_audit", epoch=driver.epoch)
     audit_before = precision_audit(
         model, system, sampler.walkers, plan["precision_audit"]
@@ -296,7 +362,8 @@ def run_case(plan, interaction, seed, output, device):
     write_json(directory / "precision_before.json", audit_before)
     if not audit_before["passed"]:
         raise FloatingPointError("FP32/FP64 preflight failed; precision audit saved")
-    previous_seconds = sum(row["epoch_time"] for row in driver.history)
+    origin = driver.continuation["parent_epoch"] if driver.continuation else 0
+    previous_seconds = sum(row["epoch_time"] for row in driver.history[origin:])
     start, saved_at = time.perf_counter(), time.perf_counter()
     progress.update("training", epoch=driver.epoch, num_epochs=config.num_epochs)
     while driver.epoch < config.num_epochs:
@@ -311,7 +378,7 @@ def run_case(plan, interaction, seed, output, device):
         elapsed = previous_seconds + time.perf_counter() - start
         progress.update(
             "training",
-            force=driver.epoch == 1 or driver.epoch == config.num_epochs,
+            force=driver.epoch == origin + 1 or driver.epoch == config.num_epochs,
             event="training_step",
             epoch=driver.epoch,
             num_epochs=config.num_epochs,
@@ -361,7 +428,11 @@ def run_case(plan, interaction, seed, output, device):
     eval_model = copy.deepcopy(model).double()
     eval_system = copy.deepcopy(system).to(dtype=torch.float64)
     progress.update("evaluation_preparing", epoch=driver.epoch)
-    eval_seed = seed + (100000 if interaction == "ferminet" else 200000)
+    eval_seed = (
+        seed
+        + (100000 if interaction == "ferminet" else 200000)
+        + plan.get("evaluation_seed_offset", 0)
+    )
     checkpoint_hash = file_sha(directory / "final_checkpoint.pt")
     evaluation = evaluate_frozen_wavefunction(
         eval_model,
@@ -386,6 +457,9 @@ def run_case(plan, interaction, seed, output, device):
         interaction=interaction,
         seed=seed,
         epochs=driver.epoch,
+        updates_this_campaign=driver.epoch - origin,
+        continuation=driver.continuation,
+        sampling_performance=performance,
         training_seconds=training_seconds,
         training_stop="epochs" if driver.epoch == config.num_epochs else "time_budget",
         training_config=asdict(config),
@@ -435,7 +509,7 @@ def worker(plan, output, index, count, device):
         device=device,
         visible_devices=os.environ.get("CUDA_VISIBLE_DEVICES"),
     )
-    for interaction, seed in planned_cases(plan)[index::count]:
+    for interaction, seed in worker_cases(plan, index, count):
         try:
             run_case(plan, interaction, seed, output, device)
         except Exception:
