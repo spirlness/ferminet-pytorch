@@ -1,0 +1,13 @@
+test_frozen_energy_chunking_preserves_chain_axis_and_model (tests.test_campaign_runtime.TestCampaignCUDA.test_frozen_energy_chunking_preserves_chain_axis_and_model) ... ok
+test_resume_preserves_updates_rng_stages_and_cache (tests.test_campaign_runtime.TestCampaignCUDA.test_resume_preserves_updates_rng_stages_and_cache) ... ok
+test_resume_rejects_changed_training_schedule (tests.test_campaign_runtime.TestCampaignCUDA.test_resume_rejects_changed_training_schedule) ... ok
+test_batched_production_matches_step_loop_rng_cache_and_counters (tests.test_continuation.TestContinuationCUDA.test_batched_production_matches_step_loop_rng_cache_and_counters) ... ok
+test_execution_selection_preserves_rng_and_model_without_amortized_gain (tests.test_continuation.TestContinuationCUDA.test_execution_selection_preserves_rng_and_model_without_amortized_gain) ... ok
+test_extension_preserves_parent_adam_rng_and_exact_tail_resume (tests.test_continuation.TestContinuationCUDA.test_extension_preserves_parent_adam_rng_and_exact_tail_resume) ... ok
+test_extension_rejects_tampering_or_scientific_configuration_changes (tests.test_continuation.TestContinuationCUDA.test_extension_rejects_tampering_or_scientific_configuration_changes) ... ok
+test_full_update_probe_restores_history_parameters_walkers_and_rng (tests.test_continuation.TestContinuationCUDA.test_full_update_probe_restores_history_parameters_walkers_and_rng) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 12.637s
+
+OK

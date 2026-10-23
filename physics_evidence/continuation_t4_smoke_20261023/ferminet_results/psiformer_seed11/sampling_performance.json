@@ -1,0 +1,16 @@
+{
+  "requested": "auto",
+  "selected": "compiled",
+  "scope": "Sampling forward only; exact kinetic remains eager",
+  "compile_seconds": 27.063264359000016,
+  "eager_seconds": 0.0071313043666672606,
+  "compiled_seconds": 0.002978818199998538,
+  "estimated_seconds_saved": 1370.3204350006783,
+  "max_log_difference": 1.9073486328125e-06,
+  "signs_equal": true,
+  "vmc_eager_seconds": 0.25599241043749643,
+  "vmc_compiled_seconds": 0.21151093031249601,
+  "vmc_estimated_seconds_saved": 1334.4444037500125,
+  "probe_updates_discarded": 44,
+  "complete_training_state_restored": true
+}

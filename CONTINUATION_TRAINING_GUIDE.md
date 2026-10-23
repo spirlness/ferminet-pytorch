@@ -42,6 +42,23 @@ lr(s) = peak * factor(s)
 
 本地 RTX 3060 Laptop 的 40 步测量没有显示减少同步可以稳定加速全部主干；编译采样前向的测量中，FermiNet 约 1.30×，Psiformer 约 0.92×。这正是采用完整更新测速后再选择执行方式的原因。这些是开发机结果，不是 T4 加速比，见[同步路径对比](physics_evidence/continuation_local_speed_20261023.json)及[编译对比](physics_evidence/continuation_compiled_speed_20261023.json)。
 
+## 2026-10-23 实际验收与提交
+
+- 固定续训源码：[114377b6be860d6f4e19de1642a76ce957119a12](https://github.com/spirlness/ferminet-pytorch/commit/114377b6be860d6f4e19de1642a76ce957119a12)。后续文档与证据提交不改变这次运行源码。
+- 本地完整严格 CUDA 验收：**277 通过、0 失败、0 错误、0 跳过，111.11 秒**，含真实 CUDA 及编译用例。[摘要与源码哈希](physics_evidence/continuation_cuda_final_20261023/summary.json)、[原始日志](physics_evidence/continuation_cuda_final_20261023/tests.log)。完整套件包含 CPU 检查，不表示每项均在 GPU 执行。
+- 本地还实际加载两个主干的已归档 checkpoint，均从 20000 轮完成到 20001 轮；父哈希、数值审计、完整状态回滚及有限 FP64 小轨迹通过。[本地实际短测摘要](physics_evidence/continuation_local_smoke_20261023/summary.json)。
+- [真实双 T4 短测](https://www.kaggle.com/code/hwbwhzbsh/ferminet-t4x2-continue-smoke) version 1 已完成。每卡 **8 项运行时检查**通过，无跳过；两个主干各净新增 **1 次更新**，最终 checkpoint/history 均为 20001 轮，父 SHA、前后数值审计、`(8,32)` FP64 小轨迹及两张卡的主日志转发核验通过。[通过回执](physics_evidence/continuation_t4_smoke_20261023/gate.json)、[实际摘要](physics_evidence/continuation_t4_smoke_20261023/ferminet_results/summary.json)、[主控制台日志](physics_evidence/continuation_t4_smoke_20261023/ferminet-t4x2-continue-smoke.log)。小轨迹的统计诊断为证据不足。
+- 回执于香港时间 **12:10:50** 通过后，自动流程于 **12:10:53** 提交了[长期续训](https://www.kaggle.com/code/hwbwhzbsh/ferminet-t4x2-continue-multiseed) version 1。**12:12:56** 的实际日志已确认两卡均训练中，FermiNet seed 11 为 20063 轮，Psiformer seed 11 为 20001 轮；其余种子等待同卡顺序执行。[启动快照](physics_evidence/continuation_submission_20261023.json)、[原始启动日志](physics_evidence/continuation_long_start_20261023.log)。这是启动证据，尚未完成新的长期冻结评估。
+
+长期任务启动时的完整更新测速如下；两组均通过数值检查并选择 compiled。它们是短时、同一会话中的测速，不能保证全程或后续种子具有相同加速比。短测会话曾对 FermiNet 选择 eager，说明执行方式选择会受测量时负载影响，未强制全卡编译。
+
+| 主干 | eager 秒/更新 | compiled 秒/更新 | 测得吞吐比 |
+|---|---:|---:|---:|
+| FermiNet | 0.1972 | 0.1613 | 约 **1.22×** |
+| Psiformer | 0.2520 | 0.2011 | 约 **1.25×** |
+
+测速的临时 44 次更新均已丢弃并恢复起点；正式长期训练仍从各自第 20000 轮开始。没有把测速能量用于选择 checkpoint 或报告精度。
+
 ## 测试后自动提交
 
 先提交并推送源码，使用完整 SHA。以下命令运行于已配置 CUDA PyTorch 的 Python 环境，`--kaggle` 指向本机已认证的 Kaggle CLI，无需在该 Python 环境额外安装 Kaggle SDK：

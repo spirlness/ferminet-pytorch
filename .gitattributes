@@ -2,3 +2,4 @@
 physics_evidence/kaggle_t4x2_long_v2/** -text whitespace=cr-at-eol
 physics_evidence/continuation_*/** -text whitespace=cr-at-eol
 physics_evidence/continuation_*.json -text whitespace=cr-at-eol
+physics_evidence/continuation_*.log -text whitespace=cr-at-eol
