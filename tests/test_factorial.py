@@ -15,6 +15,7 @@ from ferminet_pytorch.envelope import NuclearEnvelope
 from ferminet_pytorch.evaluation import evaluate_frozen_wavefunction
 from ferminet_pytorch.evaluation_observations import summarize_observations
 from ferminet_pytorch.hamiltonian import compute_local_energy
+from ferminet_pytorch.kinetic_modern import KineticMode
 from ferminet_pytorch.loss import clip_local_energy, vmc_surrogate_loss
 from ferminet_pytorch.mcmc import MCMCSampler
 from ferminet_pytorch.spin import SpinProjector
@@ -99,6 +100,40 @@ class FactorialRuntimeChecks:
         torch.testing.assert_close(
             clip_local_energy(e)[0], median + width * torch.tanh((e - median) / width)
         )
+
+    def test_wavefunction_observations_reuse_the_coordinate_forward(self):
+        driver = self.make_driver("soft_exponential")
+        positions = driver.sampler.walkers[:3].detach()
+        for mode in KineticMode:
+            torch.manual_seed(801)
+            expected = compute_local_energy(
+                driver.model,
+                driver.system,
+                positions.clone().requires_grad_(),
+                kinetic_mode=mode,
+            )
+            torch.manual_seed(801)
+            with patch.object(
+                driver.model, "forward_log_psi", wraps=driver.model.forward_log_psi
+            ) as forward:
+                observed = compute_local_energy(
+                    driver.model,
+                    driver.system,
+                    positions.clone().requires_grad_(),
+                    kinetic_mode=mode,
+                    return_wavefunction=True,
+                )
+                self.assertEqual(
+                    forward.call_count, 6 if mode == KineticMode.FORWARD_JVP else 1
+                )
+            for got, wanted in zip(observed[:3], expected):
+                torch.testing.assert_close(got, wanted, rtol=0, atol=0)
+            with torch.no_grad():
+                log, sign = driver.model.forward_log_psi(positions)
+            torch.testing.assert_close(observed[3], log, rtol=1e-12, atol=1e-12)
+            torch.testing.assert_close(observed[4], sign, rtol=0, atol=0)
+            self.assertFalse(observed[3].requires_grad)
+            self.assertFalse(observed[4].requires_grad)
 
     def test_soft_envelope_coordinate_derivatives_and_asymptote(self):
         env = (

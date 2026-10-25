@@ -111,31 +111,43 @@ def evaluate_frozen_wavefunction(
             walkers = sampler.sample(decorrelation_steps, adapt=False)
             batches = walkers.split(energy_batch_size or num_walkers)
             chunks = []
-            kinetics, potentials, logs, signs = [], [], [], []
             for batch in batches:
                 r = batch.detach().clone().requires_grad_(True)
-                energy, kinetic, potential = compute_local_energy(model, system, r)
-                chunks.append(energy.detach().cpu())
                 if writer is not None:
-                    with torch.no_grad():
-                        log_abs, sign = model.forward_log_psi(batch.detach())
-                    kinetics.append(kinetic.detach().cpu())
-                    potentials.append(potential.detach().cpu())
-                    logs.append(log_abs.detach().cpu())
-                    signs.append(sign.detach().cpu())
-            energies = torch.cat(chunks)
+                    energy, kinetic, potential, log_abs, sign = compute_local_energy(
+                        model, system, r, return_wavefunction=True
+                    )
+                    # Concatenate on device before one host transfer per record.
+                    # No arithmetic or RNG order changes: each value is copied
+                    # from the same eager, exact-energy calculation as before.
+                    chunks.append(
+                        torch.stack(
+                            (
+                                energy.detach(),
+                                kinetic.detach(),
+                                potential.detach(),
+                                log_abs,
+                                sign,
+                            )
+                        )
+                    )
+                else:
+                    energy, _, _ = compute_local_energy(model, system, r)
+                    chunks.append(energy.detach())
+            record = torch.cat(chunks, dim=1 if writer is not None else 0).cpu()
+            energies = record[0] if writer is not None else record
             if not torch.isfinite(energies).all():
                 raise FloatingPointError(
                     "Nonfinite energy in frozen evaluation; no observations were discarded"
                 )
             if writer is not None:
                 writer.append(
-                    positions=walkers,
+                    positions=walkers.detach().cpu(),
                     energy=energies,
-                    kinetic=torch.cat(kinetics),
-                    potential=torch.cat(potentials),
-                    log_abs=torch.cat(logs),
-                    sign=torch.cat(signs),
+                    kinetic=record[1],
+                    potential=record[2],
+                    log_abs=record[3],
+                    sign=record[4],
                 )
             trajectory.append(energies.detach().cpu())
             if progress_callback is not None:

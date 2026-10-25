@@ -186,7 +186,7 @@ def verify(download, revision, kernel, parent_output):
     for index in (0, 1):
         log = (base / f"runtime_tests_gpu{index}.log").read_text()
         count = re.search(r"Ran (\d+) tests", log)
-        if not count or int(count[1]) < 13 or "\nOK" not in log or "skipped=" in log:
+        if not count or int(count[1]) < 14 or "\nOK" not in log or "skipped=" in log:
             raise ValueError("Each T4 must pass all runtime regressions without skips")
     console = (download / f"{kernel.split('/')[1]}.log").read_text()
     try:

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "complete": true,
+  "seed": 900112,
+  "time_records": 64,
+  "num_walkers": 512,
+  "axes": "time,walker[,electron,xyz]",
+  "shards": [
+    {
+      "file": "observations_0000.pt",
+      "start_record": 0,
+      "records": 64,
+      "sha256": "ac8252b978108abd832229514e0a3808a555169f236a1d4cfd1b9874fbab12e0"
+    }
+  ]
+}

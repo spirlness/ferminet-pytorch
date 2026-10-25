@@ -1,0 +1,26 @@
+{
+  "passed": false,
+  "correctness_passed": true,
+  "source_commit": "ae0bc0dc542b932004b7aa75a0766c10af3610c3",
+  "long_plan_sha256": "96ad8912f83ea9d064eac193199970b48b5cce927508d60c6a12d5665448cd78",
+  "smoke_plan_sha256": "1b6a54e788078d9ff4d11518947455c8597dac180f317882c18db26910c4f85f",
+  "real_gpu_count": 2,
+  "arms_verified": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "updates_per_arm": 20,
+  "timing": {
+    "projected_wall_seconds": 31321.207836384303,
+    "seconds_per_update": 0.24273033526667404,
+    "seconds_per_record_including_observation_analysis": 0.6982887657812498,
+    "evaluation_burn_seconds": 8.057894847,
+    "training_burn_seconds": 7.913533554000026,
+    "safety_factor": 1.25,
+    "startup_reserve_seconds": 900,
+    "within_budget": false
+  },
+  "limits": "Short-run timings are projections, not guaranteed runtime; no energy-based selection."
+}

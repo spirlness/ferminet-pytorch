@@ -30,7 +30,7 @@
   },
   "envelope_scale": 2.0,
   "training": {
-    "num_epochs": 20,
+    "num_epochs": 100,
     "num_walkers": 512,
     "mcmc_steps_per_epoch": 10,
     "burn_in_steps": 1000,

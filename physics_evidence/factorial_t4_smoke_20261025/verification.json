@@ -1,0 +1,44 @@
+{
+  "source_commit": "ae0bc0dc542b932004b7aa75a0766c10af3610c3",
+  "kernel": "hwbwhzbsh/ferminet-factorial-smoke",
+  "version": 1,
+  "archive_files_verified": 55,
+  "all_published_file_hashes_match": true,
+  "complete_artifact_download": "/mnt/c/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/.kaggle_deploy/factorial/ae0bc0dc542b/smoke_output",
+  "formal_submitted": false,
+  "stop_reason": "Projected wall time exceeds preregistered 28800-second submission threshold",
+  "cases": [
+    {
+      "case": "ferminet_seed11_A",
+      "epochs": 20,
+      "precision_before": true,
+      "precision_after": true,
+      "extreme_precision_audit": true,
+      "samples": 32768
+    },
+    {
+      "case": "ferminet_seed11_B",
+      "epochs": 20,
+      "precision_before": true,
+      "precision_after": true,
+      "extreme_precision_audit": true,
+      "samples": 32768
+    },
+    {
+      "case": "ferminet_seed11_C",
+      "epochs": 20,
+      "precision_before": true,
+      "precision_after": true,
+      "extreme_precision_audit": true,
+      "samples": 32768
+    },
+    {
+      "case": "ferminet_seed11_D",
+      "epochs": 20,
+      "precision_before": true,
+      "precision_after": true,
+      "extreme_precision_audit": true,
+      "samples": 32768
+    }
+  ]
+}

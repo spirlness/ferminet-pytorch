@@ -13,7 +13,7 @@ H₂ 核间距 1.4 bohr、单重态，两种主干各运行种子 11/22/33，每
 | FermiNet | 0.809 / 1.657 / 1.253 | **1.240** | **2/3** |
 | Psiformer | 3.115 / 1.988 / 3.586 | **2.896** | **0/3** |
 
-六组采样诊断及前后数值精度审计均通过。化学精度要求 `abs(E − E_ref) + 1.96 × SEM ≤ 1.5936 mHa`；参考能量为 −1.174475714220 Ha。均值描述三个不同 checkpoint，不是合并样本后的单个波函数结果。结论限于这组 H₂ 配置，最新原始结果见[50000 轮续训摘要](physics_evidence/continuation_final_20261025/summary.json)及[检查点核验](physics_evidence/continuation_final_20261025/verification.json)；[原 20000 轮报告](KAGGLE_T4_FINAL_RESULTS.md)保留为历史基线。裁剪 × 包络的 12 组新实验见[受控实验说明](FACTORIAL_EXPERIMENT_GUIDE.md)，结果须单独验收。
+六组采样诊断及前后数值精度审计均通过。化学精度要求 `abs(E − E_ref) + 1.96 × SEM ≤ 1.5936 mHa`；参考能量为 −1.174475714220 Ha。均值描述三个不同 checkpoint，不是合并样本后的单个波函数结果。结论限于这组 H₂ 配置，最新原始结果见[50000 轮续训摘要](physics_evidence/continuation_final_20261025/summary.json)及[检查点核验](physics_evidence/continuation_final_20261025/verification.json)；[原 20000 轮报告](KAGGLE_T4_FINAL_RESULTS.md)保留为历史基线。裁剪 × 包络的 12 组新实验见[受控实验说明](FACTORIAL_EXPERIMENT_GUIDE.md)与[执行记录](FACTORIAL_EXPERIMENT_STATUS.md)，结果须单独验收。
 
 ## 安装与运行
 

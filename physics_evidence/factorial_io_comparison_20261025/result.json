@@ -1,0 +1,58 @@
+{
+  "baseline_commit": "ae0bc0dc542b932004b7aa75a0766c10af3610c3",
+  "training": [
+    {
+      "arm": "A",
+      "updates": 10,
+      "parameters_walkers_history_rng_exact": true,
+      "old_seconds": 4.386664799996652,
+      "new_seconds": 3.902445500018075
+    },
+    {
+      "arm": "B",
+      "updates": 10,
+      "parameters_walkers_history_rng_exact": true,
+      "old_seconds": 3.272051400010241,
+      "new_seconds": 3.3002360000100452
+    },
+    {
+      "arm": "C",
+      "updates": 10,
+      "parameters_walkers_history_rng_exact": true,
+      "old_seconds": 3.3952321000106167,
+      "new_seconds": 3.3799116000009235
+    },
+    {
+      "arm": "D",
+      "updates": 10,
+      "parameters_walkers_history_rng_exact": true,
+      "old_seconds": 5.507179200008977,
+      "new_seconds": 3.4166899000119884
+    }
+  ],
+  "evaluation": [
+    {
+      "old": true,
+      "seconds": 18.443467499979306
+    },
+    {
+      "old": false,
+      "seconds": 17.402044699992985
+    },
+    {
+      "old": false,
+      "seconds": 18.922411599982297
+    },
+    {
+      "old": true,
+      "seconds": 20.866508299979614
+    }
+  ],
+  "physical_observations_exact": true,
+  "evaluation_speed_ratio": 1.082190342377834,
+  "log_abs_tolerance": {
+    "atol": 2e-12,
+    "rtol": 1e-12
+  },
+  "scope": "Local Windows RTX 3060 measurement. Two temporary ten-update paths per arm were discarded; no scientific checkpoint selection or formal campaign changes."
+}

@@ -153,21 +153,37 @@ def vmc_surrogate_loss(
     loss = 2.0 * torch.mean(delta_e * log_abs_psi[valid_mask])
 
     # 4. 统计物理指标
-    raw_mean = torch.mean(finite_e).item()
-    raw_var = torch.var(finite_e, unbiased=True).item() if num_valid > 1 else 0.0
+    raw_variance = (
+        torch.var(finite_e, unbiased=True) if num_valid > 1 else finite_e.new_zeros(())
+    )
+    raw_mean, raw_var, clipped_mean, center_value, scale_value, loss_value = (
+        torch.stack(
+            (
+                finite_e.mean(),
+                raw_variance,
+                mean_clipped_energy,
+                e_median,
+                mad,
+                loss.detach(),
+            )
+        )
+        .detach()
+        .cpu()
+        .tolist()
+    )
     raw_std = raw_var**0.5
 
     stats = {
         "energy_mean": raw_mean,
         "energy_std": raw_std,
         "energy_var": raw_var,
-        "energy_clipped_mean": mean_clipped_energy.item(),
-        "energy_median": e_median.item(),
-        "energy_mad": mad.item(),
+        "energy_clipped_mean": clipped_mean,
+        "energy_median": center_value,
+        "energy_mad": scale_value,
         "energy_clip_scale_statistic": "mean_absolute_deviation"
         if clip_method == "mean_hard"
         else "median_absolute_deviation",
-        "loss": loss.item(),
+        "loss": loss_value,
         "num_valid": num_valid,
         "num_invalid": num_invalid,
     }

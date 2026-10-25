@@ -25,6 +25,8 @@
 
 `evaluate_frozen_wavefunction(..., observations_path=..., records_per_shard=128)` 增加可选的分片观察记录。每片保留 `time_index`、`walker_id`，以及 `positions`、原始 `energy`、`kinetic`、`potential`、`log_abs`、`sign`。manifest 包含 SHA-256 和完整状态。异常/中断会留下 `complete=false` 的可核查分片；正式评估拒绝非有限观察，不删除尖峰。真实库仑距离独立计算，不使用平滑特征距离。
 
+观察记录复用 `compute_local_energy(..., return_wavefunction=True)` 的坐标前向，额外返回 detached log 振幅与符号；默认仍返回 E/T/V 三项。这些 detached 值不能用于参数代理损失。每条时间记录在 GPU 上合并指标，再集中回传，减少小块同步；能量算法、分批大小和采样调用顺序不变。复用求导前向的 log 振幅与额外 no-grad 前向可能存在浮点舍入差异，必须通过数值审计，不宣称全部观察字段逐位相同。
+
 主要报告参考偏差、SEM、混合诊断、化学精度、空间尾部方差/能量贡献和极端样本数值审计。化学精度要求 `abs(E-E_ref)+1.96*SEM <= 1.5936 mHa`，且采样诊断通过；参考能量为 -1.174475714220 Ha。重尾下区间是近似值。
 
 对每个父种子计算以下配对效应，再在三个种子间比较：
@@ -37,7 +39,7 @@
 
 ## 执行与门槛
 
-正式配置为 `configs/factorial_t4x2.json`，短测为 `configs/factorial_smoke.json`。短测保留正式模型规模、512 walkers、1000 步预热及四种组合；每组 20 次更新、64 条最终评估记录，用于验证状态与估计耗时，不用于精度结论。
+正式配置为 `configs/factorial_t4x2.json`，短测为 `configs/factorial_smoke.json`。短测保留正式模型规模、512 walkers、1000 步预热及四种组合；每组 100 次更新、64 条最终评估记录，用于验证状态与估计耗时，不用于精度结论。
 
 ```powershell
 $env:PYTHONUTF8='1'

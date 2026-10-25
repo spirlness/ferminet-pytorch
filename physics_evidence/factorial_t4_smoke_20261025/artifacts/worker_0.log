@@ -1,0 +1,100 @@
+{"event": "case_start", "timestamp_utc": "2026-10-25T05:57:24.211188+00:00", "seed": 11, "arm": "A", "case_id": "ferminet_seed11_A", "visible_devices": "0"}
+{"event": "evaluation_progress", "timestamp_utc": "2026-10-25T05:57:32.740749+00:00", "directory": "zero_seed11_gaussian", "status": "evaluation_burn_in", "burn_in_steps": 0, "requested_burn_in_steps": 1000}
+{"event": "evaluation_progress", "timestamp_utc": "2026-10-25T05:57:43.226275+00:00", "directory": "zero_seed11_gaussian", "status": "evaluating", "time_records": 5, "requested_time_records": 8, "evaluation_seconds": 3.2985035689999904, "force": false}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:45.682363+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 25}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:45.869089+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 50}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:46.052330+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 75}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:46.232067+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 100}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:46.413781+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 125}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:46.594087+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 150}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:46.773001+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 175}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:46.952109+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 200}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:47.129657+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 225}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:47.305345+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 250}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:47.484407+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 275}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:47.661586+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 300}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:47.840991+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 325}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:48.019784+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 350}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:48.198984+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 375}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:48.376562+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 400}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:48.555699+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 425}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:48.733572+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 450}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:48.911693+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 475}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:49.093473+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 500}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:49.279356+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 525}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:49.507479+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 550}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:49.686758+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 575}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:49.864741+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 600}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:50.042546+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 625}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:50.219541+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 650}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:50.397069+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 675}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:50.577172+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 700}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:50.754814+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 725}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:50.932518+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 750}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:51.111214+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 775}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:51.291140+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 800}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:51.474784+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 825}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:51.652033+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 850}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:51.832760+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 875}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:52.011220+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 900}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:52.196792+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 925}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:52.374587+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 950}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:52.558158+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 975}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:57:52.737388+00:00", "case_id": "ferminet_seed11_A", "burn_in_steps": 1000}
+{"event": "training_step", "timestamp_utc": "2026-10-25T05:57:53.140545+00:00", "case_id": "ferminet_seed11_A", "epoch": 1, "energy_mean": -1.1729762554168701, "seconds_per_update": 0.39149895399998513}
+{"event": "training_step", "timestamp_utc": "2026-10-25T05:57:57.405310+00:00", "case_id": "ferminet_seed11_A", "epoch": 20, "energy_mean": -1.1733072996139526, "seconds_per_update": 0.21694184399996175}
+{"event": "evaluation_progress", "timestamp_utc": "2026-10-25T05:57:57.741377+00:00", "directory": "evaluation", "status": "evaluation_burn_in", "burn_in_steps": 0, "requested_burn_in_steps": 1000}
+{"event": "evaluation_progress", "timestamp_utc": "2026-10-25T05:58:08.069812+00:00", "directory": "evaluation", "status": "evaluating", "time_records": 4, "requested_time_records": 64, "evaluation_seconds": 2.6785228570000186, "force": false}
+{"event": "evaluation_progress", "timestamp_utc": "2026-10-25T05:58:18.247438+00:00", "directory": "evaluation", "status": "evaluating", "time_records": 19, "requested_time_records": 64, "evaluation_seconds": 12.856137801999978, "force": false}
+{"event": "evaluation_progress", "timestamp_utc": "2026-10-25T05:58:28.400060+00:00", "directory": "evaluation", "status": "evaluating", "time_records": 34, "requested_time_records": 64, "evaluation_seconds": 23.008770321999975, "force": false}
+{"event": "evaluation_progress", "timestamp_utc": "2026-10-25T05:58:38.996666+00:00", "directory": "evaluation", "status": "evaluating", "time_records": 50, "requested_time_records": 64, "evaluation_seconds": 33.605376020999984, "force": false}
+{"event": "case_completed", "timestamp_utc": "2026-10-25T05:58:48.580117+00:00", "case_id": "ferminet_seed11_A", "epochs": 20}
+{"event": "case_start", "timestamp_utc": "2026-10-25T05:58:48.581044+00:00", "seed": 11, "arm": "B", "case_id": "ferminet_seed11_B", "visible_devices": "0"}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:52.745476+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 25}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:52.947470+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 50}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:53.146382+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 75}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:53.347505+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 100}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:53.542247+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 125}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:53.748247+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 150}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:53.939387+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 175}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:54.121768+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 200}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:54.320969+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 225}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:54.519189+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 250}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:54.725024+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 275}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:54.923390+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 300}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:55.122803+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 325}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:55.320987+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 350}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:55.516592+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 375}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:55.717474+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 400}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:55.914145+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 425}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:56.116927+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 450}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:56.316439+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 475}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:56.515237+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 500}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:56.712968+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 525}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:56.910733+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 550}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:57.110375+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 575}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:57.308551+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 600}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:57.504189+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 625}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:57.704534+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 650}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:57.903258+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 675}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:58.107925+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 700}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:58.311351+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 725}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:58.507777+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 750}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:58.707206+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 775}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:58.903125+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 800}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:59.113922+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 825}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:59.308601+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 850}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:59.532343+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 875}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:59.715963+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 900}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:58:59.902133+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 925}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:59:00.087219+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 950}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:59:00.270531+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 975}
+{"event": "burn_in", "timestamp_utc": "2026-10-25T05:59:00.451224+00:00", "case_id": "ferminet_seed11_B", "burn_in_steps": 1000}
+{"event": "training_step", "timestamp_utc": "2026-10-25T05:59:00.721909+00:00", "case_id": "ferminet_seed11_B", "epoch": 1, "energy_mean": -1.1729762554168701, "seconds_per_update": 0.2606579509999847}
+{"event": "training_step", "timestamp_utc": "2026-10-25T05:59:05.335621+00:00", "case_id": "ferminet_seed11_B", "epoch": 20, "energy_mean": -1.1734232902526855, "seconds_per_update": 0.2150899790000267}
+{"event": "evaluation_progress", "timestamp_utc": "2026-10-25T05:59:05.635221+00:00", "directory": "evaluation", "status": "evaluation_burn_in", "burn_in_steps": 0, "requested_burn_in_steps": 1000}
+{"event": "evaluation_progress", "timestamp_utc": "2026-10-25T05:59:15.653534+00:00", "directory": "evaluation", "status": "evaluating", "time_records": 4, "requested_time_records": 64, "evaluation_seconds": 2.7390593949999698, "force": false}
+{"event": "evaluation_progress", "timestamp_utc": "2026-10-25T05:59:26.285281+00:00", "directory": "evaluation", "status": "evaluating", "time_records": 20, "requested_time_records": 64, "evaluation_seconds": 13.370789806000005, "force": false}
+{"event": "evaluation_progress", "timestamp_utc": "2026-10-25T05:59:36.899637+00:00", "directory": "evaluation", "status": "evaluating", "time_records": 36, "requested_time_records": 64, "evaluation_seconds": 23.985162425999988, "force": false}
+{"event": "evaluation_progress", "timestamp_utc": "2026-10-25T05:59:47.040268+00:00", "directory": "evaluation", "status": "evaluating", "time_records": 51, "requested_time_records": 64, "evaluation_seconds": 34.1257923, "force": false}
+{"event": "case_completed", "timestamp_utc": "2026-10-25T05:59:56.374580+00:00", "case_id": "ferminet_seed11_B", "epochs": 20}

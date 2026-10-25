@@ -148,7 +148,8 @@ def compute_local_energy(
     geom_ctx: Optional[GeometricContext] = None,
     kinetic_mode: KineticMode = KineticMode.REVERSE,
     num_probes: int = 1,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    return_wavefunction: bool = False,
+) -> Tuple[torch.Tensor, ...]:
     """
     计算局域能量: E_L(r) = T_L(r) + V(r)。
 
@@ -162,15 +163,19 @@ def compute_local_energy(
         geom_ctx: 可选的 GeometricContext 共享几何上下文
         kinetic_mode: 动能估计算法模式 (默认 KineticMode.REVERSE)
         num_probes: Hutchinson 估计探针数
+        return_wavefunction: 额外返回本次坐标求导前向的 detached log|Psi| 和 sign；
+            仅用于观察记录，不能用作参数代理损失的前向图。
 
     Returns:
         e_local: 局域总能量, Shape: (B,)
         t_local: 局域动能, Shape: (B,)
         v_local: 局域势能, Shape: (B,)
+        若 return_wavefunction=True，还返回 detached log_abs_psi 和 sign，均为 (B,)。
     """
     assert r.requires_grad, "输入 r 必须开启梯度追踪"
 
     freeze_ctx = _FreezeModelParameters(model) if not create_graph else nullcontext()
+    observed_values = []
     with freeze_ctx:
         # 仅当 geom_ctx 确实源自当前开启求导的坐标 r 时才可安全复用，防止无梯度外部上下文导致动能导数丢失
         safe_geom_ctx = (
@@ -187,11 +192,16 @@ def compute_local_energy(
             # A dual coordinate needs geometry derived from that dual, not its primal.
             if safe_geom_ctx is not None and coords is r:
                 try:
-                    return model.forward_log_psi(coords, geom_ctx=safe_geom_ctx)
+                    values = model.forward_log_psi(coords, geom_ctx=safe_geom_ctx)
                 except TypeError as error:
                     if "unexpected keyword argument 'geom_ctx'" not in str(error):
                         raise
-            return model.forward_log_psi(coords)
+                    values = model.forward_log_psi(coords)
+            else:
+                values = model.forward_log_psi(coords)
+            if return_wavefunction:
+                observed_values[:] = [value.detach() for value in values]
+            return values
 
         t_local, _, _ = KineticEnergyCalculator.compute_kinetic_energy(
             _call_model_forward,
@@ -209,6 +219,8 @@ def compute_local_energy(
                 v_local = system.compute_potential_energy(r, geom_ctx=geom_ctx)
 
         e_local = t_local + v_local
+        if return_wavefunction:
+            return e_local, t_local, v_local, *observed_values
         return e_local, t_local, v_local
 
 
