@@ -69,3 +69,5 @@ F:\conda\envs\torch\python.exe -m scripts.factorial_report campaign_runs/factori
 不搜索 L、学习率或网络规模，不使用中途最低能量挑组选时长或检查点。原有诊断、历史源码和历史证据保留原始内容。
 
 全有限训练批次集中读取有效性计数，随后复用已验证张量并调用同一裁剪公式；部分非有限输入沿用原有拒绝、警告和裁剪规则。回归对照同时检查损失梯度、参数、walkers 和 RNG；性能预算由真实双 T4 实测判定。
+
+运行中的日志可用 `kaggle kernels logs hwbwhzbsh/ferminet-factorial-accuracy --follow` 查看。需要有界采集时可使用 `KaggleApi.kernels_logs_stream` 并在读取快照后关闭流。`kernels output` 的持久化日志在运行期间可能为空；应以实时日志与任务状态分别核对进度。

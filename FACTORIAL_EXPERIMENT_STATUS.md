@@ -49,4 +49,17 @@
 - [正式任务状态快照](physics_evidence/factorial_t4_smoke_passed_20261025/long_status_snapshot.json)
 - [正式 Kaggle 任务](https://www.kaggle.com/code/hwbwhzbsh/ferminet-factorial-accuracy)，version 1。
 
-Kaggle 返回 RUNNING。运行中日志接口尚未取得可用训练日志，因此这里不宣称具体轮数或已完成的实验数。正式结果须待 12 组训练和独立评估结束后验证，最终报告将写入 `physics_evidence/factorial_final_20261025/REPORT.md`；目前没有新的精度结论。
+Kaggle 返回 RUNNING。随后通过 Kaggle CLI 支持的实时日志流取得了训练日志，最新快照见下节。正式结果须待 12 组训练和独立评估结束后验证，最终报告将写入 `physics_evidence/factorial_final_20261025/REPORT.md`；目前没有新的精度结论。
+
+## 实时训练日志快照（香港时间 16:03）
+
+已通过 `KaggleApi.kernels_logs_stream` 拉取 531 条服务端日志事件。两张 T4 均在运行，worker exit_code 均为 null；未见 Traceback、case_failed、NaN/Inf 或显存不足。
+
+| GPU | 实验 | 新增更新 / 10000 | 累计轮数 | 最新训练批次能量 Ha |
+|---|---|---:|---:|---:|
+| 0 | ferminet_seed22_C | 4547 | 54547 | -1.17644596 |
+| 1 | ferminet_seed11_D | 4505 | 54505 | -1.17410445 |
+
+当前完成 0/12 组；其他组等待各自 GPU 的固定执行顺序。以上能量来自训练批次，不能用于化学精度判定，须等待正式独立 FP64 冻结评估。
+
+[完整日志](physics_evidence/factorial_live_20261025T080331Z/console.log)；[结构化进度](physics_evidence/factorial_live_20261025T080331Z/progress_summary.json)；[采集来源和哈希](physics_evidence/factorial_live_20261025T080331Z/capture_meta.json)。
