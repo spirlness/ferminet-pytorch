@@ -1,0 +1,124 @@
+{
+  "total_samples": 262144,
+  "num_valid": 262144,
+  "num_invalid": 0,
+  "energy_mean": -0.5453375289523504,
+  "energy_var": 1.0994970638579251,
+  "energy_std": 1.048569055359696,
+  "energy_sem": 0.002329038464896586,
+  "energy_sem_naive": 0.0020479864362494063,
+  "energy_sem_ess": 0.002329038464896586,
+  "energy_sem_block": 0.0022982014545452093,
+  "energy_ci95": [
+    -0.5499024443435477,
+    -0.5407726135611531
+  ],
+  "interval_method": "approximate_normal_95_percent",
+  "rho_1": 0.10621488469072607,
+  "rho_1_batch": 0.14443282124472798,
+  "tau_int": 1.2932996804090968,
+  "ess_fraction": 0.7732159956025658,
+  "effective_sample_size": 202693.933951239,
+  "split_rhat": 1.0004813787738638,
+  "reblocking": [
+    {
+      "block_length": 1,
+      "num_blocks": 512,
+      "sem": 0.0019366743211385185
+    },
+    {
+      "block_length": 2,
+      "num_blocks": 256,
+      "sem": 0.002051521557491184
+    },
+    {
+      "block_length": 4,
+      "num_blocks": 128,
+      "sem": 0.0022982014545452093
+    },
+    {
+      "block_length": 8,
+      "num_blocks": 64,
+      "sem": 0.0021086569073092043
+    },
+    {
+      "block_length": 16,
+      "num_blocks": 32,
+      "sem": 0.0017472412587484255
+    },
+    {
+      "block_length": 32,
+      "num_blocks": 16,
+      "sem": 0.0018328956855972875
+    }
+  ],
+  "blocking_plateau": true,
+  "diagnostics_status": "passed",
+  "diagnostics_reasons": [],
+  "decorrelation_steps": 20,
+  "eval_time_sec": 358.257100365,
+  "time_records": 512,
+  "requested_time_records": 512,
+  "energy_batch_size": 128,
+  "burn_in_seconds": 7.5077540109999745,
+  "production_seconds": 350.74934904800006,
+  "seed": 800221,
+  "stopping_reason": "completed",
+  "mcmc_acceptance": 0.22265625,
+  "mcmc_step_size": 1.1807267788856457,
+  "spin_projection": "singlet",
+  "trajectory_path": "/kaggle/working/ferminet_results/zero_seed22_soft_exponential/energy.pt",
+  "observations_manifest": "/kaggle/working/ferminet_results/zero_seed22_soft_exponential/observations/manifest.json",
+  "reference_label": "H2 BO singlet, R=1.4 bohr",
+  "reference_source": "https://doi.org/10.1103/PhysRevA.82.032509",
+  "chemical_accuracy_met": false,
+  "chemical_accuracy_status": "not_met",
+  "exact_energy": -1.17447571422,
+  "abs_error_ha": 0.6291381852676495,
+  "abs_error_mha": 629.1381852676495,
+  "abs_error_kcal": 394.7901717106173,
+  "hf_energy": -1.13362957,
+  "correlation_retrieved_pct": -1440.2633401064052,
+  "tail_summary": {
+    "total_samples": 262144,
+    "energy_mean": -0.5453375289523504,
+    "regions_overlap": true,
+    "regions": {
+      "far_nearest_nucleus_gt_3": {
+        "count": 218696,
+        "extreme_count": 111265,
+        "top_count": 26,
+        "variance_share": 0.9180179260994695,
+        "signed_error_contribution_mha": 644.2717784949542
+      },
+      "near_nucleus_lt_0.05": {
+        "count": 62,
+        "extreme_count": 26,
+        "top_count": 0,
+        "variance_share": 0.0003474568678542467,
+        "signed_error_contribution_mha": -0.1270368971171837
+      },
+      "near_electron_lt_0.1": {
+        "count": 0,
+        "extreme_count": 0,
+        "top_count": 0,
+        "variance_share": 0.0,
+        "signed_error_contribution_mha": 0.0
+      }
+    },
+    "extreme_threshold_abs_error_ha": 0.5,
+    "extreme_count": 111422,
+    "top_count": 26,
+    "top_variance_share": 0.0009953647180326642,
+    "limits": "Spatial flags overlap; variance attribution does not establish a causal mechanism."
+  },
+  "extreme_precision_audit": {
+    "passed": true,
+    "points": 32,
+    "max_log_difference": 9.656182946571334e-07,
+    "energy_rms_difference_ha": 1.0273281303843116e-06,
+    "max_energy_difference_ha": 3.7779313806218795e-06,
+    "scope": "Fixed sampled points only; no universal error bound"
+  },
+  "total_with_observations_seconds": 358.793885949
+}

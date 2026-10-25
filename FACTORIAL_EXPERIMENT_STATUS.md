@@ -2,7 +2,7 @@
 
 2026-10-25（香港时间）。科学配置为 FermiNet 三种子、四组、每组 10000 次更新、每组 1048576 个正式评估样本。
 
-**当前状态：第三轮门槛通过，正式 12 组实验已提交。** 固定源码为 `9b001c5bbd4c143058248bbc0c6e3585412ae27c`，Kaggle 状态快照为 RUNNING；最新 17:07 日志快照已有 2/12 组完成训练和冻结评估，完整结果仍待收集核验。当前聊天已安排完成后的产物核验与报告收尾，运行期间状态不变时不发送例行通知。
+**当前状态：正式 12/12 组完成，产物与统计复核通过。** 固定源码为 `9b001c5bbd4c143058248bbc0c6e3585412ae27c`，最后一组于香港时间 22:18:20 完成，22:24:13 确认 Kaggle COMPLETE。全部 350 个发布文件已取得，清单内 349 项 SHA-256、47 个源码文件以及 18 份 FP64 评估轨迹均核验通过。[最终报告](physics_evidence/factorial_final_20261025/REPORT.md)与[可复核摘要](physics_evidence/factorial_final_20261025/verified_summary.json)已归档。化学精度 A/B/C/D 分别为 2/3、3/3、3/3、3/3；三个预设配对效应的 Bonferroni 区间均跨零，改善证据不足。
 
 ## 第一轮实现与真实双 T4 短测
 
@@ -76,3 +76,14 @@ Kaggle 返回 RUNNING。随后通过 Kaggle CLI 支持的实时日志流取得�
 Kaggle 仍为 RUNNING；最新心跳显示两 worker 正常存活、退出码均为 null，GPU 利用率约 32%–33%、显存约 177–179 MiB。本次 1625 条日志事件未见 Traceback、NaN/Inf、OOM 或 case_failed。训练批次能量不能替代独立评估精度。
 
 [完整日志](physics_evidence/factorial_live_20261025T090743Z/console.log)；[结构化进度](physics_evidence/factorial_live_20261025T090743Z/progress_summary.json)。
+
+
+## 正式实验完成与产物核验
+
+12 组各追加 10000 次更新，最终 checkpoint 均为相对 epoch 10000、累计 60000。12 份正式评估各保留 2048×512 个 FP64 样本，6 份零步评估各保留 512×512 个样本；无失败、缺组、超时或非有限能量。大型检查点、resume、起点状态与全部观察分片保留在 `campaign_runs/factorial_final_9b001c5/`。
+
+使用 git archive 提取固定源码并运行其 `scripts.factorial_report`，349 个归档 SHA、父身份、更新数、独立评估种子、能量均值与 SEM 复算通过。补充核验逐片检查坐标、动能、势能、log 振幅、符号的 FP64 类型和有限性，时间与 walker 身份、E=T+V、轨迹逐值一致、ESS/R-hat/空间尾部统计均通过；Adam 与调度器净更新数、冻结适应及同父四组起点 walkers/RNG 也通过。
+
+本次 A/B/C/D 化学精度通过数为 2/3、3/3、3/3、3/3，全部最终采样诊断和前后/极端点数值审计通过。裁剪、包络、交互作用的均值分别为 −0.116031、−1.046245、+0.164057 mHa，Bonferroni 近似区间分别为 [−0.394219, 0.162157]、[−2.606224, 0.513734]、[−0.617823, 0.945938] mHa；均跨零，按预设规则报告证据不足。零步替换包络使能量即时升高，不能用零步评估代替最终迁移表现。
+
+[完整报告与边界](physics_evidence/factorial_final_20261025/REPORT.md)、[统计摘要](physics_evidence/factorial_final_20261025/verified_summary.json)、[原始轨迹审计](physics_evidence/factorial_final_20261025/raw_observation_audit.json)、[原始产物 SHA](physics_evidence/factorial_final_20261025/artifacts/archive_manifest.json)。此前运行日志快照保留，不代表最终状态。
