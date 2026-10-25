@@ -15,6 +15,8 @@ H₂ 核间距 1.4 bohr、单重态，两种主干各运行种子 11/22/33，每
 
 六组采样诊断及前后数值精度审计均通过。化学精度要求 `abs(E − E_ref) + 1.96 × SEM ≤ 1.5936 mHa`；参考能量为 −1.174475714220 Ha。均值描述三个不同 checkpoint，不是合并样本后的单个波函数结果。结论限于这组 H₂ 配置，最新原始结果见[50000 轮续训摘要](physics_evidence/continuation_final_20261025/summary.json)及[检查点核验](physics_evidence/continuation_final_20261025/verification.json)；[原 20000 轮报告](KAGGLE_T4_FINAL_RESULTS.md)保留为历史基线。裁剪 × 包络的 12 组新实验见[受控实验说明](FACTORIAL_EXPERIMENT_GUIDE.md)与[执行记录](FACTORIAL_EXPERIMENT_STATUS.md)，正式 12 组已完成并核验，A/B/C/D 化学精度通过数分别为 2/3、3/3、3/3、3/3；三个预设配对效应的调整区间均跨零，改善证据不足，见[最终对照报告](physics_evidence/factorial_final_20261025/REPORT.md)及[可复核摘要](physics_evidence/factorial_final_20261025/verified_summary.json)。
 
+下一轮 A/C 独立父种子复现已预注册：新增六个 Gaussian 父种子、各训练 50000 步并分叉 A/C；同时对既有轨迹做残余误差归因。实现与边界见 [A/C 复现说明](ENVELOPE_REPLICATION_GUIDE.md)。正式结果尚未产生。
+
 ## 安装与运行
 
 ```powershell

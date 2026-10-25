@@ -53,6 +53,15 @@ def main():
     import numpy as np
 
     plan = json.loads((source / config).read_text())
+    if plan.get("experiment") == "envelope_replication" and bool(globals().get("SMOKE_RUN")) != ("--smoke" in globals().get("CAMPAIGN_ARGUMENTS", [])):
+        raise RuntimeError("Replication smoke label and actual command disagree")
+    if plan.get("experiment") == "envelope_replication" and not globals().get("SMOKE_RUN"):
+        import hashlib
+
+        digest = hashlib.sha256(json.dumps(plan, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        if not (gate and gate.get("passed") is True and gate.get("source_commit") == revision
+                and gate.get("long_plan_sha256") == digest):
+            raise RuntimeError("Replication needs this immutable source/protocol's real T4 gate")
 
     if globals().get("PARENT_KERNEL"):
         parent_commit = (plan.get("fork") or plan["continuation"])["source_commit"]
@@ -118,9 +127,11 @@ def main():
                     "tests.test_continuation.TestContinuationCUDA",
                     *(
                         ["tests.test_factorial.TestFactorialCUDA"]
-                        if plan.get("fork")
+                        if plan.get("fork") or plan.get("experiment") == "envelope_replication"
                         else []
                     ),
+                    *(["tests.test_envelope_replication.TestReplicationCUDA"]
+                      if plan.get("experiment") == "envelope_replication" else []),
                     "-v",
                 ],
                 cwd=source,
@@ -145,6 +156,7 @@ def main():
             str(output),
             "--workers",
             "2",
+            *globals().get("CAMPAIGN_ARGUMENTS", []),
         ],
         cwd=source,
         env=env,

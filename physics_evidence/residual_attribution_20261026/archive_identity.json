@@ -1,0 +1,23 @@
+{
+  "archive_manifest.json": "3f6830f1b6d322da396cc97ebd415703b82e92d4823e7be5a7a76657df71f1b6",
+  "identity.json": "eb046d7e66a1d5f87efefc21891179d3e29dade1879b050c5c3ddc6d60d7eea8",
+  "provenance.json": "845bf0bf3f51c74993b8b233c158257d44548022e536832af8a8c5b556b61048",
+  "REPORT.md": "7555b84a712338e859fa632279bf529eba3e4e83d47f7318143e7b5c7201eb03",
+  "reporting_tool_source.py": "5c49edae6e3b3761b3c856122735919589c611039ff154b48b7a39f979293a18",
+  "residual_attribution_20261026.log": "943a2d53b4d394bfb6235dfe9fc4da690056a9db0a9b74f4e9c53202b055bc2a",
+  "residual_attribution_compute_source.py": "a5fcbf06ce3faa63476fe6fdf10258d55e21aae86b3dac97787c0189f02e3090",
+  "residual_attribution_report_20261026.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "summary.json": "2c698f03c9483a04b3d4ff4f85ddbbf93078e45d7828a775087de56fa7d0673c",
+  "ferminet_seed11_A/result.json": "2b082a36707081a031d606bc8f4f9a45d0c81cb9f32f237f3c270984d96ebee7",
+  "ferminet_seed11_B/result.json": "aebcc1327c579dc05aa8dfa65fd296c7e9c207709d27c42d23ce1752636e88da",
+  "ferminet_seed11_C/result.json": "5e2399fc4b6acb268bd0c03e0dad684067090b40eadaf36adc6f26bea488002c",
+  "ferminet_seed11_D/result.json": "9057603c32c25c70b8318a8dfeed2e057944fd3ec46b640c7d3dcdf78da5fe25",
+  "ferminet_seed22_A/result.json": "e2db7e969dc40b26bf1cd4e6bb42a4c901b6e593bc986b50b0bf38dbf01c73bf",
+  "ferminet_seed22_B/result.json": "e7118567570729f10bf67e79b3c02506cd4d6a74521c88185d1d0bd640bd4eb9",
+  "ferminet_seed22_C/result.json": "d1b7528a2ed01697210d19319556ed9107305a41a3217abdc6451cf0696dd96a",
+  "ferminet_seed22_D/result.json": "9f34bed2f3cf2cd0d71dac0a1bb9b8b64227c9ecfdb98bdece9d31bfe5dd5472",
+  "ferminet_seed33_A/result.json": "740513d5de2738577e61c1c74dfceb334753709490a0547b19fdf8de9e9d1e9b",
+  "ferminet_seed33_B/result.json": "379315c104d87967a503a8a53e0843af049c609d351b0565036818eb4f5d136c",
+  "ferminet_seed33_C/result.json": "8900ca245f6076c22796a80767df968b28d00eb8e3bc15b95bccc3fa4af0ad48",
+  "ferminet_seed33_D/result.json": "8b2f2618303701852459deb08f056166577605ddf9b9be00c611b567adbc7103"
+}
