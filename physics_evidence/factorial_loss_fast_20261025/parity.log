@@ -1,0 +1,4 @@
+{"arm": "A", "updates": 10, "parameters_walkers_history_rng_exact": true, "old_seconds": 3.1682762000127696, "new_seconds": 3.071256600000197}
+{"arm": "B", "updates": 10, "parameters_walkers_history_rng_exact": true, "old_seconds": 3.2302953000180423, "new_seconds": 2.814975899993442}
+{"arm": "C", "updates": 10, "parameters_walkers_history_rng_exact": true, "old_seconds": 2.7700875000155065, "new_seconds": 2.779069000011077}
+{"arm": "D", "updates": 10, "parameters_walkers_history_rng_exact": true, "old_seconds": 2.746093900001142, "new_seconds": 2.777417700010119}

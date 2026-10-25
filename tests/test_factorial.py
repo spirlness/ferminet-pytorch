@@ -135,6 +135,58 @@ class FactorialRuntimeChecks:
             self.assertFalse(observed[3].requires_grad)
             self.assertFalse(observed[4].requires_grad)
 
+    def test_finite_fast_path_preserves_partial_invalid_clipping_and_gradients(self):
+        values = torch.tensor(
+            [float("nan"), float("-inf"), float("inf"), -3.0, -2.0, 0.0, 1.0, 50.0],
+            device=self.device,
+            dtype=torch.float64,
+        )
+        finite = torch.isfinite(values)
+        for method in ("tanh", "hard", "mean_hard", "none"):
+            if method == "tanh":
+                expected = torch.tanh(
+                    torch.nan_to_num(values, nan=0.0, neginf=-10.0, posinf=10.0)
+                )
+            elif method == "hard":
+                expected = torch.nan_to_num(
+                    values, nan=0.0, neginf=-10.0, posinf=10.0
+                ).clamp(-1.0, 1.0)
+            elif method == "mean_hard":
+                expected = torch.where(finite, values, 0.0).clamp(-5.6, 5.6)
+            else:
+                expected = torch.where(finite, values, 0.0)
+            got, _, _ = clip_local_energy(values, clip_factor=0.5, method=method)
+            torch.testing.assert_close(got, expected, rtol=1e-12, atol=1e-12)
+            log = torch.arange(
+                len(values), device=self.device, dtype=torch.float64, requires_grad=True
+            )
+            with self.assertWarns(RuntimeWarning):
+                loss, stats = vmc_surrogate_loss(
+                    log,
+                    values,
+                    clip_factor=0.5,
+                    clip_method=method,
+                    max_invalid_fraction=1.0,
+                )
+            gradient = torch.autograd.grad(loss, log)[0]
+            wanted = torch.zeros_like(values)
+            wanted[finite] = (
+                2 * (expected[finite] - expected[finite].mean()) / int(finite.sum())
+            )
+            torch.testing.assert_close(gradient, wanted, rtol=1e-12, atol=1e-12)
+            self.assertEqual((stats["num_valid"], stats["num_invalid"]), (5, 3))
+            clean_log = log.detach()[finite].requires_grad_()
+            clean_loss, clean_stats = vmc_surrogate_loss(
+                clean_log, values[finite], clip_factor=0.5, clip_method=method
+            )
+            torch.testing.assert_close(
+                torch.autograd.grad(clean_loss, clean_log)[0],
+                wanted[finite],
+                rtol=1e-12,
+                atol=1e-12,
+            )
+            self.assertEqual(clean_stats["energy_mean"], stats["energy_mean"])
+
     def test_soft_envelope_coordinate_derivatives_and_asymptote(self):
         env = (
             NuclearEnvelope(1, 1, 1, envelope_type="soft_exponential")

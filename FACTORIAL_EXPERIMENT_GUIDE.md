@@ -67,3 +67,5 @@ F:\conda\envs\torch\python.exe -m scripts.factorial_report campaign_runs/factori
 收集工具核对归档 SHA、检查点、更新数、轨迹形状和重算统计，生成 `REPORT.md`、`verified_summary.json` 和原始 JSON/log 归档。大型 `.pt` 保留于下载目录；归档说明记录实际位置与哈希。
 
 不搜索 L、学习率或网络规模，不使用中途最低能量挑组选时长或检查点。原有诊断、历史源码和历史证据保留原始内容。
+
+全有限训练批次集中读取有效性计数，随后复用已验证张量并调用同一裁剪公式；部分非有限输入沿用原有拒绝、警告和裁剪规则。回归对照同时检查损失梯度、参数、walkers 和 RNG；性能预算由真实双 T4 实测判定。

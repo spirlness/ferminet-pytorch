@@ -1,0 +1,38 @@
+{
+  "training": [
+    {
+      "arm": "A",
+      "updates": 10,
+      "parameters_walkers_history_rng_exact": true,
+      "old_seconds": 3.1682762000127696,
+      "new_seconds": 3.071256600000197
+    },
+    {
+      "arm": "B",
+      "updates": 10,
+      "parameters_walkers_history_rng_exact": true,
+      "old_seconds": 3.2302953000180423,
+      "new_seconds": 2.814975899993442
+    },
+    {
+      "arm": "C",
+      "updates": 10,
+      "parameters_walkers_history_rng_exact": true,
+      "old_seconds": 2.7700875000155065,
+      "new_seconds": 2.779069000011077
+    },
+    {
+      "arm": "D",
+      "updates": 10,
+      "parameters_walkers_history_rng_exact": true,
+      "old_seconds": 2.746093900001142,
+      "new_seconds": 2.777417700010119
+    }
+  ],
+  "source_sha256": {
+    "ferminet_pytorch/loss.py": "0e5c23e5eb876f5a79653a925956aacb7f204b38230c5f07dd0e6fbaf466eb06",
+    "ferminet_pytorch/hamiltonian.py": "f1a993cee6f6fa9f4b477225d0b49892b37f82b1872db67a2c1259a9fe2be0b9",
+    "ferminet_pytorch/model.py": "a43cff329ab2e92a6f826ccf9df8e4c96e2bde7c29addbde656b9893705c7ff5"
+  },
+  "scope": "Temporary paired ten-update paths discarded; no scientific checkpoint selection."
+}

@@ -1,0 +1,11 @@
+{
+  "source_commit": "d357eed4b0761442c1284ba98116fc95bb7304a9",
+  "kernel": "hwbwhzbsh/ferminet-factorial-smoke",
+  "version": 2,
+  "archive_files_verified": 55,
+  "all_published_file_hashes_match": true,
+  "complete_artifact_download": "/mnt/c/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/.kaggle_deploy/factorial/d357eed4b076/smoke_output",
+  "formal_submitted": false,
+  "correctness_passed": true,
+  "projected_seconds": 29943.204990278922
+}

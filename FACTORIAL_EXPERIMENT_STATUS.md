@@ -26,3 +26,11 @@
 在相同科学配置与预算门槛下，继续减少评估的小块 GPU 回传、复用动能坐标前向的 log 振幅/符号，并合并训练标量统计回传。正式样本数、训练步数、裁剪规则、包络、Adam、学习率调度和精确反向动能均保持原方案。优化版本必须重新经过完整 CUDA 验收及真实双 T4 短测；第一轮拒绝回执保留。
 
 优化版本地完整严格 CUDA 验收为 **298 通过、0 失败、0 错误、0 跳过**，197.16 秒，见 [原始摘要](physics_evidence/factorial_cuda_io_20261025/summary.json)。本地冻结对照与 ABBA 测速的原始证据见 [对照说明](physics_evidence/factorial_io_comparison_20261025/README.md)。
+
+## 第二轮真实双 T4 短测
+
+固定源码：`d357eed4b0761442c1284ba98116fc95bb7304a9`。每组 100 次更新，每卡 14 项运行时检查通过、无跳过。四组正确性与全部 55 个发布文件哈希核验通过。最慢组更新均值 0.233545 秒，含观察分析的评估记录 0.658680 秒；使用相同 1.25 倍安全系数、900 秒预留和 8 小时阈值，预计 **29943.20 秒，约 8 小时 19 分钟**，预算仍未通过。见 [第二轮回执](physics_evidence/factorial_t4_smoke_io_20261025/gate.json)及[归档核验](physics_evidence/factorial_t4_smoke_io_20261025/verification.json)。正式 12 组配置哈希与第一轮一致，没有提交正式任务。
+
+继续优化已经验证为全有限的训练批次：避免重复检查与动态布尔索引，保留部分非有限数据的原有拒绝/警告/裁剪行为。仍须通过完整严格 CUDA 验收和新的真实双 T4 门槛。
+
+全有限路径优化后的本地严格 CUDA 验收为 **300 通过、0 失败、0 错误、0 跳过**，185.47 秒，见 [原始摘要](physics_evidence/factorial_cuda_fast_loss_20261025/summary.json)。四组临时更新与基线的逐值回归见 [训练路径对照](physics_evidence/factorial_loss_fast_20261025/parity.json)。

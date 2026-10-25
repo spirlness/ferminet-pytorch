@@ -42,32 +42,61 @@ def clip_local_energy(
     仅以有效样本估计中位数/MAD；VMC 损失会排除这些无效样本。
     """
     finite_mask = torch.isfinite(e_local)
-    if not finite_mask.any():
+    num_finite = int(finite_mask.sum().item())
+    if not num_finite:
         raise FloatingPointError(
             "No finite local energies; cannot compute energy statistics"
         )
 
-    finite_e = e_local[finite_mask]
+    all_finite = num_finite == e_local.numel()
+    finite_e = e_local if all_finite else e_local[finite_mask]
+    return _clip_energy_values(
+        e_local,
+        finite_e,
+        clip_factor,
+        method,
+        eps,
+        finite_mask=None if all_finite else finite_mask,
+    )
+
+
+def _clip_energy_values(
+    e_local, finite_e, clip_factor, method, eps=1e-8, finite_mask=None
+):
+    """One clipping formula; callers supply the already validated finite subset."""
     if method == "mean_hard" and clip_factor > 0:
         # Standard median averages the two middle values for an even batch.
         center = torch.quantile(finite_e, 0.5)
         mean_deviation = (finite_e - center).abs().mean()
         width = clip_factor * mean_deviation
-        clean = torch.where(finite_mask, e_local, center)
+        clean = (
+            e_local
+            if finite_mask is None
+            else torch.where(finite_mask, e_local, center)
+        )
         return clean.clamp(center - width, center + width), center, mean_deviation
     e_median = torch.median(finite_e)
     mad = torch.median(torch.abs(finite_e - e_median))
 
     if method == "none" or clip_factor <= 0:
-        return torch.where(finite_mask, e_local, e_median), e_median, mad
+        clean = (
+            e_local.clone()
+            if finite_mask is None
+            else torch.where(finite_mask, e_local, e_median)
+        )
+        return clean, e_median, mad
 
     min_physical_delta = max(float(eps), 1e-3, 0.01 * float(torch.abs(e_median).item()))
     delta = torch.clamp(clip_factor * mad, min=min_physical_delta)
-    clean_e = torch.nan_to_num(
-        e_local,
-        nan=e_median.item(),
-        posinf=(e_median + 10.0 * delta).item(),
-        neginf=(e_median - 10.0 * delta).item(),
+    clean_e = (
+        e_local
+        if finite_mask is None
+        else torch.nan_to_num(
+            e_local,
+            nan=e_median.item(),
+            posinf=(e_median + 10.0 * delta).item(),
+            neginf=(e_median - 10.0 * delta).item(),
+        )
     )
 
     if method == "tanh":
@@ -118,13 +147,16 @@ def vmc_surrogate_loss(
 
     # 1. 局域能量截断与分离梯度 (阻止对 E_L 进行高阶求导)
     e_local_detached = e_local.detach()
-    valid_mask = torch.isfinite(e_local_detached) & torch.isfinite(log_abs_psi)
-    if not valid_mask.any():
+    log_finite = torch.isfinite(log_abs_psi)
+    valid_mask = torch.isfinite(e_local_detached) & log_finite
+    num_valid, num_log_finite = (
+        torch.stack((valid_mask.sum(), log_finite.sum())).cpu().tolist()
+    )
+    if not num_valid:
         raise FloatingPointError("No finite local energies; VMC update aborted")
-    if not torch.isfinite(log_abs_psi).all():
+    if num_log_finite != batch_size:
         raise FloatingPointError("Nonfinite log|Psi|; VMC update aborted")
 
-    num_valid = int(valid_mask.sum().item())
     num_invalid = batch_size - num_valid
     invalid_fraction = float(num_invalid) / float(batch_size)
     if invalid_fraction > max_invalid_fraction:
@@ -133,7 +165,8 @@ def vmc_surrogate_loss(
             f"exceeds maximum allowed {max_invalid_fraction:.2%}; VMC update aborted"
         )
 
-    finite_e = e_local_detached[valid_mask]
+    finite_e = e_local_detached if not num_invalid else e_local_detached[valid_mask]
+    finite_log = log_abs_psi if not num_invalid else log_abs_psi[valid_mask]
     if num_invalid:
         warnings.warn(
             f"Excluded {num_invalid}/{batch_size} nonfinite local energies from the VMC estimate",
@@ -141,8 +174,8 @@ def vmc_surrogate_loss(
             stacklevel=2,
         )
 
-    e_clipped, e_median, mad = clip_local_energy(
-        finite_e, clip_factor=clip_factor, method=clip_method
+    e_clipped, e_median, mad = _clip_energy_values(
+        finite_e, finite_e, clip_factor=clip_factor, method=clip_method
     )
 
     # 2. 计算中心化能量差
@@ -150,7 +183,7 @@ def vmc_surrogate_loss(
     delta_e = (e_clipped - mean_clipped_energy).detach()
 
     # 3. 构造变分代理损失: L = 2.0 * mean( Delta E * ln|Psi| )
-    loss = 2.0 * torch.mean(delta_e * log_abs_psi[valid_mask])
+    loss = 2.0 * torch.mean(delta_e * finite_log)
 
     # 4. 统计物理指标
     raw_variance = (
@@ -181,7 +214,7 @@ def vmc_surrogate_loss(
         "energy_median": center_value,
         "energy_mad": scale_value,
         "energy_clip_scale_statistic": "mean_absolute_deviation"
-        if clip_method == "mean_hard"
+        if clip_method == "mean_hard" and clip_factor > 0
         else "median_absolute_deviation",
         "loss": loss_value,
         "num_valid": num_valid,
