@@ -1,0 +1,13 @@
+{
+  "source_commit": "9b001c5bbd4c143058248bbc0c6e3585412ae27c",
+  "kernel": "hwbwhzbsh/ferminet-factorial-smoke",
+  "smoke_version": 3,
+  "archive_files_verified": 55,
+  "all_published_file_hashes_match": true,
+  "complete_artifact_download": "/mnt/c/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/.kaggle_deploy/factorial/9b001c5bbd4c/smoke_output",
+  "formal_submitted": true,
+  "formal_kernel": "hwbwhzbsh/ferminet-factorial-accuracy",
+  "formal_version": 1,
+  "snapshot_utc": "2026-10-25T07:52:20.479906+00:00",
+  "followup": "Current-chat heartbeat scheduled to collect and verify final artifacts; no periodic unchanged-state notifications."
+}

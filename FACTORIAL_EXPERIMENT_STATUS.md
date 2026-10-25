@@ -2,6 +2,8 @@
 
 2026-10-25（香港时间）。科学配置为 FermiNet 三种子、四组、每组 10000 次更新、每组 1048576 个正式评估样本。
 
+**当前状态：第三轮门槛通过，正式 12 组实验已提交。** 固定源码为 `9b001c5bbd4c143058248bbc0c6e3585412ae27c`，Kaggle 状态快照为 RUNNING；完整冻结评估结果尚未产生。当前聊天已安排完成后的产物核验与报告收尾，运行期间状态不变时不发送例行通知。
+
 ## 第一轮实现与真实双 T4 短测
 
 固定源码：`ae0bc0dc542b932004b7aa75a0766c10af3610c3`。
@@ -34,3 +36,17 @@
 继续优化已经验证为全有限的训练批次：避免重复检查与动态布尔索引，保留部分非有限数据的原有拒绝/警告/裁剪行为。仍须通过完整严格 CUDA 验收和新的真实双 T4 门槛。
 
 全有限路径优化后的本地严格 CUDA 验收为 **300 通过、0 失败、0 错误、0 跳过**，185.47 秒，见 [原始摘要](physics_evidence/factorial_cuda_fast_loss_20261025/summary.json)。四组临时更新与基线的逐值回归见 [训练路径对照](physics_evidence/factorial_loss_fast_20261025/parity.json)。
+
+## 第三轮真实双 T4 门槛通过与正式提交
+
+固定源码：`9b001c5bbd4c143058248bbc0c6e3585412ae27c`。每卡 **15 项运行时检查通过、无跳过**；四组各净新增 **100 次更新**。父状态/RNG、前后数值审计、完整观察分片、日志和全部 55 个发布文件哈希均核验通过。
+
+最慢组更新均值 **0.213749 秒**，含观察分析的评估记录 **0.625056 秒**。沿用相同的 1.25 倍安全系数与 900 秒启动预留，正式 12 组预计 **27863.00 秒，约 7 小时 44 分钟**，低于 28800 秒门槛。这是短测外推，不保证实际时长。没有缩短正式训练或评估，没有修改网络、优化器或动能算法；正式配置哈希在三轮中始终为 `96ad8912f83ea9d064eac193199970b48b5cce927508d60c6a12d5665448cd78`。
+
+- [门槛通过回执](physics_evidence/factorial_t4_smoke_passed_20261025/gate.json)
+- [原始产物核验与下载位置](physics_evidence/factorial_t4_smoke_passed_20261025/verification.json)
+- [自动提交流程记录](physics_evidence/factorial_t4_smoke_passed_20261025/pipeline.json)
+- [正式任务状态快照](physics_evidence/factorial_t4_smoke_passed_20261025/long_status_snapshot.json)
+- [正式 Kaggle 任务](https://www.kaggle.com/code/hwbwhzbsh/ferminet-factorial-accuracy)，version 1。
+
+Kaggle 返回 RUNNING。运行中日志接口尚未取得可用训练日志，因此这里不宣称具体轮数或已完成的实验数。正式结果须待 12 组训练和独立评估结束后验证，最终报告将写入 `physics_evidence/factorial_final_20261025/REPORT.md`；目前没有新的精度结论。

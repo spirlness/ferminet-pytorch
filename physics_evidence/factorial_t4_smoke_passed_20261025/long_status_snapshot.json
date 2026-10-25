@@ -1,0 +1,8 @@
+{
+  "kernel": "hwbwhzbsh/ferminet-factorial-accuracy",
+  "version": 1,
+  "source_commit": "9b001c5bbd4c143058248bbc0c6e3585412ae27c",
+  "status": "KernelWorkerStatus.RUNNING",
+  "failure_message": "",
+  "snapshot_utc": "2026-10-25T07:55:08.554294+00:00"
+}

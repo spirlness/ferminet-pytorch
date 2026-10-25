@@ -1,0 +1,33 @@
+Warning: Looks like you're using an outdated `kaggle` version (installed: 2.2.4), please consider upgrading to the latest version (2.2.5)
+Kernel version 3 successfully pushed.  Please check progress at https://www.kaggle.com/code/hwbwhzbsh/ferminet-factorial-smoke
+
+{"source_commit": "9b001c5bbd4c143058248bbc0c6e3585412ae27c", "long_plan_sha256": "96ad8912f83ea9d064eac193199970b48b5cce927508d60c6a12d5665448cd78", "phase": "smoke_submitted", "smoke_kernel": "hwbwhzbsh/ferminet-factorial-smoke"}
+Warning: Looks like you're using an outdated `kaggle` version (installed: 2.2.4), please consider upgrading to the latest version (2.2.5)
+hwbwhzbsh/ferminet-factorial-smoke has status "KernelWorkerStatus.RUNNING"
+
+Warning: Looks like you're using an outdated `kaggle` version (installed: 2.2.4), please consider upgrading to the latest version (2.2.5)
+hwbwhzbsh/ferminet-factorial-smoke has status "KernelWorkerStatus.COMPLETE"
+
+{"source_commit": "9b001c5bbd4c143058248bbc0c6e3585412ae27c", "long_plan_sha256": "96ad8912f83ea9d064eac193199970b48b5cce927508d60c6a12d5665448cd78", "phase": "smoke_passed", "smoke_kernel": "hwbwhzbsh/ferminet-factorial-smoke", "receipt": "C:\\Users\\Administrator\\.gemini\\antigravity\\scratch\\ferminet_pytorch\\.kaggle_deploy\\factorial\\9b001c5bbd4c\\gate.json", "timing": {"projected_wall_seconds": 27863.000639403308, "seconds_per_update": 0.21374917133684423, "seconds_per_record_including_observation_analysis": 0.6250563609374993, "evaluation_burn_seconds": 6.964029444000005, "training_burn_seconds": 6.999138786000003, "safety_factor": 1.25, "startup_reserve_seconds": 900, "within_budget": true}}
+Warning: Looks like you're using an outdated `kaggle` version (installed: 2.2.4), please consider upgrading to the latest version (2.2.5)
+Kernel version 1 successfully pushed.  Please check progress at https://www.kaggle.com/code/hwbwhzbsh/ferminet-factorial-accuracy
+
+{"source_commit": "9b001c5bbd4c143058248bbc0c6e3585412ae27c", "long_plan_sha256": "96ad8912f83ea9d064eac193199970b48b5cce927508d60c6a12d5665448cd78", "phase": "long_submitted", "smoke_kernel": "hwbwhzbsh/ferminet-factorial-smoke", "receipt": "C:\\Users\\Administrator\\.gemini\\antigravity\\scratch\\ferminet_pytorch\\.kaggle_deploy\\factorial\\9b001c5bbd4c\\gate.json", "timing": {"projected_wall_seconds": 27863.000639403308, "seconds_per_update": 0.21374917133684423, "seconds_per_record_including_observation_analysis": 0.6250563609374993, "evaluation_burn_seconds": 6.964029444000005, "training_burn_seconds": 6.999138786000003, "safety_factor": 1.25, "startup_reserve_seconds": 900, "within_budget": true}, "long_kernel": "hwbwhzbsh/ferminet-factorial-accuracy"}
+{
+  "source_commit": "9b001c5bbd4c143058248bbc0c6e3585412ae27c",
+  "long_plan_sha256": "96ad8912f83ea9d064eac193199970b48b5cce927508d60c6a12d5665448cd78",
+  "phase": "long_submitted",
+  "smoke_kernel": "hwbwhzbsh/ferminet-factorial-smoke",
+  "receipt": "C:\\Users\\Administrator\\.gemini\\antigravity\\scratch\\ferminet_pytorch\\.kaggle_deploy\\factorial\\9b001c5bbd4c\\gate.json",
+  "timing": {
+    "projected_wall_seconds": 27863.000639403308,
+    "seconds_per_update": 0.21374917133684423,
+    "seconds_per_record_including_observation_analysis": 0.6250563609374993,
+    "evaluation_burn_seconds": 6.964029444000005,
+    "training_burn_seconds": 6.999138786000003,
+    "safety_factor": 1.25,
+    "startup_reserve_seconds": 900,
+    "within_budget": true
+  },
+  "long_kernel": "hwbwhzbsh/ferminet-factorial-accuracy"
+}
