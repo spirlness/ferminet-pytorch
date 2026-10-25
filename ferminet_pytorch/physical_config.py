@@ -10,8 +10,8 @@ def cusp_defaults(envelope_type, smooth_cuspless, has_jastrow, jastrow=None):
     nuclear_cusp = has_jastrow and getattr(jastrow, "cusp_en", True)
     env = envelope_type or ("gaussian" if nuclear_cusp else "exponential")
     smooth = True if smooth_cuspless is None else smooth_cuspless
-    if env not in ("gaussian", "exponential"):
-        raise ValueError("envelope_type must be gaussian or exponential")
+    if env not in ("gaussian", "exponential", "soft_exponential"):
+        raise ValueError("Unknown envelope_type")
     if nuclear_cusp and env == "exponential":
         raise ValueError(
             "An electron-nuclear cusp Jastrow requires a cuspless gaussian envelope"

@@ -1,0 +1,43 @@
+{
+  "source_kernel": "hwbwhzbsh/ferminet-t4x2-continue-multiseed",
+  "source_commit": "114377b6be860d6f4e19de1642a76ce957119a12",
+  "scope": "Existing six final checkpoint hashes checked against freshly downloaded published summary; no training or new evaluation.",
+  "checks": [
+    {
+      "interaction": "ferminet",
+      "seed": 11,
+      "sha256": "52c2fd0c364924ffbcecf66a071b3ecf539ec4c3748fe10fa21c384cbbe63cd3",
+      "matched": true
+    },
+    {
+      "interaction": "psiformer",
+      "seed": 11,
+      "sha256": "3253f2bcbbb3a7413c23fc0e30b4a8f3373e006869221288dae71d89044bae5d",
+      "matched": true
+    },
+    {
+      "interaction": "ferminet",
+      "seed": 22,
+      "sha256": "9a95dd94a503117fcfa4e9e6e82170a7e450289f41b6229ae8282cf3fb44d049",
+      "matched": true
+    },
+    {
+      "interaction": "psiformer",
+      "seed": 22,
+      "sha256": "ebd223b07de52756019653e539464141465b550c9dd3c5e1df3a64fed49dc1df",
+      "matched": true
+    },
+    {
+      "interaction": "ferminet",
+      "seed": 33,
+      "sha256": "ff3cc18aafd527745b19e109937debccd8abeb17e3e650c92e4f5a7e6e667858",
+      "matched": true
+    },
+    {
+      "interaction": "psiformer",
+      "seed": 33,
+      "sha256": "cf70da816df40418ade4d6240220cabb88c55197e5cb0f7c9c64e4282ff2ee74",
+      "matched": true
+    }
+  ]
+}

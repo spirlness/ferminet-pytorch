@@ -41,6 +41,7 @@ class TrainingConfig:
     eval_decorrelation_steps: int = 10
     spin_adapted: bool = False
     envelope_type: Optional[str] = None
+    envelope_scale: float = 2.0
     smooth_cuspless: Optional[bool] = None
     restore_best: bool = True
     checkpoint_path: Optional[str] = None
@@ -56,6 +57,10 @@ class TrainingConfig:
     verbose: bool = True
 
     def __post_init__(self):
+        if not math.isfinite(self.envelope_scale) or self.envelope_scale <= 0:
+            raise ValueError("envelope_scale must be positive and finite")
+        if self.clip_method not in ("tanh", "hard", "mean_hard", "none"):
+            raise ValueError("Unknown clip_method")
         if self.lr_schedule not in ("cosine", "warmup_inverse"):
             raise ValueError("Unknown learning-rate schedule")
         if self.lr_warmup_epochs < 0 or self.lr_decay_epochs < 1:
@@ -129,6 +134,7 @@ class VMCDriver:
         self.epoch, self.stage = 0, 1
         self.history, self.best = [], {}
         self.continuation = None
+        self.experiment_origin = None
         self.is_two_stage = (
             self.config.two_stage_jastrow and model.has_trainable_jastrow()
         )
@@ -174,7 +180,9 @@ class VMCDriver:
         )
         self.optimizer = torch.optim.Adam(groups)
         self.scheduler = build_training_scheduler(
-            self.optimizer, self.config.num_epochs - self.stage1_epochs, self.config
+            self.optimizer,
+            self.config.num_epochs - (self.stage1_epochs if self.is_two_stage else 0),
+            self.config,
         )
 
     def step(self):
@@ -294,6 +302,8 @@ class VMCDriver:
                 },
                 stage=self.stage,
                 continuation=self.continuation,
+                experiment_origin=self.experiment_origin,
+                model_identity=self._model_identity(),
             ),
             target.with_name(target.name + ".tmp"),
         )
@@ -307,6 +317,136 @@ class VMCDriver:
         """
         saved = torch.load(path, map_location="cpu", weights_only=True)
         return self._restore_checkpoint(saved)
+
+    def _model_identity(self):
+        """Constructor choices which cannot be inferred from tensor shapes."""
+        return {
+            **{
+                name: getattr(self.model, name)
+                for name in (
+                    "n_up",
+                    "n_down",
+                    "num_determinants",
+                    "num_layers",
+                    "hidden_dim_one",
+                    "hidden_dim_two",
+                    "interaction_type",
+                    "eps",
+                    "envelope_type",
+                    "envelope_scale",
+                    "smooth_cuspless",
+                )
+            },
+            "spin_mode": getattr(self.model.spin_projector, "mode", None),
+            "jastrow_class": type(self.model.jastrow).__qualname__,
+        }
+
+    def fork_from_checkpoint(
+        self, path, *, expected_sha256, parent_model_identity=None
+    ):
+        """Start a declared experiment, resetting Adam/history but retaining lineage.
+
+        Legacy schema-2 parents need an externally verified model identity because
+        their training flags did not necessarily describe the assembled model.
+        Unlike resumption, a fork deliberately resets its update counter to zero.
+        """
+        if self.epoch or self.history or self.experiment_origin is not None:
+            raise ValueError("Fork requires a fresh driver")
+        digest = hashlib.sha256(Path(path).read_bytes()).hexdigest()
+        if digest != expected_sha256:
+            raise ValueError("Parent checkpoint SHA-256 mismatch")
+        saved = torch.load(path, map_location="cpu", weights_only=True)
+        if (
+            saved.get("schema_version") != 2
+            or saved.get("stage") != 2
+            or saved.get("epoch") != saved["config"]["num_epochs"]
+        ):
+            raise ValueError("Fork requires a completed schema-2 stage-2 parent")
+        identity = saved.get("model_identity") or parent_model_identity
+        target = self._model_identity()
+        if identity is None:
+            raise ValueError("Legacy parent requires verified parent_model_identity")
+        if saved.get("model_identity") and parent_model_identity is not None:
+            if saved["model_identity"] != parent_model_identity:
+                raise ValueError("Conflicting parent model identity")
+        if identity.get("envelope_type") != "gaussian":
+            raise ValueError("Experiment fork requires a Gaussian parent")
+        if target["envelope_type"] not in ("gaussian", "soft_exponential"):
+            raise ValueError("Unsupported fork envelope")
+        for key in target:
+            if (
+                key not in ("envelope_type", "envelope_scale")
+                and identity.get(key) != target[key]
+            ):
+                raise ValueError(f"Parent model identity differs: {key}")
+        state = saved["model_state_dict"]
+        for key in ("nuclear_coords", "nuclear_charges"):
+            if not torch.equal(state[key], self.model.state_dict()[key].detach().cpu()):
+                raise ValueError("Parent molecular system differs")
+            if not torch.equal(state[key], getattr(self.system, key).detach().cpu()):
+                raise ValueError("Driver molecular system differs")
+        if (self.system.n_up, self.system.n_down) != (
+            self.model.n_up,
+            self.model.n_down,
+        ):
+            raise ValueError("Driver spin partition differs")
+        if (
+            self.config.two_stage_jastrow
+            or self.config.restore_best
+            or self.config.compile_sampler
+            or self.config.lr_schedule != "warmup_inverse"
+        ):
+            raise ValueError(
+                "Fork needs all-parameter eager training and an explicit tail schedule"
+            )
+        for key in (
+            "num_walkers",
+            "mcmc_steps_per_epoch",
+            "move_mode",
+            "dtype",
+            "grad_clip",
+        ):
+            if saved["config"][key] != getattr(self.config, key):
+                raise ValueError(
+                    f"Parent sampling/training configuration differs: {key}"
+                )
+        if (
+            saved["walkers"].shape != self.sampler.walkers.shape
+            or saved["walkers"].dtype != self.sampler.dtype
+            or (saved["cuda_rng_state"] is not None)
+            != (self.sampler.device.type == "cuda")
+        ):
+            raise ValueError(
+                "Fork requires matching walker shape, dtype and CPU/CUDA backend"
+            )
+        if (
+            saved["kinetic_mode"] != KineticMode(self.kinetic_mode).value
+            or saved["num_probes"] != self.num_probes
+        ):
+            raise ValueError("Parent kinetic configuration differs")
+        self.model.load_state_dict(state, strict=True)
+        self.model.unfreeze_jastrow()
+        for parameter in self.model.parameters():
+            parameter.requires_grad_(True)
+        self._configure_stage_two()
+        self.stage = 2
+        self.sampler.walkers = saved["walkers"].to(self.sampler.device).clone()
+        self.sampler.step_size = saved["step_size"]
+        self.sampler.recompute_log_psi()
+        self.experiment_origin = dict(
+            parent_checkpoint_sha256=digest,
+            parent_epoch=saved["epoch"],
+            parent_model_identity=identity,
+            model_identity=target,
+            parent_config=saved["config"],
+            config=asdict(self.config),
+            optimizer_state_preserved=False,
+            rng_policy="parent_before_rethermalization",
+        )
+        torch.set_rng_state(saved["rng_state"])
+        if saved["cuda_rng_state"] is not None:
+            torch.cuda.set_rng_state(saved["cuda_rng_state"], self.sampler.device)
+        return self
 
     def extend_from_checkpoint(self, path, *, expected_sha256):
         """Explicit schedule migration; preserve Adam, walkers/RNG and lineage.
@@ -357,6 +497,11 @@ class VMCDriver:
             raise ValueError("Load a checkpoint into a freshly constructed driver")
         if saved.get("schema_version") != 2:
             raise ValueError("Resume requires checkpoint schema version 2")
+        if (
+            saved.get("model_identity") is not None
+            and saved["model_identity"] != self._model_identity()
+        ):
+            raise ValueError("Checkpoint model identity does not match")
         ignored = {"device", "checkpoint_path", "verbose"}
         if extending:
             ignored |= {
@@ -404,12 +549,13 @@ class VMCDriver:
             raise ValueError("Resume must use the original CPU/CUDA backend")
         self.model.load_state_dict(saved["model_state_dict"])
         self.epoch, self.stage = saved["epoch"], saved["stage"]
-        if self.stage == 2 and self.is_two_stage:
+        if self.stage == 2 and (self.is_two_stage or saved.get("experiment_origin")):
             self._configure_stage_two()
         self.optimizer.load_state_dict(saved["optimizer_state_dict"])
         self.scheduler.load_state_dict(saved["scheduler_state_dict"])
         self.history, self.best = saved["history_rows"], saved["best_records"]
         self.continuation = saved.get("continuation")
+        self.experiment_origin = saved.get("experiment_origin")
         self.sampler.walkers = walkers.to(self.sampler.device)
         self.sampler.step_size = saved["step_size"]
         for name, value in saved["sampler_settings"].items():
@@ -486,6 +632,7 @@ def train_vmc(system=None, model=None, config=None):
             use_cusp_jastrow=config.use_cusp_jastrow,
             spin_adapted=config.spin_adapted,
             envelope_type=config.envelope_type,
+            envelope_scale=config.envelope_scale,
             smooth_cuspless=config.smooth_cuspless,
             interaction_type=config.interaction_type,
         )

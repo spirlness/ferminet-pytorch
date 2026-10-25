@@ -31,6 +31,8 @@ def clip_local_energy(
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     基于中位数绝对偏差 (MAD) 的局域能量截断 (默认 Umrigar Tanh 模式)。
+    mean_hard 使用标准中位数、平均绝对偏差和硬裁剪，无能量零点相关下限；
+    该模式第三个返回值为平均绝对偏差，其余模式仍为 median MAD。
 
     公式:
         E_median = median(E_L), MAD = median(|E_L - E_median|), Delta = max(clip_factor * MAD, eps)
@@ -46,6 +48,13 @@ def clip_local_energy(
         )
 
     finite_e = e_local[finite_mask]
+    if method == "mean_hard" and clip_factor > 0:
+        # Standard median averages the two middle values for an even batch.
+        center = torch.quantile(finite_e, 0.5)
+        mean_deviation = (finite_e - center).abs().mean()
+        width = clip_factor * mean_deviation
+        clean = torch.where(finite_mask, e_local, center)
+        return clean.clamp(center - width, center + width), center, mean_deviation
     e_median = torch.median(finite_e)
     mad = torch.median(torch.abs(finite_e - e_median))
 
@@ -66,7 +75,9 @@ def clip_local_energy(
     elif method == "hard":
         e_clipped = torch.clamp(clean_e, min=e_median - delta, max=e_median + delta)
     else:
-        raise ValueError(f"不支持的截断方法: {method}，可选 'tanh', 'hard', 'none'")
+        raise ValueError(
+            f"不支持的截断方法: {method}，可选 'tanh', 'hard', 'mean_hard', 'none'"
+        )
 
     return e_clipped, e_median, mad
 
@@ -90,7 +101,7 @@ def vmc_surrogate_loss(
         log_abs_psi: 具有参数梯度的对数波函数值, Shape: (B,)
         e_local: 各 walker 处的局域能量数值, Shape: (B,)
         clip_factor: 截断阈值倍数 (MAD 倍数)
-        clip_method: 截断方法 ('tanh', 'hard', 'none')
+        clip_method: 截断方法 ('tanh', 'hard', 'mean_hard', 'none')
         max_invalid_fraction: 允许的最大非有限样本占比阈值 (默认 0.10, 即 10%)。若超标立即抛出 FloatingPointError。
 
     Returns:
@@ -153,6 +164,9 @@ def vmc_surrogate_loss(
         "energy_clipped_mean": mean_clipped_energy.item(),
         "energy_median": e_median.item(),
         "energy_mad": mad.item(),
+        "energy_clip_scale_statistic": "mean_absolute_deviation"
+        if clip_method == "mean_hard"
+        else "median_absolute_deviation",
         "loss": loss.item(),
         "num_valid": num_valid,
         "num_invalid": num_invalid,

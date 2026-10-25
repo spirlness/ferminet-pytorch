@@ -10,6 +10,7 @@ from torch import nn
 from .hamiltonian import MolecularSystem, compute_local_energy
 from .mcmc import MCMCSampler
 from .vmc_statistics import energy_statistics, apply_reference
+from .evaluation_observations import ObservationWriter
 
 
 def evaluate_frozen_wavefunction(
@@ -35,6 +36,8 @@ def evaluate_frozen_wavefunction(
     energy_batch_size: Optional[int] = None,
     progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
     should_stop: Optional[Callable[[], bool]] = None,
+    observations_path: Optional[str] = None,
+    records_per_shard: int = 128,
 ) -> Dict[str, Any]:
     """Approximate intervals conditional on this checkpoint, not training error.
 
@@ -53,10 +56,16 @@ def evaluate_frozen_wavefunction(
     target_device = (
         torch.device(device) if device is not None else system.nuclear_coords.device
     )
-    was_training = model.training
-    model.eval()
     start = time.perf_counter()
     trajectory = []
+    writer = (
+        ObservationWriter(observations_path, records_per_shard, num_walkers, seed)
+        if observations_path is not None
+        else None
+    )
+    observations_complete = False
+    was_training = model.training
+    model.eval()
     try:
         sampler = MCMCSampler(
             model,
@@ -102,14 +111,31 @@ def evaluate_frozen_wavefunction(
             walkers = sampler.sample(decorrelation_steps, adapt=False)
             batches = walkers.split(energy_batch_size or num_walkers)
             chunks = []
+            kinetics, potentials, logs, signs = [], [], [], []
             for batch in batches:
                 r = batch.detach().clone().requires_grad_(True)
-                energy, _, _ = compute_local_energy(model, system, r)
+                energy, kinetic, potential = compute_local_energy(model, system, r)
                 chunks.append(energy.detach().cpu())
+                if writer is not None:
+                    with torch.no_grad():
+                        log_abs, sign = model.forward_log_psi(batch.detach())
+                    kinetics.append(kinetic.detach().cpu())
+                    potentials.append(potential.detach().cpu())
+                    logs.append(log_abs.detach().cpu())
+                    signs.append(sign.detach().cpu())
             energies = torch.cat(chunks)
             if not torch.isfinite(energies).all():
                 raise FloatingPointError(
                     "Nonfinite energy in frozen evaluation; no observations were discarded"
+                )
+            if writer is not None:
+                writer.append(
+                    positions=walkers,
+                    energy=energies,
+                    kinetic=torch.cat(kinetics),
+                    potential=torch.cat(potentials),
+                    log_abs=torch.cat(logs),
+                    sign=torch.cat(signs),
                 )
             trajectory.append(energies.detach().cpu())
             if progress_callback is not None:
@@ -130,6 +156,8 @@ def evaluate_frozen_wavefunction(
             time_records=len(trajectory),
             requested_time_records=num_steps,
             energy_batch_size=energy_batch_size or num_walkers,
+            burn_in_seconds=production_start - start,
+            production_seconds=time.perf_counter() - production_start,
             seed=seed,
             stopping_reason="completed"
             if len(trajectory) == num_steps
@@ -143,8 +171,15 @@ def evaluate_frozen_wavefunction(
         if trajectory_path is not None:
             torch.save(series, trajectory_path)
             result["trajectory_path"] = os.path.abspath(trajectory_path)
+        observations_complete = len(trajectory) == num_steps
     finally:
-        model.train(was_training)
+        try:
+            if writer is not None:
+                observation_manifest = writer.close(complete=observations_complete)
+        finally:
+            model.train(was_training)
+    if writer is not None:
+        result["observations_manifest"] = observation_manifest
 
     # Reference matching includes electron number, geometry and target spin.
     projector = getattr(model, "spin_projector", None)

@@ -1,6 +1,7 @@
 """Nuclear envelopes evaluated from precomputed electron–nucleus distances."""
 
 from typing import Optional
+import math
 
 import torch
 from torch import nn
@@ -23,18 +24,22 @@ class NuclearEnvelope(nn.Module):
         init_decay_rate: float = 1.0,
         envelope_type: str = "exponential",
         nuclear_charges: Optional[torch.Tensor] = None,
+        envelope_scale: float = 2.0,
     ) -> None:
         super().__init__()
         if min(num_determinants, num_orbitals, num_nuclei) < 1:
             raise ValueError("Envelope dimensions must be positive")
-        if envelope_type not in ("exponential", "gaussian"):
-            raise ValueError("envelope_type must be exponential or gaussian")
+        if envelope_type not in ("exponential", "gaussian", "soft_exponential"):
+            raise ValueError("Unknown envelope_type")
+        if not math.isfinite(envelope_scale) or envelope_scale <= 0:
+            raise ValueError("envelope_scale must be positive and finite")
         if init_decay_rate <= 0:
             raise ValueError("init_decay_rate must be positive")
         if nuclear_charges is not None and nuclear_charges.shape != (num_nuclei,):
             raise ValueError("nuclear_charges must have shape (num_nuclei,)")
         self.num_nuclei = num_nuclei
         self.envelope_type = envelope_type
+        self.envelope_scale = float(envelope_scale)
         shape = (num_determinants, num_orbitals, num_nuclei)
         self.weights = nn.Parameter(torch.empty(shape))
         self.decay_rates_raw = nn.Parameter(torch.empty(shape))
@@ -53,6 +58,12 @@ class NuclearEnvelope(nn.Module):
         if distances.ndim != 3 or distances.shape[-1] != self.num_nuclei:
             raise ValueError("distances must have shape (batch, electrons, nuclei)")
         radial = distances.square() if self.envelope_type == "gaussian" else distances
+        if self.envelope_type == "soft_exponential":
+            radial = (
+                2
+                * distances.square()
+                / (torch.sqrt(1 + (distances / self.envelope_scale).square()) + 1)
+            )
         alpha = F.softplus(self.decay_rates_raw)
         decay = torch.exp(-radial[:, None, :, None, :] * alpha[None, :, None, :, :])
         return (self.weights[None, :, None, :, :] * decay).sum(dim=-1)

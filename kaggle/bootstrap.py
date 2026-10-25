@@ -17,7 +17,9 @@ def main():
             "Render this bootstrap with python -m scripts.prepare_kaggle"
         )
     gate = globals().get("SMOKE_GATE")
-    if config.endswith(("kaggle_t4x2.json", "kaggle_continue_t4x2.json")) and not (
+    if config.endswith(
+        ("kaggle_t4x2.json", "kaggle_continue_t4x2.json", "factorial_t4x2.json")
+    ) and not (
         gate and gate.get("passed") is True and gate.get("source_commit") == revision
     ):
         raise RuntimeError(
@@ -50,9 +52,10 @@ def main():
     import torch
     import numpy as np
 
+    plan = json.loads((source / config).read_text())
+
     if globals().get("PARENT_KERNEL"):
-        plan = json.loads((source / config).read_text())
-        parent_commit = plan["continuation"]["source_commit"]
+        parent_commit = (plan.get("fork") or plan["continuation"])["source_commit"]
         candidates = [
             p.parent
             for p in Path("/kaggle/input").rglob("campaign.json")
@@ -113,6 +116,11 @@ def main():
                     "unittest",
                     "tests.test_campaign_runtime.TestCampaignCUDA",
                     "tests.test_continuation.TestContinuationCUDA",
+                    *(
+                        ["tests.test_factorial.TestFactorialCUDA"]
+                        if plan.get("fork")
+                        else []
+                    ),
                     "-v",
                 ],
                 cwd=source,
@@ -130,7 +138,7 @@ def main():
             sys.executable,
             "-u",
             "-m",
-            "scripts.kaggle_campaign",
+            globals().get("CAMPAIGN_MODULE", "scripts.kaggle_campaign"),
             "--config",
             str(source / config),
             "--output",

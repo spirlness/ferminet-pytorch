@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "experiment": "clipping_envelope_factorial",
+  "seeds": [
+    11,
+    22,
+    33
+  ],
+  "arms": {
+    "A": {
+      "envelope_type": "gaussian",
+      "clip_method": "tanh"
+    },
+    "B": {
+      "envelope_type": "gaussian",
+      "clip_method": "mean_hard"
+    },
+    "C": {
+      "envelope_type": "soft_exponential",
+      "clip_method": "tanh"
+    },
+    "D": {
+      "envelope_type": "soft_exponential",
+      "clip_method": "mean_hard"
+    }
+  },
+  "model": {
+    "num_determinants": 8,
+    "hidden_dim_one": 64,
+    "hidden_dim_two": 16,
+    "num_layers": 3
+  },
+  "envelope_scale": 2.0,
+  "training": {
+    "num_epochs": 10000,
+    "num_walkers": 512,
+    "mcmc_steps_per_epoch": 10,
+    "burn_in_steps": 1000,
+    "lr": 0.0001,
+    "jastrow_lr": 1e-05,
+    "grad_clip": 1.0,
+    "clip_factor": 5.0,
+    "two_stage_jastrow": false,
+    "restore_best": false,
+    "lr_schedule": "warmup_inverse",
+    "lr_warmup_epochs": 500,
+    "lr_decay_epochs": 10000,
+    "lr_min_ratio": 0.1
+  },
+  "evaluation": {
+    "num_walkers": 512,
+    "num_steps": 2048,
+    "burn_in_steps": 1000,
+    "decorrelation_steps": 20,
+    "energy_batch_size": 128
+  },
+  "zero_evaluation_records": 512,
+  "records_per_shard": 128,
+  "training_dtype": "float32",
+  "sampling_execution": "eager",
+  "schedule_seed": 20261025,
+  "evaluation_seed_base": 900000,
+  "zero_evaluation_seed_base": 800000,
+  "practical_improvement_mha": 0.2,
+  "fork": {
+    "source_kernel": "hwbwhzbsh/ferminet-t4x2-continue-multiseed",
+    "source_commit": "114377b6be860d6f4e19de1642a76ce957119a12",
+    "source_epochs": 50000,
+    "checkpoint_sha256": {
+      "11": "52c2fd0c364924ffbcecf66a071b3ecf539ec4c3748fe10fa21c384cbbe63cd3",
+      "22": "9a95dd94a503117fcfa4e9e6e82170a7e450289f41b6229ae8282cf3fb44d049",
+      "33": "ff3cc18aafd527745b19e109937debccd8abeb17e3e650c92e4f5a7e6e667858"
+    }
+  },
+  "cpu_threads_per_worker": 1,
+  "checkpoint_seconds": 300,
+  "log_seconds": 10,
+  "heartbeat_seconds": 15,
+  "max_wall_seconds": 32400,
+  "max_projected_seconds": 28800,
+  "timing_safety_factor": 1.25,
+  "smoke": false
+}

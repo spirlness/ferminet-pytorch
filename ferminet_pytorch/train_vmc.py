@@ -73,7 +73,7 @@ def parse_args() -> argparse.Namespace:
         "--clip_method",
         type=str,
         default="tanh",
-        choices=["tanh", "hard", "none"],
+        choices=["tanh", "hard", "mean_hard", "none"],
         help="局域能量截断方法",
     )
     parser.add_argument(
@@ -130,9 +130,10 @@ def parse_args() -> argparse.Namespace:
         "--envelope_type",
         type=str,
         default=None,
-        choices=["gaussian", "exponential"],
+        choices=["gaussian", "exponential", "soft_exponential"],
         help="核包络类型",
     )
+    parser.add_argument("--envelope_scale", type=float, default=2.0)
     parser.add_argument(
         "--smooth_cuspless",
         action="store_true",

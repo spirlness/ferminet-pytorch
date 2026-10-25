@@ -45,6 +45,7 @@ class FermiNet(nn.Module):
         envelope_type=None,
         smooth_cuspless=None,
         interaction_type="ferminet",
+        envelope_scale=2.0,
     ):
         super().__init__()
         if min(n_up, n_down) < 0 or n_up + n_down == 0:
@@ -58,6 +59,7 @@ class FermiNet(nn.Module):
         self.num_determinants, self.num_layers = num_determinants, num_layers
         self.hidden_dim_one, self.hidden_dim_two = hidden_dim_one, hidden_dim_two
         self.eps, self.interaction_type = eps, interaction_type
+        self.envelope_scale = float(envelope_scale)
         self.num_nuclei = len(nuclear_coords)
         self.register_buffer("nuclear_coords", nuclear_coords.detach().clone())
         self.register_buffer("nuclear_charges", nuclear_charges.detach().clone())
@@ -110,6 +112,7 @@ class FermiNet(nn.Module):
                     self.num_nuclei,
                     envelope_type=self.envelope_type,
                     nuclear_charges=nuclear_charges,
+                    envelope_scale=self.envelope_scale,
                 )
                 if count
                 else None
