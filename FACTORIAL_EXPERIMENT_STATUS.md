@@ -2,7 +2,7 @@
 
 2026-10-25（香港时间）。科学配置为 FermiNet 三种子、四组、每组 10000 次更新、每组 1048576 个正式评估样本。
 
-**当前状态：第三轮门槛通过，正式 12 组实验已提交。** 固定源码为 `9b001c5bbd4c143058248bbc0c6e3585412ae27c`，Kaggle 状态快照为 RUNNING；完整冻结评估结果尚未产生。当前聊天已安排完成后的产物核验与报告收尾，运行期间状态不变时不发送例行通知。
+**当前状态：第三轮门槛通过，正式 12 组实验已提交。** 固定源码为 `9b001c5bbd4c143058248bbc0c6e3585412ae27c`，Kaggle 状态快照为 RUNNING；最新 17:07 日志快照已有 2/12 组完成训练和冻结评估，完整结果仍待收集核验。当前聊天已安排完成后的产物核验与报告收尾，运行期间状态不变时不发送例行通知。
 
 ## 第一轮实现与真实双 T4 短测
 
@@ -63,3 +63,16 @@ Kaggle 返回 RUNNING。随后通过 Kaggle CLI 支持的实时日志流取得�
 当前完成 0/12 组；其他组等待各自 GPU 的固定执行顺序。以上能量来自训练批次，不能用于化学精度判定，须等待正式独立 FP64 冻结评估。
 
 [完整日志](physics_evidence/factorial_live_20261025T080331Z/console.log)；[结构化进度](physics_evidence/factorial_live_20261025T080331Z/progress_summary.json)；[采集来源和哈希](physics_evidence/factorial_live_20261025T080331Z/capture_meta.json)。
+
+## 实时训练日志快照（香港时间 17:07）
+
+当前已完成 **2/12** 组：C / seed 22 于 16:49:07 完成，D / seed 11 于 16:49:57 完成。两组均已结束 10000 次追加更新及冻结评估流程；日志未提供完整能量/SEM/诊断结果，因此此处不报告化学精度判定。
+
+| GPU | 当前实验 | 新增更新 / 10000 | 最新训练批次能量 Ha |
+|---|---|---:|---:|
+| 0 | ferminet_seed33_A | 3343 | -1.17199767 |
+| 1 | ferminet_seed33_C | 2809 | -1.17363381 |
+
+Kaggle 仍为 RUNNING；最新心跳显示两 worker 正常存活、退出码均为 null，GPU 利用率约 32%–33%、显存约 177–179 MiB。本次 1625 条日志事件未见 Traceback、NaN/Inf、OOM 或 case_failed。训练批次能量不能替代独立评估精度。
+
+[完整日志](physics_evidence/factorial_live_20261025T090743Z/console.log)；[结构化进度](physics_evidence/factorial_live_20261025T090743Z/progress_summary.json)。
