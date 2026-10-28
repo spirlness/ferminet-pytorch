@@ -2,7 +2,7 @@
 
 用于固定核、非相对论多电子薛定谔方程的 PyTorch 研究框架。支持 FermiNet 和 Psiformer 主干，以及显式 Kato Jastrow、自旋投影和 VMC 优化。
 
-当前版本为 **0.3.0**。本轮采用破坏性包结构重构，删除顶层模块导入、重复包络、Modern/Composable 模块和旧适配器，不提供兼容门面。物理正确性测试与训练收敛证据分别验收；已完成 H₂ 的双 T4 多种子 50000 轮训练和独立冻结评估，尚未证明跨种子稳定达到化学精度。
+当前版本为 **0.3.0**。本轮采用破坏性包结构重构，删除顶层模块导入、重复包络、Modern/Composable 模块和旧适配器，不提供兼容门面。物理正确性测试与训练收敛证据分别验收；H₂ Gaussian 基线未能在所有种子稳定达到化学精度，六种子包络复现支持将 soft-exponential 用作 cusp-Jastrow 模型的默认包络。
 
 ## 已完成的 H₂ 精度结果
 
@@ -15,7 +15,7 @@ H₂ 核间距 1.4 bohr、单重态，两种主干各运行种子 11/22/33，每
 
 六组采样诊断及前后数值精度审计均通过。化学精度要求 `abs(E − E_ref) + 1.96 × SEM ≤ 1.5936 mHa`；参考能量为 −1.174475714220 Ha。均值描述三个不同 checkpoint，不是合并样本后的单个波函数结果。结论限于这组 H₂ 配置，最新原始结果见[50000 轮续训摘要](physics_evidence/continuation_final_20261025/summary.json)及[检查点核验](physics_evidence/continuation_final_20261025/verification.json)；[原 20000 轮报告](KAGGLE_T4_FINAL_RESULTS.md)保留为历史基线。裁剪 × 包络的 12 组新实验见[受控实验说明](FACTORIAL_EXPERIMENT_GUIDE.md)与[执行记录](FACTORIAL_EXPERIMENT_STATUS.md)，正式 12 组已完成并核验，A/B/C/D 化学精度通过数分别为 2/3、3/3、3/3、3/3；三个预设配对效应的调整区间均跨零，改善证据不足，见[最终对照报告](physics_evidence/factorial_final_20261025/REPORT.md)及[可复核摘要](physics_evidence/factorial_final_20261025/verified_summary.json)。
 
-下一轮 A/C 独立父种子复现已预注册：新增六个 Gaussian 父种子、各训练 50000 步并分叉 A/C；同时对既有轨迹做残余误差归因。实现与边界见 [A/C 复现说明](ENVELOPE_REPLICATION_GUIDE.md)。正式结果尚未产生。
+六个独立 Gaussian 父种子已各自分叉 A/C 完成复现。soft-exponential+tanh 相对 Gaussian+tanh 的配对平均改善为 **2.198 mHa**（C−A，近似 95% 区间 `[-3.067, -1.330] mHa`）；化学精度通过数为 6/6 对 2/6，12 个 case 的评估诊断均通过。结论限于 H₂、1.4 bohr 和本次固定训练方案。完整结果见 [A/C 复现报告](physics_evidence/envelope_replication_final_20261028/REPORT.md)。启用 cusp Jastrow 且未显式指定包络时，模型现在默认 soft-exponential（尺度 2 bohr）；Gaussian 仍可显式指定作为基线。
 
 ## 安装与运行
 
@@ -84,12 +84,12 @@ physics_evidence/    # 原始日志、训练结果和不可改写的历史源码
 ```python
 from ferminet_pytorch.envelope import NuclearEnvelope
 
-envelope = NuclearEnvelope(4, 2, 1, envelope_type="gaussian")
+envelope = NuclearEnvelope(4, 2, 1, envelope_type="soft_exponential")
 distances = torch.rand(8, 2, 1)  # (batch, electrons, nuclei)
 values = envelope(distances)     # (batch, determinants, electrons, orbitals)
 ```
 
-指数与 Gaussian 使用同一个实现。`NuclearEnvelopeModern`、`legacy_adapters` 以及旧的 `envelope(r, nuclear_coords, dist=...)` 调用已删除。
+指数、Gaussian 与 soft-exponential 使用同一个实现。`NuclearEnvelopeModern`、`legacy_adapters` 以及旧的 `envelope(r, nuclear_coords, dist=...)` 调用已删除。
 
 ## 验证
 
@@ -116,7 +116,7 @@ uv build
 - 特征距离的平滑规则不改变真实库仑势；正式 MCMC 采样冻结步长自适应。
 - 核及异自旋非零 s-wave 尖峰按球平均分量解释；同自旋的 `1/4` 是移除 p-wave 零点后的径向系数。精确节点处不定义局域能量。
 - 冻结评估保留 `(time, walker)` 结构，报告自相关、ESS、split-Rhat、分块平台和不确定度；参考能量必须匹配体系和几何。
-- Gaussian 默认包络用于避免与显式核 Jastrow 重复引入核尖峰。完整波函数的有限距离聚并检查不等于严格极限证明。
+- cusp Jastrow 默认配合 soft-exponential 包络；Gaussian 保留为可显式选择的基线。完整波函数的有限距离聚并检查不等于严格极限证明。
 
 ## 实验和文档
 

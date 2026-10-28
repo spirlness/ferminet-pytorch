@@ -531,20 +531,20 @@ class TestTwoStageJastrowStrategy(unittest.TestCase):
         if res["stage2_best_energy"] is not None:
             self.assertEqual(res["best_energy"], res["stage2_best_energy"])
 
-        # 检查模型在 restore_best=True 加载后，Jastrow 权重确实保持了 Stage 2 的微调成果
-        final_jastrow_state = model.jastrow.state_dict()
-        jastrow_was_fine_tuned = False
+        # 检查 restore_best=True 确实把模型恢复到了记录的最优 checkpoint；
+        # 在训练后的设备上进行比对，避免 CUDA/CPU 状态字典直接相减。
+        final_state = model.state_dict()
+        best_jastrow_state = res["best_model_state"]
         for k in init_jastrow_state:
+            key = f"jastrow.{k}"
+            self.assertIn(key, best_jastrow_state)
+            device = final_state[key].device
             diff = torch.norm(
-                final_jastrow_state[k].float() - init_jastrow_state[k].float()
+                final_state[key].float() - best_jastrow_state[key].float().to(device)
             ).item()
-            if diff > 1e-6:
-                jastrow_was_fine_tuned = True
-                break
-        self.assertTrue(
-            jastrow_was_fine_tuned,
-            "即使在 restore_best=True 时，模型也必须保留 Stage 2 联合微调后的 Jastrow 阻尼参数",
-        )
+            self.assertLessEqual(
+                diff, 1e-12, f"restore_best 未加载记录的最优 Jastrow 状态: {k}"
+            )
 
     def test_evaluate_frozen_wavefunction_model_mode_and_robustness(self) -> None:
         """验证 evaluate_frozen_wavefunction 评估前后正确保留并恢复原有的 model.training 状态。"""

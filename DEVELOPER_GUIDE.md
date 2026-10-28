@@ -52,11 +52,11 @@ psi = model(r)
 ```python
 from ferminet_pytorch.envelope import NuclearEnvelope
 # distances: (B,N,M), result: (B,K,N,O)
-envelope = NuclearEnvelope(4, 2, 1, envelope_type="gaussian")
+envelope = NuclearEnvelope(4, 2, 1, envelope_type="soft_exponential")
 result = envelope(distances)
 ```
 
-核坐标到距离的计算由模型与几何模块负责。包络仍包含五维广播中间量。若引入依赖方向位移的各向异性包络，须显式修改轨道调用并重新核验尖峰，不能直接替换当前标量距离接口。
+启用 cusp Jastrow 且未显式指定包络时，模型默认使用 soft-exponential（尺度 2 bohr）；需要重现 Gaussian 基线时显式传入 `envelope_type="gaussian"`。核坐标到距离的计算由模型与几何模块负责。包络仍包含五维广播中间量。若引入依赖方向位移的各向异性包络，须显式修改轨道调用并重新核验尖峰，不能直接替换当前标量距离接口。
 
 ## 统一训练
 

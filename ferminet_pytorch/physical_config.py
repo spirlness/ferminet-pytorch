@@ -8,7 +8,9 @@ from .spin import SpinProjector
 
 def cusp_defaults(envelope_type, smooth_cuspless, has_jastrow, jastrow=None):
     nuclear_cusp = has_jastrow and getattr(jastrow, "cusp_en", True)
-    env = envelope_type or ("gaussian" if nuclear_cusp else "exponential")
+    # The validated cusp-compatible default uses the soft-exponential tail;
+    # Gaussian remains available as an explicit compatibility baseline.
+    env = envelope_type or ("soft_exponential" if nuclear_cusp else "exponential")
     smooth = True if smooth_cuspless is None else smooth_cuspless
     if env not in ("gaussian", "exponential", "soft_exponential"):
         raise ValueError("Unknown envelope_type")

@@ -187,7 +187,7 @@ def run_case(case, output, device, deadline):
         num_layers=2,
         use_cusp_jastrow=True,
         spin_adapted=True,
-        envelope_type="gaussian",
+        envelope_type="soft_exponential",
     )
     if architecture == "psiformer":
         config["interaction_type"] = "psiformer"

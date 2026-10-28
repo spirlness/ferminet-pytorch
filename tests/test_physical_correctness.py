@@ -118,6 +118,18 @@ class TestPhysicalCorrectness(unittest.TestCase):
                 energies.append(compute_local_energy(net, system, r)[0].item())
             self.assertLess(abs(energies[-1] + 0.5), 1e-3)
 
+    def test_cusp_jastrow_defaults_to_soft_exponential_with_gaussian_override(self):
+        default_model = self.net(use_cusp_jastrow=True)
+        self.assertEqual(default_model.envelope_type, "soft_exponential")
+
+        gaussian_model = self.net(
+            use_cusp_jastrow=True, envelope_type="gaussian"
+        )
+        self.assertEqual(gaussian_model.envelope_type, "gaussian")
+
+        no_jastrow_model = self.net()
+        self.assertEqual(no_jastrow_model.envelope_type, "exponential")
+
     def test_psiformer_pair_cusp_and_local_energy_limit(self):
         net = self.net(
             n_up=1,

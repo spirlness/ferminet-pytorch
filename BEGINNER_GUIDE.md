@@ -31,7 +31,7 @@
    - 3.1 [整体架构全景数据流 (学术期刊规范架构图)](#31-整体架构全景数据流-学术期刊规范架构图)
    - 3.2 几何特征提取 (`features.py`)：相对位移、距离、平滑无尖峰特征与核电荷注入
    - 3.3 自旋分流交互层 (`layers.py`)：单/双电子流与自旋分离池化
-   - 3.4 原子核包络衰减模块 (`envelope.py`)：物理渐近条件与平滑高斯包络
+   - 3.4 原子核包络衰减模块 (`envelope.py`)：物理渐近条件与 soft-exponential 包络
    - 3.5 反对称波函数构建 (`model.py`)：Backflow 轨道矩阵构造
    - 3.6 数值稳定性基石：`torch.linalg.slogdet` 与 LogSumExp 技巧
    - 3.7 Kato 尖峰解析 Jastrow 因子模块 (`jastrow.py`) 深入剖析
@@ -303,7 +303,7 @@ $$U_{en} = -\sum_{i, I} \frac{Z_I r_{iI}}{1 + b_{en, I} r_{iI}}, \quad U_{ee} = 
                       backflow_up: (B, K, n_up, n_up)    backflow_down: (B, K, n_down, n_down)
                                │                                  │
                   【核包络 NuclearEnvelope】            【核包络 NuclearEnvelope】
-                  (指数型 或 平滑高斯型)                (指数型 或 平滑高斯型)
+                  (指数 / Gaussian / soft-exp)          (指数 / Gaussian / soft-exp)
                                │ (逐元素相乘 Hadamard)           │ (逐元素相乘 Hadamard)
                                ▼                                  ▼
                   ┌─────────────────────────┐        ┌─────────────────────────┐
@@ -404,7 +404,7 @@ $$h_i^{(l+1)} = \tanh\left( W^{(l)} a_i + b^{(l)} \right) + \text{Residual}(h_i^
 
 > **末层的双电子流更新网络已被移除**：每层都会同时更新单电子流 $h_i$ 与双电子流 $h_{ij}$，但只有**单电子流**最终流入轨道构造（Backward 到 `linear_orb_up/down`）。因此**最后一层**的双电子流输出不被任何下游消费——它的线性层会变成永远收不到梯度的空转参数。本项目在构造末层时直接跳过该更新网络（`produce_two_electron_output=False`），消除这部分浪费。前面的层不受影响，双电子流照常逐层传递。
 
-### 3.4 原子核包络衰减模块 (`envelope.py`)：物理渐近条件与平滑高斯包络
+### 3.4 原子核包络衰减模块 (`envelope.py`)：物理渐近条件与 soft-exponential 包络
 
 神经网络虽然拟合能力强，但如果放任它自由输出，当某个电子飞到距离原子核极其遥远的地方时（$r \to \infty$），未加约束的神经网络可能会输出荒谬的非零值甚至发散值。
 
@@ -416,13 +416,13 @@ $$\text{Envelope}_{k, j}(r_i) = \sum_{m=1}^M \pi_{k, j, m} \exp\left(-\alpha_{k,
 - 线性组合权重 $\pi_{k, j, m}$ 初始化均值为 1.0；
 - 衰减速率 $\alpha_{k, j, m} = \text{softplus}(\text{raw\_decay}) > 0$，严格保证衰减速率为正，确保波函数在无穷远处指数收敛至零。
 
-#### 2. 平滑高斯核包络 (`envelope_type="gaussian"`)
+#### 2. Soft-exponential 核包络 (`envelope_type="soft_exponential"`)
 当模型启用了显式 Kato 尖峰 Jastrow 因子时，波函数在近核碰撞处的尖锐对数斜率已经由 $U_{en}(r)$ 严格解析提供。此时，若核包络依然采用经典指数形式 $\exp(-\alpha r)$，由于其在 $r \to 0$ 处的对数斜率为 $-\alpha$，只要优化器学习到的 $\alpha \ne Z_m$，就会在核重合点与 Jastrow 因子发生斜率冲突。
 
-为此，本项目提供了与 Kato Jastrow 深度协同的**平滑高斯核包络**：
-$$\text{Envelope}_{k, j}(r_i) = \sum_{m=1}^M \pi_{k, j, m} \exp\left( -\alpha_{k, j, m} \, \|\mathbf{r}_i - \mathbf{R}_m\|^2 \right)$$
-- **近核平滑**：在 $\mathbf{r}_i \to \mathbf{R}_m$ 处，高斯函数的导数为 0（一阶平滑水平切线），完全把核尖峰主导权交还给解析 Jastrow 因子；
-- **远距离强束缚**：在远距离 $r \to \infty$ 时提供超指数快速衰减，物理边界条件极其纯净。当在 `FermiNet` 中启用 `use_cusp_jastrow=True` 且未显式指定 `envelope_type` 时，模型会自动默认选用高斯包络进行物理协同。
+为此，本项目提供了与 Kato Jastrow 深度协同的**soft-exponential 核包络**：
+$$r_{\mathrm{eff}}^2 = \frac{2r^2}{\sqrt{1+(r/L)^2}+1}, \qquad \text{Envelope}_{k,j}(r) = \sum_m \pi_{k,j,m}\exp(-\alpha_{k,j,m}r_{\mathrm{eff}}^2).$$
+- **近核平滑**：在 $\mathbf{r}_i \to \mathbf{R}_m$ 处，soft-exponential 的导数为 0（一阶平滑水平切线），完全把核尖峰主导权交还给解析 Jastrow 因子；
+- **近核二次行为、远场指数尾**：$r\ll L$ 时 $r_{\mathrm{eff}}^2\approx r^2$；$r\gg L$ 时 $r_{\mathrm{eff}}^2\approx 2Lr$。尺度 $L$ 默认为 2 bohr。当在 `FermiNet` 中启用 `use_cusp_jastrow=True` 且未显式指定 `envelope_type` 时，模型默认选用它。H₂ 六种子复现中，soft-exponential 相对 Gaussian 的配对平均改善为 2.198 mHa；Gaussian 仍可显式指定作为基线。
 
 ### 3.5 反对称波函数构建 (`model.py`)：Backflow 轨道矩阵构造
 
@@ -655,7 +655,7 @@ loss.backward()
 | :--- | :--- | :--- | :--- |
 | [`features.py`](ferminet_pytorch/features.py) | 相对几何特征嵌入 | `ElectronFeatureEmbedding` | 输入电子坐标 `(B, N, 3)` 与核坐标/电荷；支持普通距离与平滑无尖峰特征 `d^2/(1+d)`，输出 `(B, N, 5M)` / `(B, N, N, 4)` |
 | [`layers.py`](ferminet_pytorch/layers.py) | 自旋分流前馈交互 | `FermiInteractionLayer` | 输入单/双电子流；按自旋分别平均池化交互，输出更新后的等变表征 |
-| [`envelope.py`](ferminet_pytorch/envelope.py) | 束缚态核包络衰减 | `NuclearEnvelope` | 保证波函数在远离核时衰减至零；支持经典各向同性指数衰减与配合 Jastrow 的平滑高斯衰减 (`envelope_type="gaussian"`) |
+| [`envelope.py`](ferminet_pytorch/envelope.py) | 束缚态核包络衰减 | `NuclearEnvelope` | 保证波函数在远离核时衰减至零；支持经典指数、Gaussian 和配合 Jastrow 的 soft-exponential 衰减 |
 | [`jastrow.py`](ferminet_pytorch/jastrow.py) | Kato 尖峰边界条件 | `KatoCuspJastrow` | 显式 Padé 因子；完整模型的尖峰仍需与主干、包络、自旋配置共同验证 |
 | [`spin.py`](ferminet_pytorch/spin.py) | 自旋纯态投影算符 | `SpinProjector` | 空间置换投影消除自旋污染 (单重态空间对称化 $1/2(I + P_{12})$、三重态空间反对称化)，采用 Signed LogSumExp 稳定加权 |
 | [`model.py`](ferminet_pytorch/model.py) | 统一波函数模型 | `FermiNet` | 选择 FermiNet/Psiformer 主干，组装轨道与物理因子；`forward_log_psi` 返回 `(log_abs, sign)`，`forward` 返回波函数值 |
@@ -736,7 +736,7 @@ uv run python -m ferminet_pytorch.train_vmc --epochs 50 --walkers 512 --lr 1e-3
 # 开启解析尖峰因子与 H2 单重态投影
 uv run python -m ferminet_pytorch.train_vmc --epochs 50 --walkers 512 --cusp_jastrow --spin_adapted
 ```
-- `--cusp_jastrow`：自动挂载 `KatoCuspJastrow` 因子，默认自动启用平滑高斯核包络与平滑无尖峰特征 `smooth_cuspless`；
+- `--cusp_jastrow`：自动挂载 `KatoCuspJastrow` 因子，默认自动启用 soft-exponential 核包络与平滑无尖峰特征 `smooth_cuspless`；
 - `--spin_adapted`：自动为双电子单重态挂载空间对称化投影算符 $\frac{1}{2}(I + P_{12})$，使波函数输出严格为纯自旋态（$\hat{S}^2 \Psi = 0$）。
 
 当前 CLI 每轮输出 `Epoch`、训练批次能量 `E`、方差 `Var`、接受率 `acceptance` 和阶段 `stage`。能量可能波动，不保证单调下降；可核查的短流程运行见[第二轮 CLI 日志](physics_evidence/phase2_cli_smoke.log)。
@@ -752,7 +752,7 @@ CLI 调用 `vmc_driver.py` 中的统一训练核心，执行：
 ### 6.3 演示 3：极性异核分子氢化锂 $LiH$ 变分优化
 
 氢化锂 $LiH$ 是一个典型的极性共价键分子：锂核电荷 $Z=3$，氢核电荷 $Z=1$，总电子数 $N=4$（闭壳层：$n_\uparrow = 2, n_\downarrow = 2$）。
-这里验证了多核电荷注入、平滑高斯/指数包络能力，同时支持开启多电子单重态投影与异核 Kato 尖峰修正：
+这里验证了多核电荷注入、指数/Gaussian/soft-exponential 包络能力，同时支持开启多电子单重态投影与异核 Kato 尖峰修正：
 
 ```bash
 uv run python -m ferminet_pytorch.train_vmc --system lih --epochs 50 --walkers 512 --cusp_jastrow --spin_adapted
