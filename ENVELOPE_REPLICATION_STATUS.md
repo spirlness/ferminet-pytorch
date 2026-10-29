@@ -7,12 +7,13 @@
 ## 本地验证
 
 - 新增针对性测试 13 项通过，覆盖父阶段切换、两阶段断点恢复、A/C 分叉状态、独立动能、种子碰撞、互斥归因、方差分解、bootstrap、轴篡改和提交幂等。
-- 首次严格 CUDA 套件 309 通过、0 失败、0 错误、0 跳过，243.23 秒。补充四项测试后的最终完整验证为 **313 通过、0 失败、0 错误、0 跳过**，194.96 秒；实际环境 RTX 3060 Laptop、PyTorch 2.14.0、CUDA 13.0，见 [最终严格 CUDA 摘要](physics_evidence/replication_cuda_final_20261026/summary.json)。
+- 实验固定源码 `1659b8ef33ade46dabe30a457f27bf915714c9da` 的严格 CUDA 套件为 309 通过，补充四项测试后为 **313 通过、0 失败、0 错误、0 跳过**，194.96 秒，见 [最终严格 CUDA 摘要](physics_evidence/replication_cuda_final_20261026/summary.json)。
+- 当前分支后续提交 `3fefd4350b728344202f76057c6e262d4e52ff79` 的严格 CUDA 复验为 **314 通过、0 失败、0 错误、0 跳过**，145.89 秒，见 [当前摘要](physics_evidence/cuda_20261029T085533Z/summary.json)。
 - 既有 12 份轨迹归因已完成；全部独立动能、log 振幅与符号审计通过。没有新增采样或训练更新，见 [归因报告](physics_evidence/residual_attribution_20261026/REPORT.md)。C/D 未触发四标志区域贡献约 73%–81% 的方差；各组均未观测到 >1000 的高抵消样本。以上是条件于已访问轨迹的描述统计。
 
-## 远端执行
+## 正式训练与结果
 
-尚未提交正式训练。先提交固定源码的真实双 T4 短测；门槛通过后按每批两父或一父的预注册预算规则启动。不会根据短测能量更改科学配置或选择种子。
+正式 A/C 训练已按预注册完成，实验固定源码为 `1659b8ef33ade46dabe30a457f27bf915714c9da`。六个新父种子的 12 个 A/C case 全部完成并通过评估诊断；soft-exponential 组化学精度通过 **6/6**，Gaussian 组通过 **2/6**，配对平均改善 **2.198 mHa**，近似 95% 区间 `[-3.067, -1.330] mHa`。结果与证据边界见 [最终报告](physics_evidence/envelope_replication_final_20261028/REPORT.md)和[可复核摘要](physics_evidence/envelope_replication_final_20261028/verified_summary.json)。
 
 ## 本地工具记录
 

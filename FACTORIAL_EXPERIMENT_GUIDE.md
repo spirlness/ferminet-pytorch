@@ -11,7 +11,7 @@
 
 ## 物理与状态
 
-新包络使用 `exp(-alpha*f(r))`，`f(r)=2*r*r/(sqrt(1+(r/L)^2)+1)`。近核 `f(r)=r²+O(r⁴)`，远场径向斜率趋于 `2L`；它与显式核 cusp Jastrow 兼容。L 固定而非可学习，参数数量与 Gaussian 相同。现有 Gaussian 和 exponential 默认行为保持不变。
+新包络使用 `exp(-alpha*f(r))`，`f(r)=2*r*r/(sqrt(1+(r/L)^2)+1)`。近核 `f(r)=r²+O(r⁴)`，远场径向斜率趋于 `2L`；它与显式核 cusp Jastrow 兼容。L 固定而非可学习，参数数量与 Gaussian 相同。本实验固定比较这些显式分支；2026-10-28 起，启用 cusp Jastrow 且未指定包络时的默认值已改为 soft_exponential，Gaussian 和 exponential 仍可作为显式配置使用。
 
 `clip_method="mean_hard"` 的窗口中心为标准中位数（偶数样本取中间两数均值），半宽为 `clip_factor*mean(abs(E-center))`，硬裁剪后围绕裁剪均值中心化。没有依赖能量零点的下限；常量批次保持原值。这是整套规则的对照，不能区分尺度与硬裁剪的单独因果作用。规则参考[固定版本官方实现](https://github.com/google-deepmind/ferminet/blob/e9d5a604d15c617864e7caefd948d87453b01ae6/ferminet/loss.py)。
 

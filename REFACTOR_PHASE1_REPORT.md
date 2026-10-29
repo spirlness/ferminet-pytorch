@@ -25,7 +25,7 @@
 | 运行库，包含验证入口和两份原包导出 | 5115 行 | 4366 行 | 749 行，约 14.6% |
 | 测试 | 9709 行 | 7617 行 | 2092 行，约 21.5% |
 
-运行库口径将原来顶层的 `physics_validation.py` 和 namespace shim 纳入统计，避免目录移动造成不一致比较。历史 `physics_evidence/source_snapshot` 不属于当前运行库，不修改历史快照以制造代码减少。
+运行库口径将原来顶层的 `physics_validation.py` 和 namespace shim 纳入统计，避免目录移动造成不一致比较。历史 `physics_evidence/20261022T045238Z/source_snapshot` 不属于当前运行库，不修改历史快照以制造代码减少。
 
 ## 测试迁移
 

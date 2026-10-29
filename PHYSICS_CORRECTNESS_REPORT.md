@@ -58,7 +58,7 @@ H2 的参考来自 [Pachucki 2010，Table IV](https://arxiv.org/pdf/1007.0322)�
 
 Inductor 最初受到继承的 `CC=gcc` 和 MSYS2 头文件搜索路径影响，出现编译器错误。验收脚本只在子进程中选用 Triton 自带 TCC，并清除 `CPATH/C_INCLUDE_PATH/CPLUS_INCLUDE_PATH/INCLUDE/LIB/LIBPATH/LIBRARY_PATH`；同时启用 UTF-8、确认 CUDA 可用。未修改系统编译器或全局环境。历史失败与修复后的编译日志都保留，最终完整套件使用真实 Inductor。
 
-严格重跑入口为 [run_cuda_no_skip.py](physics_evidence/run_cuda_no_skip.py)：如果 CUDA 不可用则报错，任何 `skipped` 都导致非零退出，并记录当前源码 SHA256。完整测试不再依赖固定毫秒门槛，物理值、误差容限、反对称性、自旋与一/二阶导数断言均保留。
+严格重跑入口的历史独立脚本未纳入当前包；当前等价入口为 [scripts/run_cuda_tests.py](scripts/run_cuda_tests.py)：如果 CUDA 不可用则报错，任何 `skipped` 都导致非零退出，并记录当前源码 SHA256。完整测试不再依赖固定毫秒门槛，物理值、误差容限、反对称性、自旋与一/二阶导数断言均保留。
 
 ## 4. 预算内训练证据
 
@@ -89,11 +89,11 @@ Inductor 最初受到继承的 `CC=gcc` 和 MSYS2 头文件搜索路径影响，
 ## 5. 复现、迁移与限制
 
 ```powershell
-uv run python -m unittest discover -s . -p "test_*.py" -v
-F:\conda\envs\torch\python.exe -m unittest test_cuda -v
-F:\conda\envs\torch\python.exe physics_evidence/run_cuda_no_skip.py
-F:\conda\envs\torch\python.exe physics_validation.py --device cuda --budget-seconds 1500
-uv run python physics_validation.py --verify-output physics_evidence/20261022T045238Z
+uv run python -m unittest discover -s tests -t . -v
+F:\conda\envs\torch\python.exe -m unittest tests.test_cuda -v
+F:\conda\envs\torch\python.exe -m scripts.run_cuda_tests
+F:\conda\envs\torch\python.exe -m ferminet_pytorch.physics_validation --device cuda --budget-seconds 1500
+uv run python -m ferminet_pytorch.physics_validation --verify-output physics_evidence/20261022T045238Z
 ```
 
 验证入口创建新的输出目录，不覆盖历史 JSON。每次运行保存环境、源码 SHA256、提交与 diff 摘要、完整配置、训练历史、checkpoint SHA256，以及按 `(time, walker)` 保存的未截断局域能量。生产坐标本身不保存；固定 checkpoint、种子、记录长度与源代码可用于重新采样验证。时间预算导致重跑的 epoch 数不保证完全一致。

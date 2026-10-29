@@ -20,7 +20,7 @@
 
 ## 1. 裁剪是实质性的目标偏差来源，不能只看参数“5”
 
-`ferminet_pytorch/loss.py:49–65` 的实现为：
+`ferminet_pytorch/loss.py` 中 `clip_local_energy` 的实现为：
 
 \[
 m=\operatorname{median}(E_L),\quad d=\operatorname{median}|E_L-m|,
@@ -101,7 +101,7 @@ Psiformer 论文附录 A.1 和官方实现使用围绕中位数的**平均**绝�
 
 ## 5. 已发现但不能归因于本轮的实现缺陷
 
-`loss.py:55` 的 `0.01*abs(median_energy)` 下限依赖能量零点。对 `H -> H+C`，真实能量梯度应不变；构造固定能量向量后加 100 Ha，中心化裁剪系数最大改变约 0.01165 Ha。数值例保存在 `energy_shift_invariance.json`。
+`clip_local_energy` 中 `0.01*abs(median_energy)` 的下限依赖能量零点。对 `H -> H+C`，真实能量梯度应不变；构造固定能量向量后加 100 Ha，中心化裁剪系数最大改变约 0.01165 Ha。数值例保存在 `energy_shift_invariance.json`。
 
 但检查六个 checkpoint 的全部历史，共 300,000 条步记录（含两轮共有的父历史），该下限触发次数均为零。因此它属于应修复的通用设计缺陷，不是本轮停滞的解释。
 

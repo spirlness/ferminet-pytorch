@@ -1,6 +1,6 @@
 # 从第 20000 轮延长训练：Kaggle 双 T4
 
-日期：2026-10-23。本轮只改变训练时长、学习率调度和执行效率，保持模型规模、能量裁剪和正式采样步数不变。基线是[六组已归档结果](KAGGLE_T4_FINAL_RESULTS.md)；六组均从各自最终 checkpoint 开始，未按评估结果挑选种子。后续下载证据确认六组均完成 50000 轮及独立冻结评估：FermiNet 平均偏差由 1.796 降至 1.240 mHa、通过数由 1/3 升至 2/3；Psiformer 由 3.916 降至 2.896 mHa，仍为 0/3。原始结果见 [最终续训摘要](physics_evidence/continuation_final_20261025/summary.json)。以下启动记录保留当时状态；新一轮受控实验见 [实验说明](FACTORIAL_EXPERIMENT_GUIDE.md)。
+日期：2026-10-23。本轮只改变训练时长、学习率调度和执行效率，保持模型规模、能量裁剪和正式采样步数不变。基线是[六组已归档结果](KAGGLE_T4_FINAL_RESULTS.md)；六组均从各自最终 checkpoint 开始，未按评估结果挑选种子。后续下载证据确认六组均完成 50000 轮及独立冻结评估：FermiNet 平均偏差由 1.796 降至 1.240 mHa、通过数由 1/3 升至 2/3；Psiformer 由 3.916 降至 2.896 mHa，仍为 0/3。原始结果见 [最终续训摘要](physics_evidence/continuation_final_20261025/summary.json)及[检查点核验](physics_evidence/continuation_final_20261025/verification.json)。以下启动记录保留当时状态；新一轮受控实验见 [实验说明](FACTORIAL_EXPERIMENT_GUIDE.md)。
 
 ## 实验与学习率
 
@@ -26,7 +26,7 @@ lr(s) = peak * factor(s)
 | 30500 / 10500 | 5e-5 | 5e-6 |
 | 50000 / 30000 | 约 2.53e-5 | 约 2.53e-6 |
 
-初始值接续旧任务的末期学习率，经过温和预热后再缓慢衰减，避免在预定轮数结束时再次快速压到很低的下限。这里是待验证的优化方案，不保证优于原余弦调度。
+初始值接续旧任务的末期学习率，经过温和预热后再缓慢衰减，避免在预定轮数结束时再次快速压到很低的下限。该优化方案已完成六组续训；它是否优于原余弦调度未做单独因果识别，不保证在其他配置中占优。
 
 `VMCDriver.extend_from_checkpoint(path, expected_sha256=...)` 是显式实验迁移：只允许完成第二阶段的父状态、扩展总轮数以及修改上述学习率参数。更改 walker 数、采样步数、裁剪方式等科学配置会被拒绝。迁移信息写入新 checkpoint 和结果，保留父 checkpoint 哈希与父配置；`load_checkpoint` 仍用于相同配置下的恢复，不会静默放宽约束。`driver.run()` 无参数时只运行到配置中的累计总轮数，`driver.run(n)` 则明确新增 n 步。
 
@@ -48,7 +48,7 @@ lr(s) = peak * factor(s)
 - 本地完整严格 CUDA 验收：**277 通过、0 失败、0 错误、0 跳过，111.11 秒**，含真实 CUDA 及编译用例。[摘要与源码哈希](physics_evidence/continuation_cuda_final_20261023/summary.json)、[原始日志](physics_evidence/continuation_cuda_final_20261023/tests.log)。完整套件包含 CPU 检查，不表示每项均在 GPU 执行。
 - 本地还实际加载两个主干的已归档 checkpoint，均从 20000 轮完成到 20001 轮；父哈希、数值审计、完整状态回滚及有限 FP64 小轨迹通过。[本地实际短测摘要](physics_evidence/continuation_local_smoke_20261023/summary.json)。
 - [真实双 T4 短测](https://www.kaggle.com/code/hwbwhzbsh/ferminet-t4x2-continue-smoke) version 1 已完成。每卡 **8 项运行时检查**通过，无跳过；两个主干各净新增 **1 次更新**，最终 checkpoint/history 均为 20001 轮，父 SHA、前后数值审计、`(8,32)` FP64 小轨迹及两张卡的主日志转发核验通过。[通过回执](physics_evidence/continuation_t4_smoke_20261023/gate.json)、[实际摘要](physics_evidence/continuation_t4_smoke_20261023/ferminet_results/summary.json)、[主控制台日志](physics_evidence/continuation_t4_smoke_20261023/ferminet-t4x2-continue-smoke.log)。小轨迹的统计诊断为证据不足。
-- 回执于香港时间 **12:10:50** 通过后，自动流程于 **12:10:53** 提交了[长期续训](https://www.kaggle.com/code/hwbwhzbsh/ferminet-t4x2-continue-multiseed) version 1。**12:12:56** 的实际日志已确认两卡均训练中，FermiNet seed 11 为 20063 轮，Psiformer seed 11 为 20001 轮；其余种子等待同卡顺序执行。[启动快照](physics_evidence/continuation_submission_20261023.json)、[原始启动日志](physics_evidence/continuation_long_start_20261023.log)。这是启动证据，尚未完成新的长期冻结评估。
+- 回执于香港时间 **12:10:50** 通过后，自动流程于 **12:10:53** 提交了[长期续训](https://www.kaggle.com/code/hwbwhzbsh/ferminet-t4x2-continue-multiseed) version 1。**12:12:56** 的实际日志已确认两卡均训练中，FermiNet seed 11 为 20063 轮，Psiformer seed 11 为 20001 轮；其余种子等待同卡顺序执行。[启动快照](physics_evidence/continuation_submission_20261023.json)、[原始启动日志](physics_evidence/continuation_long_start_20261023.log)。这是启动快照；该时点尚未完成长期冻结评估，六组最终结果见开头的续训摘要与检查点核验。
 
 长期任务启动时的完整更新测速如下；两组均通过数值检查并选择 compiled。它们是短时、同一会话中的测速，不能保证全程或后续种子具有相同加速比。短测会话曾对 FermiNet 选择 eager，说明执行方式选择会受测量时负载影响，未强制全卡编译。
 
@@ -76,8 +76,8 @@ F:\conda\envs\torch\python.exe -m scripts.kaggle_pipeline `
 
 此流程调用原 `VMCDriver.step`，没有第二套正式训练更新核心。临时测速也复用该核心。短流程仅证明迁移和执行链路，评估样本仅 `(8,32)`，不能用于化学精度结论。每张 T4 还会执行既有运行时回归和新增续训回归，任何失败阻止实验启动。
 
-## 独立评估
+## 独立评估（已完成）
 
-长期计划仍为每组最后 checkpoint 的 FP64 独立评估：512 walkers × 2048 条记录，每条推进 20 步，独立预热 1000 步，不裁剪能量，保留时间/链结构。新评估种子为 FermiNet 400011/400022/400033、Psiformer 500011/500022/500033，与父实验不同。
+六组均按预注册完成每组最后 checkpoint 的 FP64 独立评估：512 walkers × 2048 条记录，每条推进 20 步，独立预热 1000 步，不裁剪能量，保留时间/链结构。新评估种子为 FermiNet 400011/400022/400033、Psiformer 500011/500022/500033，与父实验不同。
 
-报告全部六组的偏差、SEM、混合诊断和数值审计；化学精度仍要求 `abs(E-E_ref)+1.96*SEM <= 0.0015936 Ha`。不以训练最低能量选择 checkpoint，不把临时测速或 1 轮短测当作精度证据。
+最终报告列出了全部六组的偏差、SEM、混合诊断和数值审计；FermiNet 化学精度通过 2/3，Psiformer 为 0/3。化学精度判据仍为 `abs(E-E_ref)+1.96*SEM <= 0.0015936 Ha`。没有以训练最低能量选择 checkpoint，临时测速或 1 轮短测也不作为精度证据。

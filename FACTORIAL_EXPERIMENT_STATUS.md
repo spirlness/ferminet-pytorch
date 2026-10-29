@@ -8,7 +8,7 @@
 
 固定源码：`ae0bc0dc542b932004b7aa75a0766c10af3610c3`。
 
-- 本地完整严格 CUDA 验收：296 项通过、0 失败、0 错误、0 跳过，197.32 秒；含 CPU、实际 CUDA 和编译检查。Bundled TCC 可用。[原始结果](physics_evidence/factorial_cuda_release_20261025/summary.json)、[环境与源码核对](physics_evidence/factorial_cuda_release_20261025/environment.json)。本地数量包括已有未提交的冻结诊断测试，不等于远端运行时测试数量。
+- 本地完整严格 CUDA 验收：296 项通过、0 失败、0 错误、0 跳过，197.32 秒；含 CPU、实际 CUDA 和编译检查。Bundled TCC 可用。[原始结果](physics_evidence/factorial_cuda_release_20261025/summary.json)、[环境与源码核对](physics_evidence/factorial_cuda_release_20261025/environment.json)。本地数量包括当时尚未提交、现已归档的冻结诊断测试，不等于远端运行时测试数量。
 - 真实双 Tesla T4：[短测 version 1](https://www.kaggle.com/code/hwbwhzbsh/ferminet-factorial-smoke)。每卡 13 项运行时测试通过、无跳过。四组分别净新增 20 次更新；父 SHA、初始 walkers/RNG、前后数值审计、完整观察记录及日志核验均通过。
 - 全部 55 个发布产物的 SHA-256 已核对。原始小文件见 [短测归档](physics_evidence/factorial_t4_smoke_20261025/verification.json)，大型检查点与观察分片位于该文件记录的本地下载目录。
 

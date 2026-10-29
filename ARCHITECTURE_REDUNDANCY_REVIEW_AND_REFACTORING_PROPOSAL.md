@@ -154,6 +154,6 @@ uv build
 
 CPU 环境会按环境跳过 CUDA 检查；严格 CUDA 入口要求 GPU 可用，并将任意 skip 作为失败。离线对照依赖本工作区保存的 `physics_evidence/phase2_baseline/`，分发包不包含该快照。Windows 编译器导入出现 GBK 解码错误时，先设置 `$env:PYTHONUTF8='1'`。
 
-第二轮重构完成时，长期收敛、受控性能基准与随机链续训尚未验收。后续 Kaggle 工作已补充续训及其回归，并提供多种子长期实验入口，进度与适用限制见 [Kaggle 训练指南](KAGGLE_T4_TRAINING_GUIDE.md)；入口可用不代表长期实验已完成或已达到化学精度。
+第二轮重构完成时，长期收敛、受控性能基准与随机链续训尚未验收。后续 Kaggle 工作已完成六组 50000 轮续训、裁剪 × 包络受控实验和六种子包络复现；结果分别见[续训摘要](physics_evidence/continuation_final_20261025/summary.json)、[最终对照报告](physics_evidence/factorial_final_20261025/REPORT.md)和[A/C 复现报告](physics_evidence/envelope_replication_final_20261028/REPORT.md)。这些结果仍限于各自固定的 H₂ 几何、模型规模和训练方案，不构成普遍化学精度认证。
 
 实际使用见 [README](README.md)，扩展与底层调用见[开发指南](DEVELOPER_GUIDE.md)，逐项验证见[第二轮报告](REFACTOR_PHASE2_REPORT.md)。

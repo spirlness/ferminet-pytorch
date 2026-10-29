@@ -7,3 +7,4 @@ physics_evidence/continuation_diagnosis_20261023/** -text whitespace=cr-at-eol
 physics_evidence/envelope_replication_final_20261028/** -text whitespace=cr-at-eol
 physics_evidence/factorial_cuda_20261025/** -text whitespace=cr-at-eol
 physics_evidence/factorial_cuda_final_20261025/** -text whitespace=cr-at-eol
+physics_evidence/cuda_*/** -text whitespace=cr-at-eol

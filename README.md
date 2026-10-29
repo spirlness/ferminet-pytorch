@@ -135,7 +135,7 @@ uv run python -m scripts.benchmark_m4_vmc_convergence --help
 - [延长训练、末期学习率和自动双卡测试流程](CONTINUATION_TRAINING_GUIDE.md)
 - [贡献规范](AGENTS.md)
 
-第二轮已记录的严格 CUDA 完整验收为 **251 通过、0 失败、0 错误、0 跳过**；[原始结果与源码哈希](physics_evidence/phase2_cuda_complete/summary.json)可核查。完整套件包含 CPU 与 CUDA 检查，长期收敛证据另行验收。
+最近一次针对源码提交 `3fefd4350b728344202f76057c6e262d4e52ff79` 的严格 CUDA 完整验收为 **314 通过、0 失败、0 错误、0 跳过，145.89 秒**（RTX 3060 Laptop GPU、PyTorch 2.14.0、CUDA 13.0）；[摘要与源码哈希](physics_evidence/cuda_20261029T085533Z/summary.json)及[原始日志](physics_evidence/cuda_20261029T085533Z/tests.log)可核查。完整套件包含 CPU 与真实 CUDA 检查，不表示 314 项均在 GPU 上执行；长期收敛证据另行验收。第二轮历史验收仍保留在 [251 项摘要](physics_evidence/phase2_cuda_complete/summary.json)。
 
 历史记录：
 
@@ -145,7 +145,7 @@ uv run python -m scripts.benchmark_m4_vmc_convergence --help
 - [旧生产就绪报告](FERMINET_REFACTORING_EVALUATION_AND_PRODUCTION_READINESS_REPORT.md)
 - [初期代码审查](CODE_REVIEW.md)
 
-历史记录保留当时的接口与结果，不能作为当前性能或化学精度认证。第二轮没有新增长期收敛实验。
+历史记录保留当时的接口与结果，不能作为当前性能或化学精度认证。后续长期续训及受控包络实验已另行列明，当前结论以对应最终报告和统计区间为准。
 
 ## 许可证
 
