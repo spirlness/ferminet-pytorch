@@ -137,7 +137,7 @@ uv run python -m scripts.benchmark_m4_vmc_convergence --help
 - [延长训练、末期学习率和自动双卡测试流程](CONTINUATION_TRAINING_GUIDE.md)
 - [贡献规范](AGENTS.md)
 
-最近一次针对源码提交 `3fefd4350b728344202f76057c6e262d4e52ff79` 的严格 CUDA 完整验收为 **314 通过、0 失败、0 错误、0 跳过，145.89 秒**（RTX 3060 Laptop GPU、PyTorch 2.14.0、CUDA 13.0）；[摘要与源码哈希](physics_evidence/cuda_20261029T085533Z/summary.json)及[原始日志](physics_evidence/cuda_20261029T085533Z/tests.log)可核查。完整套件包含 CPU 与真实 CUDA 检查，不表示 314 项均在 GPU 上执行；长期收敛证据另行验收。第二轮历史验收仍保留在 [251 项摘要](physics_evidence/phase2_cuda_complete/summary.json)。
+最近一次针对源码提交 `407171a22406016f047040ed132af1f147a7af43` 的严格 CUDA 完整验收为 **314 通过、0 失败、0 错误、0 跳过，224.91 秒**（RTX 3060 Laptop GPU、PyTorch 2.14.0、CUDA 13.0）；[摘要与源码哈希](physics_evidence/cuda_20261029T095400Z/summary.json)及[原始日志](physics_evidence/cuda_20261029T095400Z/tests.log)可核查。完整套件包含 CPU 与真实 CUDA 检查，不表示 314 项均在 GPU 上执行；长期收敛证据另行验收。第二轮历史验收仍保留在 [251 项摘要](physics_evidence/phase2_cuda_complete/summary.json)。
 
 历史记录：
 
