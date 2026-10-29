@@ -1,0 +1,90 @@
+name: CPU CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cpu:
+    name: CPU tests and package
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: "utf-8"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install locked dependencies
+        run: uv sync --locked --python 3.11
+
+      - name: Run CPU test suite
+        run: uv run python -m unittest discover -s tests -t . -v
+
+      - name: Check local Markdown links
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          import subprocess
+          import urllib.parse
+
+          tracked = subprocess.check_output(
+              ["git", "ls-files", "*.md"], text=True, encoding="utf-8"
+          ).splitlines()
+          link_pattern = re.compile(r"(?<!!)\[[^\]]*\]\(([^)]+)\)")
+          missing = []
+          total = 0
+          for name in tracked:
+              path = Path(name)
+              text = path.read_text(encoding="utf-8", errors="replace")
+              for match in link_pattern.finditer(text):
+                  raw = match.group(1).strip()
+                  if raw.startswith("<") and raw.endswith(">"):
+                      raw = raw[1:-1]
+                  target = raw.split("#", 1)[0].split("?", 1)[0]
+                  if not target or re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", target):
+                      continue
+                  total += 1
+                  resolved = (path.parent / urllib.parse.unquote(target)).resolve()
+                  if not resolved.exists():
+                      line = text.count("\n", 0, match.start()) + 1
+                      missing.append(f"{name}:{line}: {raw}")
+          if missing:
+              print("Broken local Markdown links:")
+              print("\n".join(missing))
+              raise SystemExit(1)
+          print(f"Checked {total} local Markdown links in {len(tracked)} files; none missing.")
+          PY
+
+      - name: Build distributions
+        run: uv build
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-distributions
+          path: dist/
+          if-no-files-found: error

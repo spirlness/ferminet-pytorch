@@ -1,5 +1,7 @@
 # FermiNet PyTorch
 
+[![CPU CI](https://github.com/spirlness/ferminet-pytorch/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/spirlness/ferminet-pytorch/actions/workflows/ci.yml)
+
 用于固定核、非相对论多电子薛定谔方程的 PyTorch 研究框架。支持 FermiNet 和 Psiformer 主干，以及显式 Kato Jastrow、自旋投影和 VMC 优化。
 
 当前版本为 **0.3.0**。本轮采用破坏性包结构重构，删除顶层模块导入、重复包络、Modern/Composable 模块和旧适配器，不提供兼容门面。物理正确性测试与训练收敛证据分别验收；H₂ Gaussian 基线未能在所有种子稳定达到化学精度，六种子包络复现支持将 soft-exponential 用作 cusp-Jastrow 模型的默认包络。
