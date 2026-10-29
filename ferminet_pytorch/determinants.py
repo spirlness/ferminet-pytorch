@@ -5,6 +5,7 @@ it does not recursively expand every determinant to scalars in the forward pass.
 Log scales are numerical constants, intentionally detached from differentiation.
 """
 
+import math
 from typing import Optional, Tuple
 
 import torch
@@ -57,9 +58,27 @@ def _cofactor_apply(matrix, log_scale):
     return _ForwardCofactorDeterminant.apply(matrix, log_scale)
 
 
+def _singular_mask(matrix, sign, log_abs):
+    """Include determinants that are zero up to matrix-scale roundoff.
+
+    LAPACK can return a tiny nonzero determinant for exactly singular matrices
+    because elimination is finite precision.  Comparing the determinant with a
+    norm-scaled machine-epsilon bound identifies those unresolved singular
+    branches without treating uniformly scaled nonsingular matrices as zero.
+    """
+    size = matrix.shape[-1]
+    magnitude = matrix.detach().abs().amax(dim=(-1, -2))
+    positive = magnitude > 0
+    safe_magnitude = torch.where(positive, magnitude, torch.ones_like(magnitude))
+    log_bound = size * torch.log(safe_magnitude)
+    log_bound = log_bound + math.log(size * torch.finfo(matrix.dtype).eps)
+    return (sign == 0) | (positive & (log_abs <= log_bound))
+
+
 def _determinant_terms(matrix):
     with torch.no_grad():
-        singular = torch.linalg.slogdet(matrix)[0] == 0
+        raw_sign, raw_log_abs = torch.linalg.slogdet(matrix)
+        singular = _singular_mask(matrix, raw_sign, raw_log_abs)
     identity = torch.eye(matrix.shape[-1], device=matrix.device, dtype=matrix.dtype)
     safe = torch.where(singular[..., None, None], identity, matrix)
     sign, log_abs = torch.linalg.slogdet(safe)
