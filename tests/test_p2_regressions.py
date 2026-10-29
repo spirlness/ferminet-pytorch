@@ -495,18 +495,30 @@ class TestNodalSurfaceRegressions(unittest.TestCase):
             num_layers=1,
         ).to(dtype=torch.float64)
 
-        # Construct exact nodal surface where electron 0 and electron 1 coincide
-        batch_size = 3
-        r_node = torch.randn(batch_size, 2, 3, dtype=torch.float64)
-        r_node[:, 1, :] = r_node[:, 0, :]
-        r_node.requires_grad_(True)
+        # Construct an exact, platform-independent nodal surface where electron
+        # 0 and electron 1 coincide.  Random coordinates make this regression
+        # sensitive to BLAS/RNG differences even though the determinant rows
+        # are mathematically identical.
+        r_node = torch.tensor(
+            [
+                [[0.35, -0.20, 0.15], [0.35, -0.20, 0.15]],
+                [[-0.50, 0.25, 0.40], [-0.50, 0.25, 0.40]],
+                [[0.10, 0.60, -0.30], [0.10, 0.60, -0.30]],
+            ],
+            dtype=torch.float64,
+            requires_grad=True,
+        )
 
         with torch.no_grad():
             psi_val = model(r_node)
             log_abs, sign = model.forward_log_psi(r_node)
 
-        # Wavefunction value must be exactly zero on same-spin coincidence node
-        self.assertTrue(torch.all(psi_val == 0.0))
+        # Wavefunction value must be exactly zero on same-spin coincidence node.
+        self.assertTrue(
+            torch.all(psi_val == 0.0),
+            f"psi={psi_val.detach().tolist()}, sign={sign.detach().tolist()}, "
+            f"log_abs={log_abs.detach().tolist()}",
+        )
         self.assertTrue(torch.all(sign == 0.0))
         self.assertTrue(torch.all(torch.isneginf(log_abs) | (log_abs <= -40.0)))
 
