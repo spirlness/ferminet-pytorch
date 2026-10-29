@@ -1,0 +1,22 @@
+{
+  "core_sizes": {
+    "before": {
+      "files": 6,
+      "lines": 1891,
+      "statements": 741
+    },
+    "after": {
+      "files": 5,
+      "lines": 863,
+      "statements": 346
+    }
+  },
+  "comparison_maxima": {
+    "log": 7.460698725481052e-14,
+    "sign": 0.0,
+    "coordinate_gradient": 2.9487523534044158e-12,
+    "energy": 5.9117155615240335e-12,
+    "parameter_gradient": 5.184119800105691e-11
+  },
+  "source_hashes_match_cuda": true
+}

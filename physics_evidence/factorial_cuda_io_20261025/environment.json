@@ -1,0 +1,15 @@
+{
+  "compiler_available": true,
+  "strict_runner_compiler": "bundled TCC selected via child CC",
+  "source_hashes_match_current_files": {
+    "ferminet_pytorch/hamiltonian.py": true,
+    "ferminet_pytorch/evaluation.py": true,
+    "ferminet_pytorch/loss.py": true,
+    "tests/test_factorial.py": true,
+    "scripts/factorial_pipeline.py": true
+  },
+  "torch": "2.14.0",
+  "cuda": "13.0",
+  "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+  "scope": "Includes pre-existing untracked frozen-diagnosis tests; source hashes identify the tested code."
+}

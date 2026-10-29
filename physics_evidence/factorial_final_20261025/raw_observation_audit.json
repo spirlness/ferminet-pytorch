@@ -1,0 +1,572 @@
+{
+  "source_commit": "9b001c5bbd4c143058248bbc0c6e3585412ae27c",
+  "all_checks_passed": true,
+  "source_files_verified": 47,
+  "parent_walkers_and_cpu_rng_verified": true,
+  "checkpoints": [
+    {
+      "case_id": "ferminet_seed11_A",
+      "updates": 10000,
+      "history_rows": 10000,
+      "optimizer_states": 24,
+      "sampler_total_steps": 101000,
+      "sha256": "93d367eaa4003e8d6cb6d3d95e20737feea3b2cb3716c09e53cbe041c05d3bda",
+      "all_checks_passed": true
+    },
+    {
+      "case_id": "ferminet_seed11_B",
+      "updates": 10000,
+      "history_rows": 10000,
+      "optimizer_states": 24,
+      "sampler_total_steps": 101000,
+      "sha256": "523cd03f86c0264cb2ebf6e16e726f86810bbf92e2b813b4536f2c74231b612c",
+      "all_checks_passed": true
+    },
+    {
+      "case_id": "ferminet_seed11_C",
+      "updates": 10000,
+      "history_rows": 10000,
+      "optimizer_states": 24,
+      "sampler_total_steps": 101000,
+      "sha256": "a289946fd25ffd821ed9c07a2644be2dde0b51afee043f84ca5bb9a6d15de541",
+      "all_checks_passed": true
+    },
+    {
+      "case_id": "ferminet_seed11_D",
+      "updates": 10000,
+      "history_rows": 10000,
+      "optimizer_states": 24,
+      "sampler_total_steps": 101000,
+      "sha256": "a01bc10a323d9f6c5d8b6cada325bfda7a09079c646fce49e86dfb1df442231b",
+      "all_checks_passed": true
+    },
+    {
+      "case_id": "ferminet_seed22_A",
+      "updates": 10000,
+      "history_rows": 10000,
+      "optimizer_states": 24,
+      "sampler_total_steps": 101000,
+      "sha256": "984b7db56f92d4a189ff73fb3f7acbbae2153862f4fe144ecba56bf02df890ea",
+      "all_checks_passed": true
+    },
+    {
+      "case_id": "ferminet_seed22_B",
+      "updates": 10000,
+      "history_rows": 10000,
+      "optimizer_states": 24,
+      "sampler_total_steps": 101000,
+      "sha256": "1669899de63178d20d50ddf3a31d2c824eb4d17593f1a7afb85b4c6b1f8227ff",
+      "all_checks_passed": true
+    },
+    {
+      "case_id": "ferminet_seed22_C",
+      "updates": 10000,
+      "history_rows": 10000,
+      "optimizer_states": 24,
+      "sampler_total_steps": 101000,
+      "sha256": "45b9b972f733fee259da830f7942e1e9f15b97dc19c7a55110a7a009d2808d8f",
+      "all_checks_passed": true
+    },
+    {
+      "case_id": "ferminet_seed22_D",
+      "updates": 10000,
+      "history_rows": 10000,
+      "optimizer_states": 24,
+      "sampler_total_steps": 101000,
+      "sha256": "aea772b0829187b8271d7a81ab5719bf9874b9d53b77b7d84179f6a43640e321",
+      "all_checks_passed": true
+    },
+    {
+      "case_id": "ferminet_seed33_A",
+      "updates": 10000,
+      "history_rows": 10000,
+      "optimizer_states": 24,
+      "sampler_total_steps": 101000,
+      "sha256": "bc53f99ba07d84b09099863927e0de9f6dbea896f94976ee03696391c9988fca",
+      "all_checks_passed": true
+    },
+    {
+      "case_id": "ferminet_seed33_B",
+      "updates": 10000,
+      "history_rows": 10000,
+      "optimizer_states": 24,
+      "sampler_total_steps": 101000,
+      "sha256": "f3178d4ead9b4ccc81eb377dc6f2f98ee34d5425bacd3013257c9699f37de04f",
+      "all_checks_passed": true
+    },
+    {
+      "case_id": "ferminet_seed33_C",
+      "updates": 10000,
+      "history_rows": 10000,
+      "optimizer_states": 24,
+      "sampler_total_steps": 101000,
+      "sha256": "18a03235f2d7e217d40203dc277e2e8ec22e7886c5bbfa11a2b18c0e07ac096d",
+      "all_checks_passed": true
+    },
+    {
+      "case_id": "ferminet_seed33_D",
+      "updates": 10000,
+      "history_rows": 10000,
+      "optimizer_states": 24,
+      "sampler_total_steps": 101000,
+      "sha256": "076499a282a9e960170bb6cb9121ceae35c897daa1017b1b16aebec9258c4c80",
+      "all_checks_passed": true
+    }
+  ],
+  "fork_walkers_and_rng_equal_within_seed": true,
+  "evaluations": [
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 225,
+          "signed_error_contribution_mha": -0.4241302207471041,
+          "variance_share": 0.8152760881672513
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 104,
+          "signed_error_contribution_mha": -0.3558571638606804,
+          "variance_share": 0.7837143084516293
+        }
+      },
+      "evaluation": "ferminet_seed11_A\\evaluation",
+      "time_records": 2048,
+      "walkers": 512,
+      "shards": 16,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 6.661338147750939e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 900110
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 178,
+          "signed_error_contribution_mha": -0.21780254725970452,
+          "variance_share": 0.7272633303707207
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 104,
+          "signed_error_contribution_mha": -0.19825651980122402,
+          "variance_share": 0.7095880929799446
+        }
+      },
+      "evaluation": "ferminet_seed11_B\\evaluation",
+      "time_records": 2048,
+      "walkers": 512,
+      "shards": 16,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 8.881784197001252e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 900111
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 196,
+          "signed_error_contribution_mha": -0.10630192502550384,
+          "variance_share": 0.09888929033764564
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 104,
+          "signed_error_contribution_mha": -0.06174109478616677,
+          "variance_share": 0.0644341535586137
+        }
+      },
+      "evaluation": "ferminet_seed11_C\\evaluation",
+      "time_records": 2048,
+      "walkers": 512,
+      "shards": 16,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 2.220446049250313e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 900112
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 124,
+          "signed_error_contribution_mha": -0.06395939457885016,
+          "variance_share": 0.08071933305833741
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 104,
+          "signed_error_contribution_mha": -0.05419790610959823,
+          "variance_share": 0.07175030979438864
+        }
+      },
+      "evaluation": "ferminet_seed11_D\\evaluation",
+      "time_records": 2048,
+      "walkers": 512,
+      "shards": 16,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 2.220446049250313e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 900113
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 289,
+          "signed_error_contribution_mha": -0.490591413936864,
+          "variance_share": 0.8905358709809815
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 104,
+          "signed_error_contribution_mha": -0.4517069986073831,
+          "variance_share": 0.8448633444231317
+        }
+      },
+      "evaluation": "ferminet_seed22_A\\evaluation",
+      "time_records": 2048,
+      "walkers": 512,
+      "shards": 16,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 8.881784197001252e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 900220
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 178,
+          "signed_error_contribution_mha": -0.3394562544170191,
+          "variance_share": 0.8499309340788519
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 104,
+          "signed_error_contribution_mha": -0.30550648495924354,
+          "variance_share": 0.8370291463434054
+        }
+      },
+      "evaluation": "ferminet_seed22_B\\evaluation",
+      "time_records": 2048,
+      "walkers": 512,
+      "shards": 16,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 8.881784197001252e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 900221
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 191,
+          "signed_error_contribution_mha": -0.09255377602777573,
+          "variance_share": 0.1308574542451069
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 104,
+          "signed_error_contribution_mha": -0.0510843937460691,
+          "variance_share": 0.0893231184461112
+        }
+      },
+      "evaluation": "ferminet_seed22_C\\evaluation",
+      "time_records": 2048,
+      "walkers": 512,
+      "shards": 16,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 2.220446049250313e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 900222
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 104,
+          "signed_error_contribution_mha": -0.052734020289224144,
+          "variance_share": 0.07969392011671486
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 104,
+          "signed_error_contribution_mha": -0.052734020289224144,
+          "variance_share": 0.07969392011671486
+        }
+      },
+      "evaluation": "ferminet_seed22_D\\evaluation",
+      "time_records": 2048,
+      "walkers": 512,
+      "shards": 16,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 2.220446049250313e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 900223
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 264,
+          "signed_error_contribution_mha": -0.47243926090492694,
+          "variance_share": 0.8466699600372586
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 104,
+          "signed_error_contribution_mha": -0.3787308912253011,
+          "variance_share": 0.7972364713818583
+        }
+      },
+      "evaluation": "ferminet_seed33_A\\evaluation",
+      "time_records": 2048,
+      "walkers": 512,
+      "shards": 16,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 4.440892098500626e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 900330
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 208,
+          "signed_error_contribution_mha": -0.3684081330845373,
+          "variance_share": 0.8446807772608987
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 104,
+          "signed_error_contribution_mha": -0.34081573301460377,
+          "variance_share": 0.8257241311491174
+        }
+      },
+      "evaluation": "ferminet_seed33_B\\evaluation",
+      "time_records": 2048,
+      "walkers": 512,
+      "shards": 16,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 8.881784197001252e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 900331
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 215,
+          "signed_error_contribution_mha": -0.11537880127741529,
+          "variance_share": 0.13357217993895593
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 104,
+          "signed_error_contribution_mha": -0.05867023921394061,
+          "variance_share": 0.0822562002330696
+        }
+      },
+      "evaluation": "ferminet_seed33_C\\evaluation",
+      "time_records": 2048,
+      "walkers": 512,
+      "shards": 16,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 2.220446049250313e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 900332
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 146,
+          "signed_error_contribution_mha": -0.07735047559939319,
+          "variance_share": 0.109749078725012
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 104,
+          "signed_error_contribution_mha": -0.056696480190054514,
+          "variance_share": 0.08874363992203496
+        }
+      },
+      "evaluation": "ferminet_seed33_D\\evaluation",
+      "time_records": 2048,
+      "walkers": 512,
+      "shards": 16,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 2.220446049250313e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 900333
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 45,
+          "signed_error_contribution_mha": -0.27609985405491466,
+          "variance_share": 0.757032258784145
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 26,
+          "signed_error_contribution_mha": -0.24991233727113077,
+          "variance_share": 0.7388293874001433
+        }
+      },
+      "evaluation": "zero_seed11_gaussian",
+      "time_records": 512,
+      "walkers": 512,
+      "shards": 4,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 6.661338147750939e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 800110
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 111567,
+          "signed_error_contribution_mha": 515.2291977298096,
+          "variance_share": 0.7166627287982079
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 26,
+          "signed_error_contribution_mha": 0.41676045942912954,
+          "variance_share": 0.0022429963224078553
+        }
+      },
+      "evaluation": "zero_seed11_soft_exponential",
+      "time_records": 512,
+      "walkers": 512,
+      "shards": 4,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 2.220446049250313e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 800111
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 81,
+          "signed_error_contribution_mha": -0.724139628344722,
+          "variance_share": 0.9197541025712741
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 26,
+          "signed_error_contribution_mha": -0.5547542933818393,
+          "variance_share": 0.8484075497737616
+        }
+      },
+      "evaluation": "zero_seed22_gaussian",
+      "time_records": 512,
+      "walkers": 512,
+      "shards": 4,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 8.881784197001252e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 800220
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 111422,
+          "signed_error_contribution_mha": 648.6623081667313,
+          "variance_share": 0.7447146383401628
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 26,
+          "signed_error_contribution_mha": 0.3915828279909173,
+          "variance_share": 0.0009953647180326642
+        }
+      },
+      "evaluation": "zero_seed22_soft_exponential",
+      "time_records": 512,
+      "walkers": 512,
+      "shards": 4,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 2.220446049250313e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 800221
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 58,
+          "signed_error_contribution_mha": -0.3671532161713157,
+          "variance_share": 0.7995203955897885
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 26,
+          "signed_error_contribution_mha": -0.3148423972022913,
+          "variance_share": 0.7713821522109432
+        }
+      },
+      "evaluation": "zero_seed33_gaussian",
+      "time_records": 512,
+      "walkers": 512,
+      "shards": 4,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 6.661338147750939e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 800330
+    },
+    {
+      "sample_contributions": {
+        "extreme_abs_reference_error_gt_0.5_ha": {
+          "count": 111007,
+          "signed_error_contribution_mha": 613.0263410140375,
+          "variance_share": 0.7159990857204607
+        },
+        "top_0.01_percent_absolute_centered_energy": {
+          "count": 26,
+          "signed_error_contribution_mha": 0.3475959030197565,
+          "variance_share": 0.0011345455028548166
+        }
+      },
+      "evaluation": "zero_seed33_soft_exponential",
+      "time_records": 512,
+      "walkers": 512,
+      "shards": 4,
+      "dtype": "float64",
+      "all_finite": true,
+      "time_walker_identity_verified": true,
+      "energy_trajectory_exact": true,
+      "max_energy_decomposition_residual_ha": 4.440892098500626e-16,
+      "statistics_and_tails_reproduced": true,
+      "seed": 800331
+    }
+  ],
+  "final_samples": 12582912,
+  "zero_samples": 1572864,
+  "limits": "Saved states and observations are audited; no new training or sampling was performed."
+}

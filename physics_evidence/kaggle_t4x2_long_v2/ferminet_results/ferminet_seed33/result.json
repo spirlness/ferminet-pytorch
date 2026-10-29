@@ -1,0 +1,153 @@
+{
+  "status": "completed",
+  "interaction": "ferminet",
+  "seed": 33,
+  "epochs": 20000,
+  "training_seconds": 3964.059227276999,
+  "training_stop": "epochs",
+  "training_config": {
+    "num_walkers": 512,
+    "num_epochs": 20000,
+    "mcmc_steps_per_epoch": 10,
+    "burn_in_steps": 500,
+    "lr": 0.001,
+    "step_size": 0.5,
+    "target_acceptance": null,
+    "move_mode": "all",
+    "clip_factor": 5.0,
+    "clip_method": "tanh",
+    "grad_clip": 1.0,
+    "use_cusp_jastrow": false,
+    "two_stage_jastrow": true,
+    "jastrow_stage1_epochs": 1000,
+    "jastrow_lr": 0.0001,
+    "eval_after_train": false,
+    "eval_steps": 50,
+    "eval_decorrelation_steps": 10,
+    "spin_adapted": false,
+    "envelope_type": null,
+    "smooth_cuspless": null,
+    "restore_best": false,
+    "checkpoint_path": null,
+    "interaction_type": "ferminet",
+    "compile_sampler": false,
+    "device": "cuda:0",
+    "dtype": "torch.float32",
+    "seed": 33,
+    "verbose": false
+  },
+  "checkpoint_selection": "final_no_energy_selection",
+  "checkpoint_sha256": "f20a52169046764fb5e0ed26a5d7c10f4d14569f0f26eda537938f82a6b6937e",
+  "evaluation": {
+    "total_samples": 1048576,
+    "num_valid": 1048576,
+    "num_invalid": 0,
+    "energy_mean": -1.1727887586516657,
+    "energy_var": 0.0034378174628129326,
+    "energy_std": 0.05863290426725366,
+    "energy_sem": 6.930949863063388e-05,
+    "energy_sem_naive": 5.7258695573489905e-05,
+    "energy_sem_ess": 5.8920520196520765e-05,
+    "energy_sem_block": 6.930949863063388e-05,
+    "energy_ci95": [
+      -1.1729246052689817,
+      -1.1726529120343496
+    ],
+    "interval_method": "approximate_normal_95_percent",
+    "rho_1": 0.024041655314348202,
+    "rho_1_batch": 0.04904156271494771,
+    "tau_int": 1.0588885322655655,
+    "ess_fraction": 0.9443864670631862,
+    "effective_sample_size": 990260.9840872475,
+    "split_rhat": 1.0000047109874046,
+    "reblocking": [
+      {
+        "block_length": 1,
+        "num_blocks": 2048,
+        "sem": 5.7194255418655974e-05
+      },
+      {
+        "block_length": 2,
+        "num_blocks": 1024,
+        "sem": 5.865169146817375e-05
+      },
+      {
+        "block_length": 4,
+        "num_blocks": 512,
+        "sem": 5.8908484747382445e-05
+      },
+      {
+        "block_length": 8,
+        "num_blocks": 256,
+        "sem": 5.884316618993458e-05
+      },
+      {
+        "block_length": 16,
+        "num_blocks": 128,
+        "sem": 6.1018306146216773e-05
+      },
+      {
+        "block_length": 32,
+        "num_blocks": 64,
+        "sem": 6.498930662302932e-05
+      },
+      {
+        "block_length": 64,
+        "num_blocks": 32,
+        "sem": 6.930949863063388e-05
+      },
+      {
+        "block_length": 128,
+        "num_blocks": 16,
+        "sem": 6.353663838023707e-05
+      }
+    ],
+    "blocking_plateau": true,
+    "diagnostics_status": "passed",
+    "diagnostics_reasons": [],
+    "decorrelation_steps": 20,
+    "eval_time_sec": 1177.2377808089987,
+    "time_records": 2048,
+    "requested_time_records": 2048,
+    "energy_batch_size": 128,
+    "seed": 100033,
+    "stopping_reason": "completed",
+    "mcmc_acceptance": 0.232421875,
+    "mcmc_step_size": 0.8937869836164302,
+    "spin_projection": "singlet",
+    "trajectory_path": "/kaggle/working/ferminet_results/ferminet_seed33/evaluation_trajectory.pt",
+    "reference_label": "H2 BO singlet, R=1.4 bohr",
+    "reference_source": "https://doi.org/10.1103/PhysRevA.82.032509",
+    "chemical_accuracy_met": false,
+    "chemical_accuracy_status": "not_met",
+    "exact_energy": -1.17447571422,
+    "abs_error_ha": 0.001686955568334314,
+    "abs_error_mha": 1.686955568334314,
+    "abs_error_kcal": 1.0585806013468364,
+    "hf_energy": -1.13362957,
+    "correlation_retrieved_pct": 95.86997597803047
+  },
+  "evaluation_dtype": "float64, exact promotion of stored training weights",
+  "precision_before": {
+    "passed": true,
+    "points": 32,
+    "max_log_difference": 1.2287034314439893e-06,
+    "energy_rms_difference_ha": 1.174093437447664e-06,
+    "max_energy_difference_ha": 2.51952831842317e-06,
+    "scope": "Fixed sampled points only; no universal error bound"
+  },
+  "precision_after": {
+    "passed": true,
+    "points": 32,
+    "max_log_difference": 4.630234071711925e-07,
+    "energy_rms_difference_ha": 3.4849326059299934e-07,
+    "max_energy_difference_ha": 7.724212149895493e-07,
+    "scope": "Fixed sampled points only; no universal error bound"
+  },
+  "peak_cuda_memory_bytes": 31248896,
+  "device": {
+    "logical_device": "cuda:0",
+    "visible_devices": "0",
+    "name": "Tesla T4"
+  }
+}

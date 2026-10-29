@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "points": 32,
+  "max_log_difference": 6.105045118331986e-07,
+  "energy_rms_difference_ha": 7.163289140629038e-07,
+  "max_energy_difference_ha": 1.5790765961476438e-06,
+  "scope": "Fixed sampled points only; no universal error bound"
+}

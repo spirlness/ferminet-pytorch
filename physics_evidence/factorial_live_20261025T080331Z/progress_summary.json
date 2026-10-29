@@ -1,0 +1,65 @@
+{
+  "cases": [
+    {
+      "case": "ferminet_seed22_C",
+      "latest_epoch": 4547,
+      "cumulative_epoch": 54547,
+      "latest_energy": -1.1764459609985352,
+      "recent_logged_energy_mean": -1.1756342649459839,
+      "recent_step_seconds": 0.22694081180000011,
+      "timestamp_hk": "2026-10-25T16:03:23.307841+08:00",
+      "first_energy": -0.6421439051628113
+    },
+    {
+      "case": "ferminet_seed11_D",
+      "latest_epoch": 4505,
+      "cumulative_epoch": 54505,
+      "latest_energy": -1.1741044521331787,
+      "recent_logged_energy_mean": -1.1748618960380555,
+      "recent_step_seconds": 0.23600148640002772,
+      "timestamp_hk": "2026-10-25T16:03:30.029552+08:00",
+      "first_energy": -0.6523691415786743
+    }
+  ],
+  "completed_cases": 0,
+  "failed_cases": [],
+  "issue_lines": [],
+  "last_heartbeat": {
+    "event": "heartbeat",
+    "timestamp_utc": "2026-10-25T08:03:19.521935+00:00",
+    "completed": 0,
+    "workers": [
+      {
+        "worker": 0,
+        "pid": 46,
+        "exit_code": null,
+        "seconds_since_output": 6.2,
+        "reader_error": null
+      },
+      {
+        "worker": 1,
+        "pid": 48,
+        "exit_code": null,
+        "seconds_since_output": 9.8,
+        "reader_error": null
+      }
+    ],
+    "gpus": [
+      {
+        "index": 0,
+        "name": "Tesla T4",
+        "utilization_percent": 33,
+        "memory_used_mib": 177,
+        "memory_total_mib": 15360
+      },
+      {
+        "index": 1,
+        "name": "Tesla T4",
+        "utilization_percent": 33,
+        "memory_used_mib": 179,
+        "memory_total_mib": 15360
+      }
+    ]
+  },
+  "scope": "Latest streamed logged training batches, not independent frozen evaluation."
+}

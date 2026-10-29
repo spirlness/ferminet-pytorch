@@ -1,0 +1,17 @@
+{
+  "kernel": "hwbwhzbsh/ferminet-factorial-accuracy",
+  "source_commit": "9b001c5bbd4c143058248bbc0c6e3585412ae27c",
+  "method": "KaggleApi.kernels_logs_stream",
+  "capture": "Unmodified SDK event payloads serialized as JSON Lines; console.log concatenates the data strings. This is not a byte-for-byte HTTP capture.",
+  "sha256": {
+    "console.log": "d5789a49e6cf2512303373da90ce6d2f72ea94bc69b01c7d788f8c61d6ff3351",
+    "download_stream.py": "5416a31830f039df09b0474137af92ade6b9ed63816804662df413272b35bf28",
+    "events.jsonl": "6cba5d127b4c6e6e45ce3628cb6c4810e472c7ab2563563edd6a8c1b12224301",
+    "progress_summary.json": "0b128da9a0785829d5eaa773b37cf3f7c69e0195e6124b64c15c11ea6fb62821",
+    "snapshot.json": "30c9e6bfc52ef5273e26bfd7ec6153585ad435b4d866c47cef120ee1b98f42ff"
+  },
+  "observed_source_commits": [
+    "9b001c5bbd4c143058248bbc0c6e3585412ae27c"
+  ],
+  "expected_source_commit_seen_in_log": true
+}

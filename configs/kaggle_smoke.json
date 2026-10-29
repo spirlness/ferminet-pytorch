@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "seeds": [11],
+  "interactions": ["ferminet", "psiformer"],
+  "model": {"num_determinants": 8, "hidden_dim_one": 64, "hidden_dim_two": 16, "num_layers": 3},
+  "training": {
+    "num_epochs": 1, "num_walkers": 512,
+    "mcmc_steps_per_epoch": 1, "burn_in_steps": 4,
+    "lr": 0.001, "grad_clip": 1.0,
+    "two_stage_jastrow": true, "jastrow_stage1_epochs": 1,
+    "restore_best": false
+  },
+  "training_dtype": "float32",
+  "training_seconds_per_case": 120,
+  "checkpoint_seconds": 1,
+  "evaluation": {
+    "num_walkers": 32, "num_steps": 8,
+    "burn_in_steps": 4, "decorrelation_steps": 1,
+    "energy_batch_size": 16, "max_seconds": 90
+  },
+  "precision_audit": {"num_points": 8, "max_log_difference": 0.001, "max_energy_rms_difference": 0.001},
+  "cpu_threads_per_worker": 1,
+  "log_seconds": 1,
+  "heartbeat_seconds": 2,
+  "max_wall_seconds": 600
+}

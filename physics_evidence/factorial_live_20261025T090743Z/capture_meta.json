@@ -1,0 +1,14 @@
+{
+  "kernel": "hwbwhzbsh/ferminet-factorial-accuracy",
+  "expected_source_commit": "9b001c5bbd4c143058248bbc0c6e3585412ae27c",
+  "expected_source_seen": true,
+  "method": "KaggleApi.kernels_logs_stream",
+  "capture": "SDK event payloads serialized as JSON Lines; decoded console view concatenates data strings.",
+  "sha256": {
+    "console.log": "37aa9fb6310c1f791a21fd9080a66d2e7e896ac93211fbdc14c71ce8675f55f7",
+    "events.jsonl": "3ff76c22b938c56e22fe30a49605237680f75cf618609e1a9745f04f389c1bf2",
+    "fetch_script.py": "4b1983273c7e6a8b8822d760e8873ce5c528fb5c854cfe50254fd1934fb20b8d",
+    "progress_summary.json": "40827c2c35b521a0cf1671fe3461f544156a5302b4071c907ac4d9d8e67d0dc4",
+    "snapshot.json": "803c9b2a058062f5fca377b0c9d29b3ae2af9e196e1a6a75278ef51365c34cfe"
+  }
+}

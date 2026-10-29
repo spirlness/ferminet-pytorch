@@ -1,0 +1,544 @@
+CUDA: NVIDIA GeForce RTX 3060 Laptop GPU
+test_cuda_extreme_batch_mixed_singularities_inductor (test_adversarial_dynamo.TestAdversarialCudaInductorDynamo.test_cuda_extreme_batch_mixed_singularities_inductor)
+GPU (CUDA) 上极限大规模混合奇异批次 (B=512) 0 图断裂与 Inductor 数值等价性. ... ok
+test_cuda_float64_machine_precision_equivalence (test_adversarial_dynamo.TestAdversarialCudaInductorDynamo.test_cuda_float64_machine_precision_equivalence)
+GPU (CUDA) 模式下 Float64 高精度极限压力实测: 编译与 Eager 绝对误差达到机器精度 (< 1e-10). ... ok
+test_cuda_singular_input_backward_finite (test_adversarial_dynamo.TestAdversarialCudaInductorDynamo.test_cuda_singular_input_backward_finite)
+GPU (CUDA) 上奇异样本反向传播求导，梯度处处有限无 NaN/Inf. ... ok
+test_massive_batch_1024_walkers_stress (test_adversarial_dynamo.TestAdversarialLargeBatches.test_massive_batch_1024_walkers_stress)
+超大规模 Walker 批次 (B=1024) 极端压力下 Dynamo 追踪 0 图断裂. ... ok
+test_massive_batch_512_mixed_singularities (test_adversarial_dynamo.TestAdversarialLargeBatches.test_massive_batch_512_mixed_singularities)
+大规模 Walker 批次 (B=512) 混合 6 类极端奇异构型的 Dynamo 图断裂严格为 0. ... ok
+test_fully_spin_polarized_ferromagnetic (test_adversarial_dynamo.TestAdversarialOpenShellMultiplets.test_fully_spin_polarized_ferromagnetic)
+全自旋极化体系 (纯自旋向上: n_up=4, n_down=0, d_down=None 极端分支) 0 图断裂. ... ok
+test_heteronuclear_open_shell_lih_ion (test_adversarial_dynamo.TestAdversarialOpenShellMultiplets.test_heteronuclear_open_shell_lih_ion)
+双核开壳层高自旋体系 (LiH 离子/激发态: n_up=3, n_down=1) 0 图断裂. ... ok
+test_li_ground_state_doublet_s_half (test_adversarial_dynamo.TestAdversarialOpenShellMultiplets.test_li_ground_state_doublet_s_half)
+开壳层未配对体系 (Li 原子 3 电子: n_up=2, n_down=1, S=1/2) 0 图断裂. ... ok
+test_quadruplet_high_spin_four_electrons (test_adversarial_dynamo.TestAdversarialOpenShellMultiplets.test_quadruplet_high_spin_four_electrons)
+高自旋四重态体系 (4 电子: n_up=3, n_down=1, S=3/2) 0 图断裂. ... ok
+test_single_electron_extreme_boundary (test_adversarial_dynamo.TestAdversarialOpenShellMultiplets.test_single_electron_extreme_boundary)
+单电子极端边界体系 (类氢原子: n_up=1, n_down=0, 1x1 行列式) 0 图断裂. ... ok
+test_rank_deficient_log_psi_derivatives (test_adversarial_dynamo.TestAdversarialSingularGradients.test_rank_deficient_log_psi_derivatives)
+测试在常规与轻度奇异样本上，log_abs_psi 的坐标梯度有限且处处无 NaN. ... ok
+test_singular_pauli_overlap_backward_gradients (test_adversarial_dynamo.TestAdversarialSingularGradients.test_singular_pauli_overlap_backward_gradients)
+同自旋双电子完全重合奇异点 (det=0) 下 model.forward(r) 坐标梯度有限 (无 NaN/Inf). ... ok
+test_singular_triplet_overlap_backward_gradients (test_adversarial_dynamo.TestAdversarialSingularGradients.test_singular_triplet_overlap_backward_gradients)
+三电子完全重合超强降秩下 model.forward(r) 坐标反向传播梯度有限 (无 NaN/Inf). ... ok
+test_smooth_approach_to_pauli_node (test_adversarial_dynamo.TestAdversarialSingularGradients.test_smooth_approach_to_pauli_node)
+测试电子逐步逼近 Pauli 节点面 (delta -> 0) 时梯度的连续性与有限性. ... ok
+test_quadrant_1_base_ferminet (test_adversarial_dynamo.TestAdversarialSpinAndJastrowMatrix.test_quadrant_1_base_ferminet)
+象限 1: spin_adapted=False, use_cusp_jastrow=False. ... ok
+test_quadrant_2_spin_adapted_only (test_adversarial_dynamo.TestAdversarialSpinAndJastrowMatrix.test_quadrant_2_spin_adapted_only)
+象限 2: spin_adapted=True, use_cusp_jastrow=False. ... ok
+test_quadrant_3_cusp_jastrow_only (test_adversarial_dynamo.TestAdversarialSpinAndJastrowMatrix.test_quadrant_3_cusp_jastrow_only)
+象限 3: spin_adapted=False, use_cusp_jastrow=True. ... ok
+test_quadrant_4_both_spin_and_jastrow (test_adversarial_dynamo.TestAdversarialSpinAndJastrowMatrix.test_quadrant_4_both_spin_and_jastrow)
+象限 4: spin_adapted=True, use_cusp_jastrow=True. ... ok
+test_ferminet_large_system_nodal_surface_backward (test_challenge_stress.TestCofactorLargeSingular.test_ferminet_large_system_nodal_surface_backward)
+端到端检验：构建 8 电子体系 (n_up=8, n_down=0)，两电子重合于泡利节点面上时的反向传播。 ... ok
+test_singular_cofactor_size_10 (test_challenge_stress.TestCofactorLargeSingular.test_singular_cofactor_size_10)
+测试 size=10 奇异矩阵 (det=0) 的代数余子式反向传播与耗时。 ... ok
+test_singular_cofactor_size_8 (test_challenge_stress.TestCofactorLargeSingular.test_singular_cofactor_size_8)
+测试 size=8 奇异矩阵 (det=0) 的代数余子式反向传播与耗时。 ... ok
+test_exact_zero_variance_boundary_safety (test_challenge_stress.TestDegenerateVarianceMADClipping.test_exact_zero_variance_boundary_safety)
+边界极限挑战：当所有 Walker 能量完全相等 (方差严格为 0) 时，系统平稳执行且 loss 为 0。 ... ok
+test_mad_clipping_hard_method_under_vanishing_variance (test_challenge_stress.TestDegenerateVarianceMADClipping.test_mad_clipping_hard_method_under_vanishing_variance)
+测试 hard 截断在方差趋近 0 时同样正常工作且保持梯度。 ... ok
+test_mad_clipping_preserves_gradient_under_vanishing_variance (test_challenge_stress.TestDegenerateVarianceMADClipping.test_mad_clipping_preserves_gradient_under_vanishing_variance)
+测试在不同极小方差尺度 (1e-3, 1e-5, 1e-7) 下，代理损失梯度保持非零且有限。 ... ok
+test_contrast_adaptive_vs_frozen (test_challenge_stress.TestMCMCStepSizeFreezing.test_contrast_adaptive_vs_frozen)
+对照测试：证明 adapt=True 会动态改变步长，而 adapt=False 能绝对冻结。 ... ok
+test_mcmc_frozen_step_size_under_high_acceptance (test_challenge_stress.TestMCMCStepSizeFreezing.test_mcmc_frozen_step_size_under_high_acceptance)
+测试在极端高接受率 (接近 100%) 挑战下，sample(adapt=False) 步长严格不变。 ... ok
+test_mcmc_frozen_step_size_under_zero_acceptance (test_challenge_stress.TestMCMCStepSizeFreezing.test_mcmc_frozen_step_size_under_zero_acceptance)
+测试在极端低接受率 (接近 0%) 挑战下，sample(adapt=False) 步长严格不变。 ... ok
+test_bug01_adversarial_spin_pooling_mathematical_oracle (test_challenger_reverify.TestEmpiricalChallengerReverification.test_bug01_adversarial_spin_pooling_mathematical_oracle)
+Adversarial stress-test: ... ok
+test_bug01_autograd_and_finiteness (test_challenger_reverify.TestEmpiricalChallengerReverification.test_bug01_autograd_and_finiteness)
+Verify autograd gradient flow and finiteness for n_up=1, n_down=1. ... ok
+test_bug02_kinetic_calculator_forward_jvp_correctness (test_challenger_reverify.TestEmpiricalChallengerReverification.test_bug02_kinetic_calculator_forward_jvp_correctness)
+Verify that FORWARD_JVP mode calculates correct Laplacian matching REVERSE mode. ... F:\conda\envs\torch\Lib\site-packages\torch\jit\_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+ok
+test_bug02_kinetic_calculator_hutchinson_unbiasedness (test_challenger_reverify.TestEmpiricalChallengerReverification.test_bug02_kinetic_calculator_hutchinson_unbiasedness)
+Verify that Hutchinson random trace estimator is statistically unbiased: ... ok
+test_bug02_kinetic_calculator_reverse_exact_harmonic (test_challenger_reverify.TestEmpiricalChallengerReverification.test_bug02_kinetic_calculator_reverse_exact_harmonic)
+Verify that REVERSE mode gives exact analytical Laplacian and kinetic energy: ... ok
+test_bug03_nuclear_envelope_checkpoint_bidirectional_state_dict (test_challenger_reverify.TestEmpiricalChallengerReverification.test_bug03_nuclear_envelope_checkpoint_bidirectional_state_dict)
+Verify 100% parameter compatibility between NuclearEnvelope and NuclearEnvelopeModern. ... ok
+test_bug03_nuclear_envelope_softplus_and_charge_alignment (test_challenger_reverify.TestEmpiricalChallengerReverification.test_bug03_nuclear_envelope_softplus_and_charge_alignment)
+Verify softplus regularization and nuclear charge physics alignment. ... ok
+test_bug04_psiformer_same_spin_permutation_equivariance (test_challenger_reverify.TestEmpiricalChallengerReverification.test_bug04_psiformer_same_spin_permutation_equivariance)
+Verify permutation equivariance among electrons with the same spin: ... ok
+test_bug04_psiformer_spin_differentiation (test_challenger_reverify.TestEmpiricalChallengerReverification.test_bug04_psiformer_spin_differentiation)
+Verify that PsiformerAttentionBlock breaks spin degeneracy: ... ok
+test_checklist5_ferminet_legacy_adapter_end_to_end (test_challenger_reverify.TestEmpiricalChallengerReverification.test_checklist5_ferminet_legacy_adapter_end_to_end)
+Verify FermiNetLegacyAdapter forward and forward_log_psi equivalence. ... ok
+test_checklist5_interaction_legacy_adapter_delegation (test_challenger_reverify.TestEmpiricalChallengerReverification.test_checklist5_interaction_legacy_adapter_delegation)
+Verify FermiInteractionLayerLegacyAdapter matches original layer interface. ... ok
+test_cuda_mcmc_sampler_with_inductor_forward (test_compile.TestCompileMCMCSampler.test_cuda_mcmc_sampler_with_inductor_forward)
+GPU (CUDA) 环境下使用 Inductor 编译前向的 MCMC 采样正常. ... ok
+test_mcmc_sampler_all_mode_with_compiled_forward (test_compile.TestCompileMCMCSampler.test_mcmc_sampler_all_mode_with_compiled_forward)
+MCMC 在 'all' 移动模式下注入编译前向函数能够平稳完成预热与采样. ... ok
+test_mcmc_sampler_one_by_one_mode_with_compiled_forward (test_compile.TestCompileMCMCSampler.test_mcmc_sampler_one_by_one_mode_with_compiled_forward)
+MCMC 在 'one_by_one' 逐电子模式下注入编译前向函数运作正常. ... ok
+test_cpu_numerical_equivalence_float32 (test_compile.TestCompileNumericalEquivalence.test_cpu_numerical_equivalence_float32)
+CPU 单精度 (Float32) 编译与 Eager 模式输出绝对误差严格 < 1e-6 且符号一致. ... ok
+test_cpu_numerical_equivalence_float64 (test_compile.TestCompileNumericalEquivalence.test_cpu_numerical_equivalence_float64)
+CPU 双精度 (Float64) 编译与 Eager 模式输出绝对误差严格 < 1e-6 且符号 100% 一致. ... ok
+test_cuda_numerical_equivalence_float32 (test_compile.TestCompileNumericalEquivalence.test_cuda_numerical_equivalence_float32)
+GPU (CUDA) 单精度下 Inductor 融合编译输出绝对误差 < 1e-5 (浮点重排容差) 且符号精确一致. ... ok
+test_cuda_numerical_equivalence_float64 (test_compile.TestCompileNumericalEquivalence.test_cuda_numerical_equivalence_float64)
+GPU (CUDA) 双精度下 Inductor 编译与 Eager 模式绝对误差严格 < 1e-6 且符号完全一致. ... ok
+test_singular_input_backward_finite_gradients (test_compile.TestCompileSingularRobustness.test_singular_input_backward_finite_gradients)
+奇异降秩构型处反向传播梯度有限性验证 (无 NaN/Inf). ... ok
+test_singular_input_forward_finite_and_equivalence (test_compile.TestCompileSingularRobustness.test_singular_input_forward_finite_and_equivalence)
+极端奇异降秩 (det=0) 构型下编译输出全有限 (无 NaN/Inf) 且与 Eager 绝对误差 < 1e-6. ... ok
+test_train_vmc_compile_flag_cpu (test_compile.TestCompileVMCIntegration.test_train_vmc_compile_flag_cpu)
+CPU 环境下启用 compile=True 能够平稳完成 2 个 Epoch 训练且无 NaN. ... ok
+test_train_vmc_compile_flag_cuda (test_compile.TestCompileVMCIntegration.test_train_vmc_compile_flag_cuda)
+GPU (CUDA) 环境下启用 compile=True 顺利完成端到端 VMC 训练并记录历史最优能量. ... ok
+test_cuda_graph_breaks_zero (test_compile.TestDynamoGraphBreaks.test_cuda_graph_breaks_zero)
+GPU (CUDA) 环境下 forward_log_psi 图断裂数严格为 0. ... ok
+test_h2_closed_shell_graph_breaks_zero (test_compile.TestDynamoGraphBreaks.test_h2_closed_shell_graph_breaks_zero)
+闭壳层 H2 分子 (2 电子) forward_log_psi 图断裂数严格为 0. ... ok
+test_li_open_shell_graph_breaks_zero (test_compile.TestDynamoGraphBreaks.test_li_open_shell_graph_breaks_zero)
+开壳层未配对体系 (Li 原子: 3 电子, up=2, down=1) 图断裂数严格为 0. ... ok
+test_singular_overlap_graph_breaks_zero (test_compile.TestDynamoGraphBreaks.test_singular_overlap_graph_breaks_zero)
+同自旋电子坐标完全重合奇异构型 (det=0) 图断裂数严格为 0. ... ok
+test_spin_adapted_and_cusp_jastrow_graph_breaks_zero (test_compile.TestDynamoGraphBreaks.test_spin_adapted_and_cusp_jastrow_graph_breaks_zero)
+开启自旋纯态投影与 Kato Cusp Jastrow 因子时图断裂数严格为 0. ... ok
+test_cpu_cuda_local_energy_and_coordinate_gradients_agree (test_cuda.TestCudaAgreementAndTraining.test_cpu_cuda_local_energy_and_coordinate_gradients_agree) ... ok
+test_h2_lih_training_updates_cuda_parameters (test_cuda.TestCudaAgreementAndTraining.test_h2_lih_training_updates_cuda_parameters) ... ok
+test_real_model_zero_orbital_has_finite_energy_and_parameter_gradients (test_cuda.TestCudaDeterminants.test_real_model_zero_orbital_has_finite_energy_and_parameter_gradients) ... ok
+test_regular_branches_keep_logarithmic_dynamic_range (test_cuda.TestCudaDeterminants.test_regular_branches_keep_logarithmic_dynamic_range)
+Each spin determinant product underflows in float32, but log Psi does not. ... ok
+test_zero_branch_preserves_tiny_total_wavefunction_and_derivatives (test_cuda.TestCudaDeterminants.test_zero_branch_preserves_tiny_total_wavefunction_and_derivatives)
+Psi = scale**4 * (w0 * theta + w1), evaluated at theta = 0. ... ok
+test_zero_branches_match_polynomial_first_and_second_derivatives (test_cuda.TestCudaDeterminants.test_zero_branches_match_polynomial_first_and_second_derivatives)
+Include rank n-1, rank n-2, and both spin factors zero in one term. ... ok
+test_all_invalid_energy_raises_instead_of_reporting_zero (test_cuda.TestCudaInvalidEnergy.test_all_invalid_energy_raises_instead_of_reporting_zero) ... ok
+test_nonfinite_log_wavefunction_aborts_update (test_cuda.TestCudaInvalidEnergy.test_nonfinite_log_wavefunction_aborts_update) ... ok
+test_partial_invalid_energy_uses_only_valid_samples (test_cuda.TestCudaInvalidEnergy.test_partial_invalid_energy_uses_only_valid_samples) ... F:\conda\envs\torch\Lib\site-packages\torch\jit\_script.py:365: FutureWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+ok
+test_training_aborts_before_optimizer_step (test_cuda.TestCudaInvalidEnergy.test_training_aborts_before_optimizer_step) ... ok
+test_custom_single_permutation_is_applied_to_values_and_gradients (test_cuda.TestCudaSpin.test_custom_single_permutation_is_applied_to_values_and_gradients) ... ok
+test_incompatible_named_spin_is_rejected (test_cuda.TestCudaSpin.test_incompatible_named_spin_is_rejected) ... ok
+test_lih_with_jastrow_is_singlet_and_has_finite_energy_gradients (test_cuda.TestCudaSpin.test_lih_with_jastrow_is_singlet_and_has_finite_energy_gradients) ... ok
+test_multielectron_s_squared_idempotence_and_antisymmetry (test_cuda.TestCudaSpin.test_multielectron_s_squared_idempotence_and_antisymmetry)
+Check actual S^2 eigenvalues, including the S=3 sector in six electrons. ... ok
+test_singlet_rejects_fully_antisymmetric_quintet (test_cuda.TestCudaSpin.test_singlet_rejects_fully_antisymmetric_quintet) ... ok
+test_incompatible_explicit_jastrow_is_rejected (test_cuda.TestCudaTripletCusp.test_incompatible_explicit_jastrow_is_rejected) ... ok
+test_real_triplet_local_energy_remains_bounded_at_coalescence (test_cuda.TestCudaTripletCusp.test_real_triplet_local_energy_remains_bounded_at_coalescence) ... ok
+test_triplet_cusp_derivative_is_one_quarter (test_cuda.TestCudaTripletCusp.test_triplet_cusp_derivative_is_one_quarter) ... ok
+test_autocorrelation_boundary_cases (test_decorrelation_and_two_stage.TestAutocorrelationAndDecorrelation.test_autocorrelation_boundary_cases)
+测试极端边界输入 (常数序列、过短序列、全零方差). ... ok
+test_evaluate_decorrelation_enhancement_reduces_autocorrelation (test_decorrelation_and_two_stage.TestAutocorrelationAndDecorrelation.test_evaluate_decorrelation_enhancement_reduces_autocorrelation)
+核心物理与统计验证: ... ok
+test_synthetic_autocorrelation_highly_correlated (test_decorrelation_and_two_stage.TestAutocorrelationAndDecorrelation.test_synthetic_autocorrelation_highly_correlated)
+验证自回归高自相关序列 (AR(1) with phi=0.85) 的自相关时间与 ESS 缩减。 ... ok
+test_synthetic_autocorrelation_white_noise (test_decorrelation_and_two_stage.TestAutocorrelationAndDecorrelation.test_synthetic_autocorrelation_white_noise)
+验证白噪声无自相关序列 (phi=0.0) 的自相关系数接近 0 且有效样本量比例接近 100%. ... ok
+test_evaluate_frozen_wavefunction_model_mode_and_robustness (test_decorrelation_and_two_stage.TestTwoStageJastrowStrategy.test_evaluate_frozen_wavefunction_model_mode_and_robustness)
+验证 evaluate_frozen_wavefunction 评估前后正确保留并恢复原有的 model.training 状态。 ... ok
+test_model_freeze_and_unfreeze_jastrow (test_decorrelation_and_two_stage.TestTwoStageJastrowStrategy.test_model_freeze_and_unfreeze_jastrow)
+测试 FermiNet 模型的 freeze_jastrow() 与 unfreeze_jastrow() 方法。 ... ok
+test_model_parameter_groups_separation (test_decorrelation_and_two_stage.TestTwoStageJastrowStrategy.test_model_parameter_groups_separation)
+测试 get_parameter_groups() 是否能够正确分配主干与 Jastrow 的独立学习率。 ... ok
+test_restore_best_preserves_stage2_fine_tuned_jastrow (test_decorrelation_and_two_stage.TestTwoStageJastrowStrategy.test_restore_best_preserves_stage2_fine_tuned_jastrow)
+关键状态持久化验证: ... ok
+test_stage1_zero_gradient_and_stage2_gradient_flow (test_decorrelation_and_two_stage.TestTwoStageJastrowStrategy.test_stage1_zero_gradient_and_stage2_gradient_flow)
+微观梯度流验证: ... ok
+test_stage2_learning_rate_independent_annealing (test_decorrelation_and_two_stage.TestTwoStageJastrowStrategy.test_stage2_learning_rate_independent_annealing)
+核心调度器验证: ... ok
+test_train_two_stage_jastrow_convenience_api (test_decorrelation_and_two_stage.TestTwoStageJastrowStrategy.test_train_two_stage_jastrow_convenience_api)
+测试 train_two_stage_jastrow 高层便捷封装与训练后评估 (eval_after_train). ... ok
+test_train_vmc_two_stage_jastrow_workflow (test_decorrelation_and_two_stage.TestTwoStageJastrowStrategy.test_train_vmc_two_stage_jastrow_workflow)
+关键端到端验证: ... ok
+test_two_stage_fallback_without_jastrow (test_decorrelation_and_two_stage.TestTwoStageJastrowStrategy.test_two_stage_fallback_without_jastrow)
+测试在未开启 Jastrow (use_cusp_jastrow=False) 的模型上启用 two_stage_jastrow 平滑降级。 ... ok
+test_real_model_zero_orbital_has_finite_energy_and_parameter_gradients (test_determinants.TestSingularDeterminants.test_real_model_zero_orbital_has_finite_energy_and_parameter_gradients) ... ok
+test_regular_branches_keep_logarithmic_dynamic_range (test_determinants.TestSingularDeterminants.test_regular_branches_keep_logarithmic_dynamic_range)
+Each spin determinant product underflows in float32, but log Psi does not. ... ok
+test_zero_branch_preserves_tiny_total_wavefunction_and_derivatives (test_determinants.TestSingularDeterminants.test_zero_branch_preserves_tiny_total_wavefunction_and_derivatives)
+Psi = scale**4 * (w0 * theta + w1), evaluated at theta = 0. ... ok
+test_zero_branches_match_polynomial_first_and_second_derivatives (test_determinants.TestSingularDeterminants.test_zero_branches_match_polynomial_first_and_second_derivatives)
+Include rank n-1, rank n-2, and both spin factors zero in one term. ... ok
+test_modern_and_legacy_numerical_match (test_envelope_modern.TestEnvelopeModern.test_modern_and_legacy_numerical_match)
+验证相同参数下 NuclearEnvelope 与 NuclearEnvelopeModern 数值精确一致。 ... ok
+test_modern_envelope_shapes_and_state_dict_keys (test_envelope_modern.TestEnvelopeModern.test_modern_envelope_shapes_and_state_dict_keys)
+验证现代包络与历史权重字典键名完全一致，输出形状为 (B, K, N, N_orb)。 ... ok
+test_antisymmetry_down_electrons (test_ferminet.TestFermiNet.test_antisymmetry_down_electrons)
+核心物理测试: 交换任意两个自旋向下电子的坐标，波函数必须严格反号 Psi -> -Psi。 ... ok
+test_antisymmetry_up_electrons (test_ferminet.TestFermiNet.test_antisymmetry_up_electrons)
+核心物理测试: 交换任意两个自旋向上电子的坐标，波函数必须严格反号 Psi -> -Psi。 ... ok
+test_compute_local_energy_create_graph (test_ferminet.TestFermiNet.test_compute_local_energy_create_graph)
+测试 compute_local_energy 的 create_graph=True 选项， ... ok
+test_device_and_dtype_consistency (test_ferminet.TestFermiNet.test_device_and_dtype_consistency)
+测试体系与模型在 float64 双精度以及数据类型/设备对齐下的正确性。 ... ok
+test_envelope_shapes (test_ferminet.TestFermiNet.test_envelope_shapes)
+测试核包络衰减模块形状. ... ok
+test_feature_embedding_shapes (test_ferminet.TestFermiNet.test_feature_embedding_shapes)
+测试特征嵌入层输出张量形状与数值有限性。 ... ok
+test_interaction_layer_shapes (test_ferminet.TestFermiNet.test_interaction_layer_shapes)
+测试自旋等变相互作用层形状. ... ok
+test_local_energy_computation (test_ferminet.TestFermiNet.test_local_energy_computation)
+测试局域能量计算 (局部动能拉普拉斯与库仑势能)。 ... ok
+test_mcmc_sampler_functionality (test_ferminet.TestFermiNet.test_mcmc_sampler_functionality)
+验证批量 GPU/CPU MCMC 采样器的全电子与逐电子步进、自适应步长与预热. ... ok
+test_model_forward_shapes (test_ferminet.TestFermiNet.test_model_forward_shapes)
+测试 FermiNet 整体模型的前向推断形状. ... ok
+test_pauli_exclusion_exact_zero_and_no_nan (test_ferminet.TestFermiNet.test_pauli_exclusion_exact_zero_and_no_nan)
+泡利不相容原理严格数值测试: 两个同自旋电子完全重合时，波函数必须严格为 0， ... ok
+test_pauli_exclusion_zero (test_ferminet.TestFermiNet.test_pauli_exclusion_zero)
+泡利不相容原理: 两个同自旋电子处于同一空间位置时，波函数必须等于 0。 ... ok
+test_single_electron_spin_polarized (test_ferminet.TestFermiNet.test_single_electron_spin_polarized)
+极端边界条件测试: 单自旋极化单电子体系 (如孤立氢原子 H: N_up=1, N_down=0)。 ... ok
+test_slogdet_antisymmetry_on_large_system (test_ferminet.TestFermiNet.test_slogdet_antisymmetry_on_large_system)
+验证阶段0防范: 在多电子体系下，采用对数波函数 slogdet 维度直接比对反对称性， ... ok
+test_train_vmc_integration (test_ferminet.TestFermiNet.test_train_vmc_integration)
+验证端到端 VMC 训练迭代闭环 (微型 2 步迭代). ... ok
+test_v_nn_precomputed_and_migrated (test_ferminet.TestFermiNet.test_v_nn_precomputed_and_migrated)
+测试 MolecularSystem 初始化时预计算并缓存核-核排斥常数 V_nn，以及在 .to() 迁移时同步。 ... ok
+test_vmc_surrogate_loss_and_clipping (test_ferminet.TestFermiNet.test_vmc_surrogate_loss_and_clipping)
+验证基于 MAD 的稳健有偏截断与代理损失反向传播. ... ok
+test_geometry_extraction_precision (test_geometry_cache.TestGeometricContext.test_geometry_extraction_precision)
+验证 GeometricContext 抽取的位移与范数与传统直接计算在 float64 下精确吻合 (< 1e-14)。 ... ok
+test_single_electron_boundary (test_geometry_cache.TestGeometricContext.test_single_electron_boundary)
+验证单电子极限 (N=1) 下 r_ee 和 d_ee 安全返回 None 且不崩溃。 ... ok
+test_mcmc_decorrelation_step_kernel_zero_breaks (test_graph_breaks_verification.TestDecorrelationAndHamiltonianDynamoBehavior.test_mcmc_decorrelation_step_kernel_zero_breaks)
+评估去相关采样循环中的 MCMC 转移与接受判定核心算子图断裂数严格为 0. ... ok
+test_potential_energy_zero_breaks (test_graph_breaks_verification.TestDecorrelationAndHamiltonianDynamoBehavior.test_potential_energy_zero_breaks)
+势能计算 compute_potential_energy 图断裂数严格为 0. ... ok
+test_pure_tensor_autocorrelation_zero_breaks (test_graph_breaks_verification.TestDecorrelationAndHamiltonianDynamoBehavior.test_pure_tensor_autocorrelation_zero_breaks)
+纯张量形式的滞后自协方差与自相关时间核心算子图断裂数严格为 0. ... ok
+test_pure_tensor_surrogate_loss_zero_breaks (test_graph_breaks_verification.TestDecorrelationAndHamiltonianDynamoBehavior.test_pure_tensor_surrogate_loss_zero_breaks)
+纯张量 VMC 代理损失计算图断裂数严格为 0. ... ok
+test_cuda_two_stage_jastrow_zero_breaks (test_graph_breaks_verification.TestTwoStageJastrowDynamoZeroBreaks.test_cuda_two_stage_jastrow_zero_breaks)
+CUDA 设备上两阶段 Jastrow 前向图断裂数严格为 0. ... ok
+test_ferminet_forward_log_psi_stages_zero_breaks (test_graph_breaks_verification.TestTwoStageJastrowDynamoZeroBreaks.test_ferminet_forward_log_psi_stages_zero_breaks)
+FermiNet.forward_log_psi 在 Stage 1 (冻结 Jastrow) 与 Stage 2 (解冻 Jastrow) 下图断裂严格为 0. ... ok
+test_ferminet_forward_psi_zero_breaks (test_graph_breaks_verification.TestTwoStageJastrowDynamoZeroBreaks.test_ferminet_forward_psi_zero_breaks)
+FermiNet.forward (直接输出波函数 Psi) 在两阶段 Jastrow 下图断裂严格为 0. ... ok
+test_ferminet_spin_adapted_and_jastrow_stages_zero_breaks (test_graph_breaks_verification.TestTwoStageJastrowDynamoZeroBreaks.test_ferminet_spin_adapted_and_jastrow_stages_zero_breaks)
+自旋适配投影 + 两阶段 Jastrow 策略下图断裂严格为 0. ... ok
+test_jastrow_module_frozen_and_unfrozen_zero_breaks (test_graph_breaks_verification.TestTwoStageJastrowDynamoZeroBreaks.test_jastrow_module_frozen_and_unfrozen_zero_breaks)
+KatoCuspJastrow 模块在冻结 (Stage 1) 与解冻 (Stage 2) 状态下图断裂严格为 0. ... ok
+test_singular_overlap_zero_breaks (test_graph_breaks_verification.TestTwoStageJastrowDynamoZeroBreaks.test_singular_overlap_zero_breaks)
+含 Jastrow 模型在极端奇异碰撞坐标 (det=0) 下图断裂严格为 0. ... ok
+test_modes_on_harmonic_wavefunction (test_kinetic_modern.TestKineticModern.test_modes_on_harmonic_wavefunction)
+针对解析波函数 psi(r) = exp(-0.5 * alpha * sum(r^2)) 验证各模式动能数值吻合。 ... ok
+test_legacy_adapter_equivalence (test_layers_modern.TestLayersModern.test_legacy_adapter_equivalence)
+验证 FermiInteractionLayerLegacyAdapter 与现有接口参数与输出一致。 ... ok
+test_modern_layer_shapes_and_equivariance (test_layers_modern.TestLayersModern.test_modern_layer_shapes_and_equivariance)
+验证现代层前向输出形状及同自旋置换等变性。 ... ok
+test_circuit_breaker_all_invalid_and_nonfinite_log_psi (test_m1_challenger_empirical.TestChallengerLossCircuitBreaker.test_circuit_breaker_all_invalid_and_nonfinite_log_psi)
+退化对抗场景： ... ok
+test_circuit_breaker_critical_equal_boundary_90_0 (test_m1_challenger_empirical.TestChallengerLossCircuitBreaker.test_circuit_breaker_critical_equal_boundary_90_0)
+临界边界测试： ... ok
+test_circuit_breaker_exact_boundary_89_9_vs_90_1 (test_m1_challenger_empirical.TestChallengerLossCircuitBreaker.test_circuit_breaker_exact_boundary_89_9_vs_90_1)
+关键对抗用例： ... ok
+test_parameter_combinations_and_defaults (test_m1_challenger_empirical.TestChallengerMCMCAcceptance.test_parameter_combinations_and_defaults)
+验证所有 move_mode 与 target_acceptance 参数组合及别名映射。 ... ok
+test_step_size_adaptation_direction (test_m1_challenger_empirical.TestChallengerMCMCAcceptance.test_step_size_adaptation_direction)
+实证验证自适应步长调节方向： ... ok
+test_diagonal_autograd_zero_gradient (test_m1_challenger_empirical.TestChallengerTwoElectronSelfInteraction.test_diagonal_autograd_zero_gradient)
+对抗测试：令 h2.requires_grad=True，验证反向传播后对角线梯度 h2.grad[:, i, i, :] ... ok
+test_extreme_diagonal_perturbation_invariance (test_m1_challenger_empirical.TestChallengerTwoElectronSelfInteraction.test_extreme_diagonal_perturbation_invariance)
+对抗测试：向对角线 h2[b, i, i, :] 注入极端天文大值扰动 (如 10^6, -10^7 等)， ... ok
+test_single_electron_regime_zero_pooling_and_nan_free_gradients (test_m1_challenger_empirical.TestChallengerTwoElectronSelfInteraction.test_single_electron_regime_zero_pooling_and_nan_free_gradients)
+对抗测试：验证单电子极限体系 (n_up=1, n_down=1 / n_up=1, n_down=0 / n_up=0, n_down=1) ... ok
+test_checkpoint_serialization_and_deserialization_fidelity (test_m2_challenger_empirical.TestChallengerBestModelAndCheckpointPersistence.test_checkpoint_serialization_and_deserialization_fidelity)
+对抗测试：检验 Checkpoint 在嵌套未知路径下的自动创建与完整序列化。 ... ok
+test_no_restore_best_flag_preserves_final_state (test_m2_challenger_empirical.TestChallengerBestModelAndCheckpointPersistence.test_no_restore_best_flag_preserves_final_state)
+验证设置 restore_best=False 时，模型保持为最后一个 epoch 的参数。 ... ok
+test_non_finite_energy_does_not_corrupt_best_state (test_m2_challenger_empirical.TestChallengerBestModelAndCheckpointPersistence.test_non_finite_energy_does_not_corrupt_best_state)
+对抗测试：当某一轮训练由于极端波动产生 NaN 或 Inf 能量时， ... ok
+test_real_vmc_training_best_energy_matches_min_history (test_m2_challenger_empirical.TestChallengerBestModelAndCheckpointPersistence.test_real_vmc_training_best_energy_matches_min_history)
+真实物理端到端对抗测试：运行真实的端到端小型 VMC 优化过程， ... ok
+test_simulated_energy_oscillation_restores_true_best_epoch (test_m2_challenger_empirical.TestChallengerBestModelAndCheckpointPersistence.test_simulated_energy_oscillation_restores_true_best_epoch)
+对抗测试：模拟一个能量剧烈恶化/波动的训练过程： ... ok
+test_all_electron_mode_micro_macro_consistency (test_m2_challenger_empirical.TestChallengerMicroStepCountingPrecision.test_all_electron_mode_micro_macro_consistency)
+对抗测试：在全电子一体化移动模式 (All-electron moves) 下， ... ok
+test_consecutive_multi_step_accumulation_precision (test_m2_challenger_empirical.TestChallengerMicroStepCountingPrecision.test_consecutive_multi_step_accumulation_precision)
+对抗测试：执行多个连续 MCMC 步，每次接受数均非整除， ... ok
+test_non_divisible_micro_acceptance_exactness (test_m2_challenger_empirical.TestChallengerMicroStepCountingPrecision.test_non_divisible_micro_acceptance_exactness)
+对抗测试：构造各种非整除电子移动接受序列（例如 3 电子体系在 7 个微观接受动作下， ... ok
+test_alias_and_type_conformance (test_m2_challenger_empirical.TestChallengerSpinVectorizationEquivalence.test_alias_and_type_conformance)
+验证类名别名兼容性与类型同一性。 ... ok
+test_autograd_backward_gradient_equivalence (test_m2_challenger_empirical.TestChallengerSpinVectorizationEquivalence.test_autograd_backward_gradient_equivalence)
+对抗测试：比对向量化批量推断与串行求和在反向自动微分 (Autograd) 时的梯度等价性。 ... ok
+test_batch_size_broadcasting_boundaries (test_m2_challenger_empirical.TestChallengerSpinVectorizationEquivalence.test_batch_size_broadcasting_boundaries)
+对抗测试：测试极限批次边界 (B=1 单样本与 B=64 大批次) 的张量广播鲁棒性。 ... ok
+test_custom_large_permutations_high_precision (test_m2_challenger_empirical.TestChallengerSpinVectorizationEquivalence.test_custom_large_permutations_high_precision)
+对抗测试：构造包含任意多项置换 (如 K=10) 与正负交错加权系数的自定义投影算符， ... ok
+test_extreme_nodal_cancellation_and_neginf_resilience (test_m2_challenger_empirical.TestChallengerSpinVectorizationEquivalence.test_extreme_nodal_cancellation_and_neginf_resilience)
+边界对抗测试：波函数在某些置换下严格处于节点面 (log_abs = -inf)， ... ok
+test_large_dynamic_range_coordinates_numerical_stability (test_m2_challenger_empirical.TestChallengerSpinVectorizationEquivalence.test_large_dynamic_range_coordinates_numerical_stability)
+对抗测试：构造动态范围跨越多个数量级的对数波函数 (如 -100 到 +50)， ... ok
+test_multiconfig_vectorization_vs_serial_equivalence (test_m2_challenger_empirical.TestChallengerSpinVectorizationEquivalence.test_multiconfig_vectorization_vs_serial_equivalence)
+对抗测试：构建多种电子配置与自旋多重态置换， ... ok
+test_odd_electron_custom_permutation_equivalence (test_m2_challenger_empirical.TestChallengerSpinVectorizationEquivalence.test_odd_electron_custom_permutation_equivalence)
+对抗测试：奇数电子体系 (如 Li 原子 3 电子) 的多项空间置换， ... ok
+test_fermi_interaction_layer_autograd_second_derivative (test_modernization_prototypes.TestPrototypeEmpirical.test_fermi_interaction_layer_autograd_second_derivative)
+Test if in-place slice subtraction in Prototype 2 breaks double backward. ... ok
+test_fermi_interaction_layer_fix_verification (test_modernization_prototypes.TestPrototypeEmpirical.test_fermi_interaction_layer_fix_verification)
+Empirically verify the correct vectorized fix for FermiInteractionLayerModern: ... ok
+test_fermi_interaction_layer_h2_molecule_bug (test_modernization_prototypes.TestPrototypeEmpirical.test_fermi_interaction_layer_h2_molecule_bug)
+CRITICAL CHALLENGE: For N_up=1, N_down=1 (e.g. H2 molecule), ... ok
+test_geometric_context_device_and_dtype_mismatch (test_modernization_prototypes.TestPrototypeEmpirical.test_geometric_context_device_and_dtype_mismatch)
+Challenge: Check what happens if nuclear_coords device differs from r. ... ok
+test_geometric_context_shapes_and_values (test_modernization_prototypes.TestPrototypeEmpirical.test_geometric_context_shapes_and_values)
+Test GeometricContext shape and mathematical consistency. ... ok
+test_kinetic_calculator_all_modes_numeric (test_modernization_prototypes.TestPrototypeEmpirical.test_kinetic_calculator_all_modes_numeric)
+Compare REVERSE, FORWARD_JVP, and HUTCHINSON on a known analytical function. ... ok
+test_kinetic_calculator_forward_jvp_speed_and_overhead (test_modernization_prototypes.TestPrototypeEmpirical.test_kinetic_calculator_forward_jvp_speed_and_overhead)
+CHALLENGE: Measure wall-clock time and forward-pass counts of FORWARD_JVP vs REVERSE. ... ok
+test_nuclear_envelope_shapes_and_5d_broadcast (test_modernization_prototypes.TestPrototypeEmpirical.test_nuclear_envelope_shapes_and_5d_broadcast)
+Test NuclearEnvelopeModern shapes and check if 5D tensor still exists. ... ok
+test_nuclear_envelope_still_allocates_5d_tensor (test_modernization_prototypes.TestPrototypeEmpirical.test_nuclear_envelope_still_allocates_5d_tensor)
+CRITICAL CHALLENGE: Check if NuclearEnvelopeModern truly eliminated the 5D broadcast tensor ... ok
+test_psiformer_attention_equivariance_and_n1 (test_modernization_prototypes.TestPrototypeEmpirical.test_psiformer_attention_equivariance_and_n1)
+Test Psiformer equivariance under electron permutation, and N=1 behavior. ... ok
+test_checkpoint_generation_and_deserialization (test_p2_p3_regressions.TestBestModelTrackingAndCheckpointPersistence.test_checkpoint_generation_and_deserialization)
+测试 Checkpoint 文件在多级嵌套目录下成功生成，包含关键键值，且能成功反序列化加载。 ... ok
+test_energy_oscillation_restores_true_best_evaluated_state (test_p2_p3_regressions.TestBestModelTrackingAndCheckpointPersistence.test_energy_oscillation_restores_true_best_evaluated_state)
+模拟能量波动的训练过程，验证训练结束返回的模型严格对应测得历史最低能量处的真实参数 theta_t。 ... ok
+test_invalid_fraction_exceeding_threshold_raises_floating_point_error (test_p2_p3_regressions.TestInvalidEnergyFractionCircuitBreaker.test_invalid_fraction_exceeding_threshold_raises_floating_point_error)
+验证当非有限样本比例超标（如 4/20 = 20% > 10% 默认阈值）时，坚决抛出 FloatingPointError 熔断。 ... ok
+test_invalid_fraction_within_threshold_issues_warning_and_computes_loss (test_p2_p3_regressions.TestInvalidEnergyFractionCircuitBreaker.test_invalid_fraction_within_threshold_issues_warning_and_computes_loss)
+验证当非有限样本比例在容限内（如 1/20 = 5% <= 10%）时，发出 Warning 且正常完成损失计算。 ... ok
+test_vmc_loss_class_module_circuit_breaker (test_p2_p3_regressions.TestInvalidEnergyFractionCircuitBreaker.test_vmc_loss_class_module_circuit_breaker)
+验证 VMCLoss 类模块封装下的熔断机制运转正常。 ... ok
+test_explicit_target_acceptance_overrides_default (test_p2_p3_regressions.TestMCMCTargetAcceptanceAdaptation.test_explicit_target_acceptance_overrides_default)
+测试显式传入 target_acceptance（如 0.35）能成功覆盖两种模式下的默认值。 ... ok
+test_metropolis_hastings_alias (test_p2_p3_regressions.TestMCMCTargetAcceptanceAdaptation.test_metropolis_hastings_alias)
+验证类名别名 MetropolisHastings is MCMCSampler。 ... ok
+test_move_mode_all_defaults_to_optimal_rate (test_p2_p3_regressions.TestMCMCTargetAcceptanceAdaptation.test_move_mode_all_defaults_to_optimal_rate)
+测试 move_mode == 'all' 默认推导目标接受率为 0.234。 ... ok
+test_move_mode_one_by_one_defaults_to_half (test_p2_p3_regressions.TestMCMCTargetAcceptanceAdaptation.test_move_mode_one_by_one_defaults_to_half)
+测试 move_mode == 'one_by_one' 默认维持目标接受率为 0.50。 ... ok
+test_all_mode_microscopic_accounting (test_p2_p3_regressions.TestMicroscopicMoveCountersNoRounding.test_all_mode_microscopic_accounting)
+测试全电子移动模式下微观计步：一次全电子移动尝试等价于 N 个微观坐标提议。 ... ok
+test_non_divisible_acceptance_sequence_exact_accumulation (test_p2_p3_regressions.TestMicroscopicMoveCountersNoRounding.test_non_divisible_acceptance_sequence_exact_accumulation)
+测试在非整除电子接受序列下，微观计数器 proposed_moves 与 accepted_moves 真实精确累加， ... ok
+test_spin_projected_wavefunction_alias (test_p2_p3_regressions.TestSpinProjectionBatchVectorizationEquivalence.test_spin_projected_wavefunction_alias)
+验证类名别名 SpinProjectedWaveFunction is SpinProjector。 ... ok
+test_vectorized_projection_autograd_gradient_equivalence (test_p2_p3_regressions.TestSpinProjectionBatchVectorizationEquivalence.test_vectorized_projection_autograd_gradient_equivalence)
+验证自旋投影批量向量化反向传播 Autograd 梯度与串行版本的等价性。 ... ok
+test_vectorized_projection_exact_numerical_match_with_serial (test_p2_p3_regressions.TestSpinProjectionBatchVectorizationEquivalence.test_vectorized_projection_exact_numerical_match_with_serial)
+验证批量广播向量化前向与原逐项串行求和在数值上严格等价（误差 < 1e-6），符号严格一致。 ... ok
+test_autograd_diagonal_gradient_strictly_zero (test_p2_p3_regressions.TestTwoElectronSelfInteractionExclusion.test_autograd_diagonal_gradient_strictly_zero)
+验证 Autograd 自动微分反向传播时，h2 对角线 i=j 处的梯度严格为 0.0。 ... ok
+test_diagonal_extreme_perturbation_invariance (test_p2_p3_regressions.TestTwoElectronSelfInteractionExclusion.test_diagonal_extreme_perturbation_invariance)
+验证双电子特征对角线 i=j 注入极端扰动 (10^6) 时，均值池化与层前向输出严格不受影响。 ... ok
+test_ferminet_layer_alias (test_p2_p3_regressions.TestTwoElectronSelfInteractionExclusion.test_ferminet_layer_alias)
+验证类名别名 FermiNetLayer is FermiInteractionLayer。 ... ok
+test_spin_channel_denominator_and_single_electron_safety (test_p2_p3_regressions.TestTwoElectronSelfInteractionExclusion.test_spin_channel_denominator_and_single_electron_safety)
+验证同自旋除以 n_spin - 1、异自旋除以 n_other，以及单电子安全填 0 且无除零或 NaN。 ... ok
+test_all_invalid_energy_raises_instead_of_reporting_zero (test_p2_regressions.TestInvalidEnergyRegressions.test_all_invalid_energy_raises_instead_of_reporting_zero) ... ok
+test_nonfinite_log_wavefunction_aborts_update (test_p2_regressions.TestInvalidEnergyRegressions.test_nonfinite_log_wavefunction_aborts_update) ... ok
+test_partial_invalid_energy_uses_only_valid_samples (test_p2_regressions.TestInvalidEnergyRegressions.test_partial_invalid_energy_uses_only_valid_samples) ... ok
+test_training_aborts_before_optimizer_step (test_p2_regressions.TestInvalidEnergyRegressions.test_training_aborts_before_optimizer_step) ... ok
+test_sample_adapt_false_strictly_freezes_step_size (test_p2_regressions.TestMCMCStationaryRegressions.test_sample_adapt_false_strictly_freezes_step_size)
+Verify MetropolisSampler.sample(num_steps=10, adapt=False) strictly preserves ... ok
+test_sample_adapt_true_dynamically_adjusts_step_size (test_p2_regressions.TestMCMCStationaryRegressions.test_sample_adapt_true_dynamically_adjusts_step_size)
+Verify MetropolisSampler.sample(num_steps=10, adapt=True) dynamically adapts ... ok
+test_coincident_same_spin_electrons_higher_order_derivatives (test_p2_regressions.TestNodalSurfaceRegressions.test_coincident_same_spin_electrons_higher_order_derivatives)
+Verify that higher-order gradient propagation (create_graph=True) through ... ok
+test_nodal_surface_zero_determinant_autograd_finite_and_no_nan (test_p2_regressions.TestNodalSurfaceRegressions.test_nodal_surface_zero_determinant_autograd_finite_and_no_nan)
+Verify that on wavefunction nodal surfaces (where det -> 0 or exactly 0), ... ok
+test_even_electron_high_spin_triplet_safe_fallback (test_p2_regressions.TestOddElectronRegressions.test_even_electron_high_spin_triplet_safe_fallback)
+Verify even-electron high-spin states (4-electron 3,1 and Carbon atom 4,2) ... ok
+test_general_open_shell_boron_and_polarized_systems (test_p2_regressions.TestOddElectronRegressions.test_general_open_shell_boron_and_polarized_systems)
+Verify open-shell Boron atom (3, 2) and fully-polarized (3, 0) system ... ok
+test_li_atom_spin_adapted_initialization_and_forward (test_p2_regressions.TestOddElectronRegressions.test_li_atom_spin_adapted_initialization_and_forward)
+Verify Li atom (n_up=2, n_down=1, spin_adapted=True) initialization, ... ok
+test_invalid_energy_fraction_cutoff (test_p2_regressions.TestP2OptimizationRegressions.test_invalid_energy_fraction_cutoff)
+验证当非有限局域能量样本比例超过安全阈值 max_invalid_fraction 时， ... ok
+test_mcmc_target_acceptance_mode_defaults (test_p2_regressions.TestP2OptimizationRegressions.test_mcmc_target_acceptance_mode_defaults)
+验证 MCMC 采样器在全电子模式下默认采用理论最优值 0.234， ... ok
+test_two_electron_pooling_excludes_diagonal_self_interaction (test_p2_regressions.TestP2OptimizationRegressions.test_two_electron_pooling_excludes_diagonal_self_interaction)
+验证 FermiNetLayer 双电子均值池化显式剔除了自身项 i=j， ... ok
+test_custom_single_permutation_is_applied_to_values_and_gradients (test_p2_regressions.TestSpinProjectionRegressions.test_custom_single_permutation_is_applied_to_values_and_gradients) ... ok
+test_incompatible_named_spin_is_rejected (test_p2_regressions.TestSpinProjectionRegressions.test_incompatible_named_spin_is_rejected) ... ok
+test_lih_with_jastrow_is_singlet_and_has_finite_energy_gradients (test_p2_regressions.TestSpinProjectionRegressions.test_lih_with_jastrow_is_singlet_and_has_finite_energy_gradients) ... ok
+test_multielectron_s_squared_idempotence_and_antisymmetry (test_p2_regressions.TestSpinProjectionRegressions.test_multielectron_s_squared_idempotence_and_antisymmetry)
+Check actual S^2 eigenvalues, including the S=3 sector in six electrons. ... ok
+test_singlet_rejects_fully_antisymmetric_quintet (test_p2_regressions.TestSpinProjectionRegressions.test_singlet_rejects_fully_antisymmetric_quintet) ... ok
+test_incompatible_explicit_jastrow_is_rejected (test_p2_regressions.TestTripletCuspRegressions.test_incompatible_explicit_jastrow_is_rejected) ... ok
+test_real_triplet_local_energy_remains_bounded_at_coalescence (test_p2_regressions.TestTripletCuspRegressions.test_real_triplet_local_energy_remains_bounded_at_coalescence) ... ok
+test_triplet_cusp_derivative_is_one_quarter (test_p2_regressions.TestTripletCuspRegressions.test_triplet_cusp_derivative_is_one_quarter) ... ok
+test_built_distributions_include_and_import_runtime_modules (test_packaging.TestDistribution.test_built_distributions_include_and_import_runtime_modules) ... ok
+test_composable_triplet_uses_quarter_cusp (test_physical_correctness.TestPhysicalCorrectness.test_composable_triplet_uses_quarter_cusp) ... ok
+test_context_created_under_no_grad_is_rebuilt (test_physical_correctness.TestPhysicalCorrectness.test_context_created_under_no_grad_is_rebuilt) ... ok
+test_default_jastrow_has_finite_nuclear_limit (test_physical_correctness.TestPhysicalCorrectness.test_default_jastrow_has_finite_nuclear_limit) ... ok
+test_driver_refreshes_cache_after_each_update (test_physical_correctness.TestPhysicalCorrectness.test_driver_refreshes_cache_after_each_update) ... ok
+test_feature_context_cannot_change_the_sampled_wavefunction (test_physical_correctness.TestPhysicalCorrectness.test_feature_context_cannot_change_the_sampled_wavefunction) ... ok
+test_jvp_on_slogdet_and_model_with_context (test_physical_correctness.TestPhysicalCorrectness.test_jvp_on_slogdet_and_model_with_context) ... ok
+test_large_rank_deficiency_two_has_exact_mixed_derivative (test_physical_correctness.TestPhysicalCorrectness.test_large_rank_deficiency_two_has_exact_mixed_derivative) ... ok
+test_large_singular_determinant_is_exact (test_physical_correctness.TestPhysicalCorrectness.test_large_singular_determinant_is_exact) ... ok
+test_potential_does_not_depend_on_feature_smoothing (test_physical_correctness.TestPhysicalCorrectness.test_potential_does_not_depend_on_feature_smoothing) ... ok
+test_psiformer_pair_cusp_and_local_energy_limit (test_physical_correctness.TestPhysicalCorrectness.test_psiformer_pair_cusp_and_local_energy_limit) ... ok
+test_singular_branch_has_nonzero_first_and_second_derivatives (test_physical_correctness.TestPhysicalCorrectness.test_singular_branch_has_nonzero_first_and_second_derivatives) ... ok
+test_conflicting_cusp_configuration_is_rejected (test_physical_matrix.TestPhysicalMatrix.test_conflicting_cusp_configuration_is_rejected) ... ok
+test_hutchinson_off_diagonal_variance (test_physical_matrix.TestPhysicalMatrix.test_hutchinson_off_diagonal_variance) ... ok
+test_hydrogen_exact_energy_and_zero_variance (test_physical_matrix.TestPhysicalMatrix.test_hydrogen_exact_energy_and_zero_variance) ... ok
+test_real_models_jvp_energy_and_parameter_derivative (test_physical_matrix.TestPhysicalMatrix.test_real_models_jvp_energy_and_parameter_derivative) ... ok
+test_same_spin_antisymmetry_and_s_squared (test_physical_matrix.TestPhysicalMatrix.test_same_spin_antisymmetry_and_s_squared) ... ok
+test_spherical_nuclear_cusp_and_directional_energy_limits (test_physical_matrix.TestPhysicalMatrix.test_spherical_nuclear_cusp_and_directional_energy_limits) ... ok
+test_triplet_pair_limit_for_all_architectures (test_physical_matrix.TestPhysicalMatrix.test_triplet_pair_limit_for_all_architectures) ... ok
+test_composable_ferminet_end_to_end (test_psiformer_integration.TestPsiformerIntegration.test_composable_ferminet_end_to_end)
+验证 ComposableFermiNet 在 psiformer 模式下能够端到端计算对数波函数与局域能量。 ... ok
+test_psiformer_spin_embedding_and_equivariance (test_psiformer_integration.TestPsiformerIntegration.test_psiformer_spin_embedding_and_equivariance)
+验证 PsiformerAttentionBlock 的自旋嵌入能区分上下自旋，且在同自旋交换下满足置换等变性。 ... ok
+test_cofactor_determinant_zero_graph_breaks_and_finite_gradients (test_refactor_review_regressions.TestRefactorReviewRegressions.test_cofactor_determinant_zero_graph_breaks_and_finite_gradients)
+测试 5: 验证 _CofactorDeterminant 保持精确伴随导数并在 TorchDynamo 下实现 0 图断裂。 ... ok
+test_composable_ferminet_spin_adapted_no_attribute_error_or_recursion (test_refactor_review_regressions.TestRefactorReviewRegressions.test_composable_ferminet_spin_adapted_no_attribute_error_or_recursion)
+测试 2: 验证 ComposableFermiNet 开启自旋投影时正确调用 project_log_psi 且不发生无限递归。 ... ok
+test_fermi_interaction_legacy_adapter_has_parameters_and_supports_optim (test_refactor_review_regressions.TestRefactorReviewRegressions.test_fermi_interaction_legacy_adapter_has_parameters_and_supports_optim)
+测试 3: 验证 FermiInteractionLayerLegacyAdapter 初始化即持有参数，且支持优化器与 dtype 转换。 ... ok
+test_ferminet_spin_adapted_with_geom_ctx_no_crash (test_refactor_review_regressions.TestRefactorReviewRegressions.test_ferminet_spin_adapted_with_geom_ctx_no_crash)
+测试 1: 验证 FermiNet 开启自旋投影时传入 geom_ctx 不发生批次维度崩溃。 ... ok
+test_nuclear_envelope_legacy_adapter_accepts_dist (test_refactor_review_regressions.TestRefactorReviewRegressions.test_nuclear_envelope_legacy_adapter_accepts_dist)
+测试 4: 验证 NuclearEnvelopeLegacyAdapter.forward 支持 dist 传参，保持原有签名兼容。 ... ok
+test_psiformer_attention_robust_against_small_embed_dim (test_refactor_review_regressions.TestRefactorReviewRegressions.test_psiformer_attention_robust_against_small_embed_dim)
+测试 7: 验证 PsiformerAttentionBlock 在极小维度 (embed_dim=2, num_heads=1) 下安全构建与前向。 ... ok
+test_vmc_driver_step_executes_cleanly (test_refactor_review_regressions.TestRefactorReviewRegressions.test_vmc_driver_step_executes_cleanly)
+测试 6: 验证四层解耦 VMCDriver.step 单步优化执行平稳，度量统计健全。 ... ok
+test_bug01_fixed_h2_molecule (test_refined_prototypes_and_adapters.TestRefinedPrototypes.test_bug01_fixed_h2_molecule)
+Verify BUG-01 fix: n_up=1, n_down=1 retains opposite-spin correlation. ... ok
+test_bug02_kinetic_calculator_default_reverse (test_refined_prototypes_and_adapters.TestRefinedPrototypes.test_bug02_kinetic_calculator_default_reverse)
+Verify BUG-02 fix: REVERSE is default mode and exact analytical match. ... ok
+test_bug03_fixed_checkpoint_compatibility (test_refined_prototypes_and_adapters.TestRefinedPrototypes.test_bug03_fixed_checkpoint_compatibility)
+Verify BUG-03 fix: NuclearEnvelopeModern matches original state_dict keys and softplus. ... ok
+test_bug04_psiformer_spin_embedding (test_refined_prototypes_and_adapters.TestRefinedPrototypes.test_bug04_psiformer_spin_embedding)
+Verify BUG-04 fix: PsiformerAttentionBlock possesses spin_embed and can differentiate spins. ... ok
+test_legacy_adapters (test_refined_prototypes_and_adapters.TestRefinedPrototypes.test_legacy_adapters)
+Verify Checklist-5: Legacy adapters run without modification to calling signatures. ... ok
+test_combined_model_shapes_and_gradients (test_spin_and_cusp.TestIntegratedModelAndVMC.test_combined_model_shapes_and_gradients)
+测试同时启用 spin_adapted 与 cusp_jastrow 时的输出形状与梯度传播。 ... ok
+test_local_energy_with_combined_model (test_spin_and_cusp.TestIntegratedModelAndVMC.test_local_energy_with_combined_model)
+验证组合模型在 compute_local_energy 中拉普拉斯与动能计算正常。 ... ok
+test_single_electron_boundary (test_spin_and_cusp.TestIntegratedModelAndVMC.test_single_electron_boundary)
+测试单电子边界条件 (氢原子: n_up=1, n_down=0)。 ... ok
+test_vmc_training_loop_integration (test_spin_and_cusp.TestIntegratedModelAndVMC.test_vmc_training_loop_integration)
+验证端到端 VMC 训练循环在 3 个 epoch 内正常迭代。 ... ok
+test_coulomb_singularity_cancellation (test_spin_and_cusp.TestKatoCuspJastrow.test_coulomb_singularity_cancellation)
+物理关键验证: 验证 Kato Jastrow 因子在近核奇点消除库仑发散。 ... ok
+test_electron_electron_coulomb_singularity_cancellation (test_spin_and_cusp.TestKatoCuspJastrow.test_electron_electron_coulomb_singularity_cancellation)
+物理关键验证: 验证 Kato Jastrow 因子在两电子短程碰撞 (r_{12} -> 0) 时 ... ok
+test_electron_electron_opposite_spin_cusp_limit (test_spin_and_cusp.TestKatoCuspJastrow.test_electron_electron_opposite_spin_cusp_limit)
+验证异自旋电子-电子 Kato 尖峰条件: ... ok
+test_electron_electron_parallel_spin_cusp_limit (test_spin_and_cusp.TestKatoCuspJastrow.test_electron_electron_parallel_spin_cusp_limit)
+验证同自旋电子-电子 Kato 尖峰条件: ... ok
+test_electron_nucleus_cusp_limit (test_spin_and_cusp.TestKatoCuspJastrow.test_electron_nucleus_cusp_limit)
+验证电子-核 Kato 尖峰条件: ... ok
+test_full_ferminet_nuclear_cusp_divergence_cancellation (test_spin_and_cusp.TestKatoCuspJastrow.test_full_ferminet_nuclear_cusp_divergence_cancellation)
+端到端深度架构验证: 验证真实的 FermiNet 深度波函数 (融合平滑几何特征、高斯包络与 Kato Jastrow) ... ok
+test_pauli_antisymmetry_preserved_with_jastrow (test_spin_and_cusp.TestKatoCuspJastrow.test_pauli_antisymmetry_preserved_with_jastrow)
+验证引入 Jastrow 因子后，Slater 行列式的同自旋电子反对称性严格保持。 ... ok
+test_closed_shell_spin_flip_symmetry (test_spin_and_cusp.TestSpinAdaptation.test_closed_shell_spin_flip_symmetry)
+验证多电子闭壳层体系 (LiH, n_up=2, n_down=2) 的空间自旋翻转对称性。 ... ok
+test_float32_nodal_clamp_underflow_prevention (test_spin_and_cusp.TestSpinAdaptation.test_float32_nodal_clamp_underflow_prevention)
+验证在 float32 精度下波函数节点面截断下界不发生 0.0 下溢且导数稳定。 ... ok
+test_open_shell_even_electrons_safe_fallback (test_spin_and_cusp.TestSpinAdaptation.test_open_shell_even_electrons_safe_fallback)
+验证偶数总电子但自旋不相等的开壳层体系 (如 4 电子三线态与碳原子基态) 安全降级为 mode='none'。 ... ok
+test_singlet_spatial_symmetry (test_spin_and_cusp.TestSpinAdaptation.test_singlet_spatial_symmetry)
+验证双电子单重态空间对称化: Psi(r1, r2) == Psi(r2, r1)。 ... ok
+test_spin_eigenvalue_s_squared_operator (test_spin_and_cusp.TestSpinAdaptation.test_spin_eigenvalue_s_squared_operator)
+验证自旋单重态本征值: S^2 Psi_singlet = (1 - P_12) Psi_singlet = 0。 ... ok
+test_triplet_spatial_antisymmetry (test_spin_and_cusp.TestSpinAdaptation.test_triplet_spatial_antisymmetry)
+验证双电子三重态空间反对称化: Psi(r1, r2) == -Psi(r2, r1) 且重合点为0。 ... ok
+test_unadapted_ferminet_has_spin_contamination (test_spin_and_cusp.TestSpinAdaptation.test_unadapted_ferminet_has_spin_contamination)
+对比验证: 未开启自旋适配的普通 FermiNet 通常存在自旋污染 (非空间完全对称)。 ... ok
+test_single_forward_gradient_match (test_unified_loss.TestUnifiedLoss.test_single_forward_gradient_match)
+验证单次前向代理损失计算出的模型参数梯度与原二次前向方法严格相等。 ... ok
+test_vmc_driver_step (test_unified_loss.TestUnifiedLoss.test_vmc_driver_step)
+验证 VMCDriver 四层解耦架构能够正常执行单步迭代并输出完整统计指标。 ... ok
+test_clipping_robustness_against_nan_and_inf (test_vmc.TestVMCComponents.test_clipping_robustness_against_nan_and_inf)
+测试局域能量截断与代理损失面对 NaN/Inf 极端异常值时的绝对数值鲁棒性. ... ok
+test_energy_clipping_tanh_and_hard (test_vmc.TestVMCComponents.test_energy_clipping_tanh_and_hard)
+测试基于 MAD 的局域能量平滑截断 (Tanh) 与硬截断 (Hard). ... ok
+test_local_energy_param_grad_frozen_equivalence (test_vmc.TestVMCComponents.test_local_energy_param_grad_frozen_equivalence)
+验证 compute_local_energy 参数冻结优化与原始计算在数值上机器精度完全一致. ... ok
+test_mcmc_accepted_steps_and_rejection_of_invalid_proposals (test_vmc.TestVMCComponents.test_mcmc_accepted_steps_and_rejection_of_invalid_proposals)
+测试 MCMC 采样器的 accepted_steps 计数跟踪与非法波函数的绝对拒绝保护. ... ok
+test_mcmc_adaptive_step_size (test_vmc.TestVMCComponents.test_mcmc_adaptive_step_size)
+测试步长自适应调节逻辑 (目标 50% 接受率). ... ok
+test_mcmc_burn_in_and_sample (test_vmc.TestVMCComponents.test_mcmc_burn_in_and_sample)
+测试预热 (Burn-in) 与多步抽样接口. ... ok
+test_mcmc_custom_initial_walkers (test_vmc.TestVMCComponents.test_mcmc_custom_initial_walkers)
+测试用户传入初始构型时的采样器行为. ... ok
+test_mcmc_init_walkers (test_vmc.TestVMCComponents.test_mcmc_init_walkers)
+测试 MCMC 采样器初始化构型形状与合法性. ... ok
+test_mcmc_step_all_mode (test_vmc.TestVMCComponents.test_mcmc_step_all_mode)
+测试全电子一体化移动模式 (All-electron moves). ... ok
+test_mcmc_step_one_by_one_mode (test_vmc.TestVMCComponents.test_mcmc_step_one_by_one_mode)
+测试逐电子轮流移动模式 (One-by-one moves). ... ok
+test_surrogate_loss_gradient_exact_match (test_vmc.TestVMCComponents.test_surrogate_loss_gradient_exact_match)
+核心物理与数学检验: ... ok
+test_train_vmc_end_to_end_loop (test_vmc.TestVMCComponents.test_train_vmc_end_to_end_loop)
+测试端到端 VMC 训练迭代完整闭环 (3 步迷你训练). ... ok
+test_vmc_loss_module (test_vmc.TestVMCComponents.test_vmc_loss_module)
+测试 VMCLoss 模块 compute_step_loss 一站式接口. ... ok
+test_vmc_single_electron_system (test_vmc.TestVMCComponents.test_vmc_single_electron_system)
+测试单电子体系 (氢原子 H, n_up=1, n_down=0) 的 MCMC 采样与 VMC 训练迭代. ... ok
+test_ar1_and_slow_mixture (test_vmc_statistics.TestVMCStatistics.test_ar1_and_slow_mixture) ... ok
+test_chain_offsets_are_detected (test_vmc_statistics.TestVMCStatistics.test_chain_offsets_are_detected) ... ok
+test_confidence_interval_controls_accuracy_claim (test_vmc_statistics.TestVMCStatistics.test_confidence_interval_controls_accuracy_claim) ... ok
+test_frozen_nonfinite_energy_is_never_discarded (test_vmc_statistics.TestVMCStatistics.test_frozen_nonfinite_energy_is_never_discarded) ... ok
+test_reference_requires_geometry_electrons_and_spin (test_vmc_statistics.TestVMCStatistics.test_reference_requires_geometry_electrons_and_spin) ... ok
+test_white_noise_constant_and_short_series (test_vmc_statistics.TestVMCStatistics.test_white_noise_constant_and_short_series) ... ok
+
+----------------------------------------------------------------------
+Ran 270 tests in 92.812s
+
+OK
+[Test 1.3 PASS] FermiNet 8-电子泡利节点全流程反向传播平稳，耗时: 3.033 ms
+[Test 1.2 PASS] size=10 奇异矩阵 (det=0) 反向传播平稳执行，耗时: 0.794 ms，梯度全有限 (无阶乘爆炸/无 OOM)
+
+[Test 1.1 PASS] size=8 奇异矩阵 (det=0) 反向传播平稳执行，耗时: 0.521 ms，梯度全有限
+[Test 3.3 PASS] 精确零方差极限边界平稳执行: loss=0.0, grad=0.0
+[Test 3.2 PASS] hard 截断模式下退化方差梯度非零有限: grad=-2.994235e-07
+[Test 3.1 PASS] 尺度 sigma=1.0e-03: grad=+4.666234e-04, 理论一致性相对误差: 5.16e-03
+[Test 3.1 PASS] 尺度 sigma=1.0e-05: grad=+4.686225e-06, 理论一致性相对误差: 0.00e+00
+[Test 3.1 PASS] 尺度 sigma=1.0e-07: grad=+2.623110e-08, 理论一致性相对误差: 0.00e+00
+[Test 2.3 PASS] 自适应 vs 冻结对比鲜明: 初始 10.0 -> 自适应调整至 7.7880 -> 冻结保持 7.7880
+[Test 2.2 PASS] 极端高接受率 (100.0%) 挑战下，step_size 严格冻结: 0.0001 == 0.0001
+
+[Test 2.1 PASS] 极端低接受率 (0.0%) 挑战下，step_size 严格冻结: 20.0 == 20.0
+
+[Decorrelation Test] decorrelation_steps=1:  rho_1 = 0.6315, ESS = 224/1920
+[Decorrelation Test] decorrelation_steps=10: rho_1 = 0.2132, ESS = 970/1920
+
+[Empirical Check] Proposed fix for FermiInteractionLayer successfully preserves opposite-spin correlation!
+
+[Empirical Check] n_up=1, n_down=1:
+Modern mean_h2_up max: 0.0
+Original mean_h2_up max: 1.0
+Original mean_h2_up for electron 1 (down seeing up): 1.0
+>>> CONFIRMED BUG in Prototype 2: n_up=1 erroneously zeroes opposite-spin mean_h2_up!
+
+[Empirical Check] Kinetic Energy Laplacian:
+Analytical: 12.0000
+Reverse:    12.0000
+Forward JVP:12.0000
+Hutchinson (500 probes): 12.0000
+
+[Empirical Check] Kinetic Energy Mode Comparison (N=6, dim_total=18):
+Reverse Mode:     Time = 1.96 ms, Forward Calls = 1
+Forward JVP Mode: Time = 3.85 ms, Forward Calls = 19
+>>> CONFIRMED: Forward JVP in Prototype 4 is SLOWER than Reverse because of 3N additional forward calls!
+
+[Empirical Check] NuclearEnvelope parameter mismatch: Original uses 'decay_rates_raw' (softplus), Modern uses 'log_alpha' (exp)
+
+[Empirical Check] NuclearEnvelopeModern 'decay' tensor dimensions:
+decay.shape: torch.Size([4, 6, 4, 4, 2]) (ndim=5)
+Total elements: 768
+>>> CONFIRMED: NuclearEnvelopeModern STILL constructs a 5D tensor! Einsum claim is not implemented.
+
+[Empirical Check] Psiformer Permutation Equivariance Max Diff: 2.38e-07
+NO_SKIP_SUMMARY {"tests_run": 270, "failures": 0, "errors": 0, "skipped": [], "elapsed_seconds": 94.73120469999958, "torch": "2.14.0", "cuda": "13.0", "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU", "no_skip_requirement_met": true, "successful": true, "source_sha256": {"__init__.py": "1d484375b8409af5e86f963b946495f234e9e01bc154a2b29b3ec2ca01ad39f1", "benchmark_compile.py": "00e5c6a956ff627915937bb37b51b9dc134d55124b20bd95ad7ce4b2aaefc3b0", "benchmark_comprehensive_m3.py": "3f42664ed4dec188869d5cc05eed413652f31432bec6eb45f5b28ee24b0e08ad", "benchmark_h2_long_convergence.py": "445a5687588cf72d8ffc13dccc18a48444fdc10635a696bb88d671bb417380eb", "benchmark_m4_vmc_convergence.py": "0cfc5ee301f17531ec061ff6720db446ef8d212833930ad9c8cc17c834dbea31", "composable_model.py": "f9c72fbb403b565fd7fcfe9fe3ad2bdae15c00136cda1e856327edca597e5e86", "determinants.py": "4f55c59d9940ad3ca41c0484edc1d0f5d30da7ffb5af9128403b84338965e92a", "diagnose_graph_breaks.py": "d9e6a3f6b2848d3b7aba436072e95f47d5d1f7a91af6be99a1180f82de25d21d", "envelope.py": "e72d91b2e12f177bf0e6761068c57843918eff467b12fe051fda845cd9cd925a", "envelope_modern.py": "9454d496a9f84d1f8bf7eb83b5ad66a8d75e1537c386b5e4fb3ff966f4c3e851", "evaluation.py": "4f0c6db84935f92d7d14e55f1cdab511724e2cb7e47d3a0c01c06079f11695b4", "example_h2.py": "9d1177e0fe6b6592ed504ec80e576368aaeb3d821cd66f60a239b612a36e336d", "features.py": "8fd41c4fab76327a9a1abc18525e2feac3ef294654a4f0280b80ed1b6f4f3fa9", "geometry.py": "7f52f8a55b9a2c91764ff16eb7bc726211a98f3741dd7914143e311e390057f6", "hamiltonian.py": "9b374bbe9bf7b5914ef6610272c223443aecd855854ef5d6e5740126628d8a36", "jastrow.py": "cc49a0c3d27f479898db7c53e8848a4c1fa16f373491f6a7d0d40aead449d8dc", "kinetic_modern.py": "7744762cf1c96bd738e0e629f831916b959f037ae133f6636082db56ab732bb6", "layers.py": "c2faf8265b35ee0200577531497ce4f15e776f6d24933d805f449fc2b150f09f", "layers_modern.py": "136dd7a9c40bbae62bab5ab825ab696ede5b717ebac7800862c2405d4b67e5d8", "legacy_adapters.py": "7cb76dde03989fdc3a56b332c0f48f399f6828dd3c9e4d8d7e70f1b60c48fbff", "loss.py": "8eb4299f2f352b6c614b72a45f2f4766da5604ee125d3bceefadfc7a20b2f240", "mcmc.py": "df61c868731976bb8826578c8dcf228d326fae556eb38d651028dd912995d42e", "model.py": "f40256555a5a60296e445bfad5e0eae1f126923080e6f88024eb4e249e786a31", "physical_config.py": "3a0f757eff03fd26e0eece5c9c3fafe4c9d6855b29b9e06acca8383805051ddd", "physics_validation.py": "6a9e13b717ca6d974e8a6be274eb5f55eaf6389dec727897930471421bb89185", "psiformer_attention.py": "d63bededdb71a9ed08e28cf07e91ae68aaaaebd750cac671b175706425ff9c64", "spin.py": "3b855893d789f7479ac2ab9d731825b2a55f0290d3afe3b6c9cf8ee9dcaa3ce2", "summarize_results.py": "a735b10967a03c12e5f5d15870c90237259dedceda2549ee572accc77e8717d4", "test_adversarial_dynamo.py": "bd0167a174c53b970270b7dadb89645354824a1b999d74e4b5857c6414881a38", "test_challenge_stress.py": "0a69db68d737ccbec87f26ff55d6101132975235d628e866530f1972fd7f5f05", "test_challenger_reverify.py": "de9453c76ab668320041a1982c87ff2b3fe121d2a1e33cd72d30fccf35b8752e", "test_compile.py": "69c2e173856dfdaa7116128092e87873ff70b61fc6d51df2802f6554c5f9dbf8", "test_cuda.py": "1ff0423926f273e406fd95a1a3e31ee8dabe15ce7e71e913a87653d79a34b674", "test_decorrelation_and_two_stage.py": "abe3df34db544225cf347bb391f2067d52d3a943e20edf764328a59d9b9fa4d4", "test_determinants.py": "f485371cba83c1c7a02728e362fc88b9aba4aeaaa54bdcc5ab283362d4de8480", "test_envelope_modern.py": "2d4ac8b6555bd06e825ed58ad835a11a395115f71103d3181b15b6c0adf5288f", "test_ferminet.py": "5169aa358b59c6c5e6cb979a5b5bfcc85345dbd8fdb2f1664a77bb5eb3da88ab", "test_geometry_cache.py": "fe3801f34b87e7827237db9462477b9e08a30dfe819ae190e7d76f5ec2862269", "test_graph_breaks_verification.py": "d445b195ab75fef96f311e85acbc92ca15f785db379e535a08ba1cc3b7028858", "test_kinetic_modern.py": "2ec178f44209a5055ea71cb397e88ae14beaf0db7d85f77471b0c8d0f9bf5496", "test_layers_modern.py": "58f00a59beef4436596aceef347bd87b25cc63f1086137e2883b9a31432c38a9", "test_m1_challenger_empirical.py": "5f7647ae80d3e498d7b53e5613ecd2c97b93fdecfe74ff06ccd47d649a908564", "test_m2_challenger_empirical.py": "0b1556ee329f2a9df9087a9f10511b7d77356209be8953497a7d17b1aa905820", "test_modernization_prototypes.py": "67e7da48394ddcab37f870fd6107f2eb202fe43db4dd37bd22c006c9a0c5328f", "test_p2_p3_regressions.py": "a5cf452d8c5bcb923127a8e9f1f153507670fbab60390bad2678b7709150617a", "test_p2_regressions.py": "dfdbd9a8978dc5a531a192c18e86d1e9ae5c26a66263aadf25854c67e967136b", "test_packaging.py": "2eba16a2fe6aaa310650f000d37f14e0934afaa8b69c267c2f30985d3cd853bd", "test_physical_correctness.py": "a1d4a38e4f7b8d791f6b3a97ea209db06e3a790b4a7b1bb4209acf7deaf70efc", "test_physical_matrix.py": "9b473429771577429e73a52b897d12c1d26ac19843210304e99d381de14a8d90", "test_psiformer_integration.py": "6bbd597ad36d6c3d2e491804f461cb58eed062ec75c5828f87bf6b76edc1f2f1", "test_refactor_review_regressions.py": "65a8ef5330d0d34d73e657f8dee229af3ac04fe801166cce01d615b8473b0b60", "test_refined_prototypes_and_adapters.py": "c46643b53f29f3dcff12f483f265280fe89b66491f2146f203f5c65e8ae9c5ea", "test_spin_and_cusp.py": "5724419bbeb933a60c5b67edf3317ac17ef545740b43b0a538201e71e281f1a6", "test_unified_loss.py": "78fb6c150ef3f1910619582c664506611a72a86e7e84505ad6b8e7c78c6fc3b3", "test_vmc.py": "8764e674b1d6b60994233bb0ae2dab0e47a88b7aa3e1b8fd3c815c3ceaa67da5", "test_vmc_statistics.py": "c8862218f736207647ad769321e8976441d84284e92797e10d6fc1f2f125b395", "train_vmc.py": "140497bb35322df81519b898c7929d166957b5e753fcfecbbdece5aa454751e2", "vmc_driver.py": "9967e6a7e05dc020b9e763465d7b6ecc7e46c131288452a0d3ee070fa99472a9", "vmc_statistics.py": "9dbc4164327e8e84813de5331123f8e0797fba87c53c3739bedf6bd180c982e3"}}

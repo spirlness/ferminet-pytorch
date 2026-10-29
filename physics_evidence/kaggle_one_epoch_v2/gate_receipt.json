@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "checked_utc": "2026-10-22T08:47:10.115010+00:00",
+  "smoke_kernel": "hwbwhzbsh/ferminet-t4x2-smoke/2",
+  "source_commit": "d2618dfb6780f1da49f0bb4ab247d29ec15e41f8",
+  "epochs_per_case": 1,
+  "real_gpu_count": 2,
+  "console_forwarding_verified": true,
+  "long_plan_sha256": "9ee49c274e4d78cd27cc04347f5a1bc1c663270c50768970795bb2ec1b85c855",
+  "summary_sha256": "de5d50f3ce56d89c4ca977f2f5a4528c6ac3fcedece69e8b274bef4ca5f32c02",
+  "scope": "Execution/numerical/logging gate; not chemical accuracy evidence"
+}

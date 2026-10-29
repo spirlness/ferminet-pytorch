@@ -1,0 +1,368 @@
+[
+  {
+    "file_name": "ferminet_results/bootstrap.json",
+    "bytes": 390,
+    "server_md5_base64": null,
+    "sha256": "4985d645cd68c50901f4ceffc67750ad09c12045e22fa9a3a461fc21f7b48aea"
+  },
+  {
+    "file_name": "ferminet_results/campaign.json",
+    "bytes": 5198,
+    "server_md5_base64": null,
+    "sha256": "c3ce5325f777d05ea85e6f6d1741eebb96211f99e3727f5ee77eb828575c2316"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed11/evaluation_trajectory.pt",
+    "bytes": 8390283,
+    "server_md5_base64": null,
+    "sha256": "c771b193af287c3bb3cffe1e1be8d46fe337aa063c30a49a8e0c6702c60d7d51"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed11/final_checkpoint.pt",
+    "bytes": 5514285,
+    "server_md5_base64": null,
+    "sha256": "c406cc4b7ee819848d2b9364aebc79372ee163034e7cb5cf201f8bf0776a1953"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed11/manifest.json",
+    "bytes": 5120,
+    "server_md5_base64": null,
+    "sha256": "648365e94980f2a14486ec851c63b43ee76b282c9c8383a661679d5b8c4a7484"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed11/precision_after.json",
+    "bytes": 256,
+    "server_md5_base64": null,
+    "sha256": "2f931a0b95c3d6a8e5d16ea8df7d7be1e9fdeda406f0cd4a131f436413fe97c0"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed11/precision_before.json",
+    "bytes": 257,
+    "server_md5_base64": null,
+    "sha256": "da60f28dbccd472dc75fb2d4ff5d1e9e7635843f61344e5e181f8dddd8261ce0"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed11/progress.json",
+    "bytes": 967,
+    "server_md5_base64": null,
+    "sha256": "a36f3efbb39cf0308093a5b3362e92b786b49e0e4b6f7941ce4666a50c739a35"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed11/result.json",
+    "bytes": 4548,
+    "server_md5_base64": null,
+    "sha256": "6dc7723e5d767b8bb524f909edb742883ea1c3317e6575a6479dcb352c4dc3b9"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed11/resume.pt",
+    "bytes": 5512075,
+    "server_md5_base64": null,
+    "sha256": "2c9b92749d5781113c15b99a5a564339765ed8469c9908c2699aea6ebaa8cebc"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed11/training_history.json",
+    "bytes": 3314957,
+    "server_md5_base64": null,
+    "sha256": "6fb9ab1d1af848ed628dc761bda0de02d4d1dc085cb0fa2efbe741884f85166d"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed22/evaluation_trajectory.pt",
+    "bytes": 8390283,
+    "server_md5_base64": null,
+    "sha256": "f0378a407236daea1d93cf9d8486ea84b28276f957757a11bf2a8b9766fbb137"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed22/final_checkpoint.pt",
+    "bytes": 5514285,
+    "server_md5_base64": null,
+    "sha256": "1330714e73cb6c89717dc0a3abbfe6852c48a43f64dc6d1be75cac82927cdf5b"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed22/manifest.json",
+    "bytes": 5120,
+    "server_md5_base64": null,
+    "sha256": "085749666e934ae5053710346914904e441c54328dacb232090e3f203760c21a"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed22/precision_after.json",
+    "bytes": 258,
+    "server_md5_base64": null,
+    "sha256": "d7b675d747297658bd0bfb7003d9677127a66f1b70a877252a7f7ec5c0f97be9"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed22/precision_before.json",
+    "bytes": 257,
+    "server_md5_base64": null,
+    "sha256": "12292d8f03f818b8c57220fcfa2d01057f698ff00e9ffc943df81a5913cb2779"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed22/progress.json",
+    "bytes": 977,
+    "server_md5_base64": null,
+    "sha256": "a73a1a5f138378678ca12777cce44128d2cffdd9522e7eb95cb170a0b4992f38"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed22/result.json",
+    "bytes": 4562,
+    "server_md5_base64": null,
+    "sha256": "ca75e6b06d63fb71403f4cb3e7ea2ffd6cb480d0cc617a92ce34438bb4e890f6"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed22/resume.pt",
+    "bytes": 5512075,
+    "server_md5_base64": null,
+    "sha256": "83603bc5249e76be888dcb8f1ec3984adaf04e0bb8e86dc88da79f95d5182c44"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed22/training_history.json",
+    "bytes": 3313915,
+    "server_md5_base64": null,
+    "sha256": "776537eddec3cc1eb66f2ec3150c1d6b79b513d9e178ec6702e2d7e66ff15bd0"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed33/evaluation_trajectory.pt",
+    "bytes": 8390283,
+    "server_md5_base64": null,
+    "sha256": "d64832ed3f9fa68ee8e21ec8a432f7fccf535acb5874545c4f4bb0b682df2f5a"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed33/final_checkpoint.pt",
+    "bytes": 5514285,
+    "server_md5_base64": null,
+    "sha256": "f20a52169046764fb5e0ed26a5d7c10f4d14569f0f26eda537938f82a6b6937e"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed33/manifest.json",
+    "bytes": 5120,
+    "server_md5_base64": null,
+    "sha256": "0570ad9d7d042ee71b36e6d669fd3d657406a299433e94e3dbb1bce100673b6c"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed33/precision_after.json",
+    "bytes": 256,
+    "server_md5_base64": null,
+    "sha256": "514884ed6c80b7a1ebc77f16ff3e78cedd0555a2b5e12d0cfe581187bf98e0d0"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed33/precision_before.json",
+    "bytes": 255,
+    "server_md5_base64": null,
+    "sha256": "9d90163613cd8d994e04e6d2e99974252c23e0486c181f8014d5711361cccd1b"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed33/progress.json",
+    "bytes": 979,
+    "server_md5_base64": null,
+    "sha256": "2f6bd7a1054355df9c7773f8e6c9930484d156e1d71167279e66376ecb198041"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed33/result.json",
+    "bytes": 4562,
+    "server_md5_base64": null,
+    "sha256": "747e30ae38f5f74f980b610f8b502af860e2e56f0ed9853ebcb8067c7efeee9c"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed33/resume.pt",
+    "bytes": 5512075,
+    "server_md5_base64": null,
+    "sha256": "ca06fad8e50eb3994e0bee95d17430b5b8562ea017f4cbcad605a8649d0b576d"
+  },
+  {
+    "file_name": "ferminet_results/ferminet_seed33/training_history.json",
+    "bytes": 3332591,
+    "server_md5_base64": null,
+    "sha256": "5a12af328e0517d986e326b121e854d55b6e82400fbb448efe4f839998d30cbc"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed11/evaluation_trajectory.pt",
+    "bytes": 8390283,
+    "server_md5_base64": null,
+    "sha256": "fe64c84556d7c985ce123945bfa259c7dd6b568d2fdc7991cb458c037f941455"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed11/final_checkpoint.pt",
+    "bytes": 7287523,
+    "server_md5_base64": null,
+    "sha256": "bd27f05b681b927802b95740862f75822572f8d6a9c44f10f151edad53a2725d"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed11/manifest.json",
+    "bytes": 5121,
+    "server_md5_base64": null,
+    "sha256": "a0e87d7fb9086f0b5ae182827946838db0743649c6586bfecbf002bf26d231ac"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed11/precision_after.json",
+    "bytes": 254,
+    "server_md5_base64": null,
+    "sha256": "c2d68f708f04905b0345b06368dcd57697c44884fc33d26f57aa82aa6e5577e5"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed11/precision_before.json",
+    "bytes": 256,
+    "server_md5_base64": null,
+    "sha256": "86575b8df9f108625d0221d1070ebb0ebd3dea0d4807a328dd6a9cee9f8cfdfb"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed11/progress.json",
+    "bytes": 982,
+    "server_md5_base64": null,
+    "sha256": "3c295f6c9998b1b003979c3cf98c8d646abdde8d8eddcdefd363d89bf4092e10"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed11/result.json",
+    "bytes": 4561,
+    "server_md5_base64": null,
+    "sha256": "6c4214c393d94d2ef96ab08d60940c676555bf71647cb467e5219dc5818bdb30"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed11/resume.pt",
+    "bytes": 7282443,
+    "server_md5_base64": null,
+    "sha256": "42d5d6037dbcd2629fde12c228b2a1ec1ed8c047e4a01d2fb3f160890f82aa8e"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed11/training_history.json",
+    "bytes": 3306951,
+    "server_md5_base64": null,
+    "sha256": "7f562b4c912ab9d78c674a4f077c176a1505aa0ee46de251c2e38940e0cd9bc0"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed22/evaluation_trajectory.pt",
+    "bytes": 8390283,
+    "server_md5_base64": null,
+    "sha256": "0caaca3301efc3b77c2a0ffe784a8de79736b6937b4f043baed7555552210321"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed22/final_checkpoint.pt",
+    "bytes": 7287523,
+    "server_md5_base64": null,
+    "sha256": "250f0405f6a9484081dbc20fe6978c0585ac3a842420406f573cc65eae903141"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed22/manifest.json",
+    "bytes": 5121,
+    "server_md5_base64": null,
+    "sha256": "b2323dc822217af81ea3d2df86dbd14deed45fb5482607887a3e895861d957ea"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed22/precision_after.json",
+    "bytes": 257,
+    "server_md5_base64": null,
+    "sha256": "e54a816ead455dea908c4761237882c9a91e3d99ba6d4147bb8547de91360f40"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed22/precision_before.json",
+    "bytes": 256,
+    "server_md5_base64": null,
+    "sha256": "f2ec218402565745c29422902040d5ab52dc1d84f9e9fad259fa3d4106a8d526"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed22/progress.json",
+    "bytes": 976,
+    "server_md5_base64": null,
+    "sha256": "63544474510d8a501390d441e840fe13d6902d895f95682ad726506841702e72"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed22/result.json",
+    "bytes": 4556,
+    "server_md5_base64": null,
+    "sha256": "2a98fb060c586bf5fab449cd35dc37bbdf47fbc8036aae3b3590edc8a852c2a5"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed22/resume.pt",
+    "bytes": 7282443,
+    "server_md5_base64": null,
+    "sha256": "0747b6616e793f1da756bbd2361d3ff1dbac49caabbca7c7f85e1fb6d77f955d"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed22/training_history.json",
+    "bytes": 3307244,
+    "server_md5_base64": null,
+    "sha256": "d081a65131d9d6d0a2b21c8b8c8212fbe05e5f7ac24fa676f0b54377d8505c6d"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed33/evaluation_trajectory.pt",
+    "bytes": 8390283,
+    "server_md5_base64": null,
+    "sha256": "442a41432fbb9f8e8545a234b111c60412a484ab97f0bc8dd818744121fd2ed5"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed33/final_checkpoint.pt",
+    "bytes": 7287523,
+    "server_md5_base64": null,
+    "sha256": "ba51d4f1cdc4884f5baaf8889399e08a5d226987fac5b0283a8ae6d9eccac52a"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed33/manifest.json",
+    "bytes": 5121,
+    "server_md5_base64": null,
+    "sha256": "0614c3e934a09d19578a2cfdc16cf434a902ba420796d63146a3b4409757e598"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed33/precision_after.json",
+    "bytes": 256,
+    "server_md5_base64": null,
+    "sha256": "29230c94d06ba985dd7767085be0d0d0631cc1ffad7d8f29eaf2a130646c5f41"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed33/precision_before.json",
+    "bytes": 256,
+    "server_md5_base64": null,
+    "sha256": "a09809f2dd965a4f56df3e67799944f851368e4184b8cac0f4ea9d5a11dcb132"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed33/progress.json",
+    "bytes": 974,
+    "server_md5_base64": null,
+    "sha256": "d0991a8fea2076ab37840ff3fffeccb4f50cc987094a789d989a6f7687ea9574"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed33/result.json",
+    "bytes": 4567,
+    "server_md5_base64": null,
+    "sha256": "ca3c7574d9646bef4a4e0897494b9ff1aadcc68e4a54f3f39ecdf5a1c71ef867"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed33/resume.pt",
+    "bytes": 7282443,
+    "server_md5_base64": null,
+    "sha256": "3cddfd4841c47c8325e556336577401f50bf32e02a095bc10824032c5f0bc57d"
+  },
+  {
+    "file_name": "ferminet_results/psiformer_seed33/training_history.json",
+    "bytes": 3310121,
+    "server_md5_base64": null,
+    "sha256": "7bf1a2f8108fdd9c195f837d641ab6846ba417891e095ac0ab458998e4a1a0fa"
+  },
+  {
+    "file_name": "ferminet_results/runtime_tests_gpu0.log",
+    "bytes": 573,
+    "server_md5_base64": null,
+    "sha256": "d2615e49f3a15ccd29284c6184360417fd64c929da5d9bb62eda4d9a7e8e4153"
+  },
+  {
+    "file_name": "ferminet_results/runtime_tests_gpu1.log",
+    "bytes": 572,
+    "server_md5_base64": null,
+    "sha256": "714b0e345c32ce62d5ce93c6176f374e16aa2fd1be2f1db4de6cb2bd5f3eeb3f"
+  },
+  {
+    "file_name": "ferminet_results/summary.json",
+    "bytes": 37939,
+    "server_md5_base64": null,
+    "sha256": "36cc56b35911f3c76e0bb867e928b739bb9ac46305fc7dda85bf597bc36aec1d"
+  },
+  {
+    "file_name": "ferminet_results/worker_0.log",
+    "bytes": 720985,
+    "server_md5_base64": null,
+    "sha256": "345af52137ab9c9bcfb79e87fe71754b537a2cc7476074b2161ad900018cda0e"
+  },
+  {
+    "file_name": "ferminet_results/worker_1.log",
+    "bytes": 864636,
+    "server_md5_base64": null,
+    "sha256": "16e25a9ece0ca169987404f6c3e69d44730d132c7838a19c80742ef17b93a0f8"
+  }
+]

@@ -1,0 +1,25 @@
+{
+  "source_commit": "114377b6be860d6f4e19de1642a76ce957119a12",
+  "scope": "Real two-T4 one-update continuation execution gate; not accuracy evidence",
+  "files": {
+    "ferminet-t4x2-continue-smoke.log": "87818a39ea131a386b3e9d43c2e6d33b83011f6125da4badb9ad9cf87ea21bf5",
+    "gate.json": "a5f8c134d33ddda28ebda2666aed6638bee34c2a7b33dc4089e596dc8cf8ddf8",
+    "ferminet_results/bootstrap.json": "8d36ea8fbc32dc60646700a3c2125ceecd49eb60d30b2f0f13f6954f3c50bddb",
+    "ferminet_results/campaign.json": "a862664132b6308e8ccfd2f59321010dbc6b8f2549113ffb9acad95214ca7480",
+    "ferminet_results/runtime_tests_gpu0.log": "32cf970c6ec23875087c91b023c5a403c9b67d112f77e52965bddec471a206b8",
+    "ferminet_results/runtime_tests_gpu1.log": "055adc153cb60cd741bea719d76c203c6bcf7f2753f867b165a8037f17e9a80e",
+    "ferminet_results/summary.json": "6d239b7bc2a363d90212a6551932c66fc8c35f7a4e97483020c3bf7974afa601",
+    "ferminet_results/worker_0.log": "df340a96093c4cb75a1e4ce5a545473931701a99d8840b70d65e363385287042",
+    "ferminet_results/worker_1.log": "fff7cfdeb140b671ac9d1b12f4c42a98f0daa0157997ea27737c167c719dd312",
+    "ferminet_results/ferminet_seed11/manifest.json": "96c816e24c5942f45b28559900ef3bcc6e2c778320217a37007a6feaaa4f2e02",
+    "ferminet_results/ferminet_seed11/precision_after.json": "2deb6b91d90afbf1024853adcd0aac524077461fd2698192d932a59cf9a35a15",
+    "ferminet_results/ferminet_seed11/precision_before.json": "ec876249b78d2211434728ba63f34764e3e718cd49f401a1176392eb81de8ba1",
+    "ferminet_results/ferminet_seed11/result.json": "ccd52fa15a72a055282feb77be0a3710a824f849a962c6b6ca2cc607a3483f95",
+    "ferminet_results/ferminet_seed11/sampling_performance.json": "731624782265eb146c93debffe80981ac319a96b9be4fd9d02a9409493f4ff71",
+    "ferminet_results/psiformer_seed11/manifest.json": "84318ffdb37443b652b2cff5f72e63d4db4dc60d866f4af6b863f6a8c17058bf",
+    "ferminet_results/psiformer_seed11/precision_after.json": "946f476a4662e79c5e8f07390799abc0e11880b694112acf8b9a07ca9d257b56",
+    "ferminet_results/psiformer_seed11/precision_before.json": "f1cbdc64194f9c5abf1f0d6e97323d99c7c8f40d861506f63cc6cf88cd0530ff",
+    "ferminet_results/psiformer_seed11/result.json": "20f255324fbf23dea965e731c648253f6bf292a2fe3a70748b5d5faf14953499",
+    "ferminet_results/psiformer_seed11/sampling_performance.json": "f41227245a5e8e015b9a9cb7add4ef653ff5bda33661d657af80c82af343ecbb"
+  }
+}

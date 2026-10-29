@@ -1,0 +1,8 @@
+test_frozen_energy_chunking_preserves_chain_axis_and_model (tests.test_campaign_runtime.TestCampaignCUDA.test_frozen_energy_chunking_preserves_chain_axis_and_model) ... ok
+test_resume_preserves_updates_rng_stages_and_cache (tests.test_campaign_runtime.TestCampaignCUDA.test_resume_preserves_updates_rng_stages_and_cache) ... ok
+test_resume_rejects_changed_training_schedule (tests.test_campaign_runtime.TestCampaignCUDA.test_resume_rejects_changed_training_schedule) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 11.823s
+
+OK

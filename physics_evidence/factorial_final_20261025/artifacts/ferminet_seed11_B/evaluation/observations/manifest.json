@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "complete": true,
+  "seed": 900111,
+  "time_records": 2048,
+  "num_walkers": 512,
+  "axes": "time,walker[,electron,xyz]",
+  "shards": [
+    {
+      "file": "observations_0000.pt",
+      "start_record": 0,
+      "records": 128,
+      "sha256": "15af5a06cd90a9c5e8190e7c505c7cd336f8003fc0bf62f16efaaeb60263bd2a"
+    },
+    {
+      "file": "observations_0001.pt",
+      "start_record": 128,
+      "records": 128,
+      "sha256": "6532825b898156d7541dccf1f1f3a4f072a8e0ef1f5544bc97d7d034a510c0b3"
+    },
+    {
+      "file": "observations_0002.pt",
+      "start_record": 256,
+      "records": 128,
+      "sha256": "1ad53fa5f666c4c45747dde369ec9decf8f87e3316530dad319e24318acaf5a0"
+    },
+    {
+      "file": "observations_0003.pt",
+      "start_record": 384,
+      "records": 128,
+      "sha256": "3d558d264a055bd6257ab8f174c0130e6aa9d149a025e47b005447fc5deccb3f"
+    },
+    {
+      "file": "observations_0004.pt",
+      "start_record": 512,
+      "records": 128,
+      "sha256": "7d4382c08fdd2a0b8b44eb36322c23c18f4114411e00a230d76136c95446c8db"
+    },
+    {
+      "file": "observations_0005.pt",
+      "start_record": 640,
+      "records": 128,
+      "sha256": "c305eee56a3435dc4824aab424edcbf425452727dbe455a7ae3c1dfa5b05538c"
+    },
+    {
+      "file": "observations_0006.pt",
+      "start_record": 768,
+      "records": 128,
+      "sha256": "84d265cefe788398aab0e9908b8daddc01b5d69f2bccdec1a5d6b036bade5186"
+    },
+    {
+      "file": "observations_0007.pt",
+      "start_record": 896,
+      "records": 128,
+      "sha256": "2e750eca5b0baea93fa7830130f1b2a3bcccafcf107895e2522b1b4691b01d7a"
+    },
+    {
+      "file": "observations_0008.pt",
+      "start_record": 1024,
+      "records": 128,
+      "sha256": "a457948d52c159fdd7da0790523b73169501161e0585f721fef34099c6dfb75b"
+    },
+    {
+      "file": "observations_0009.pt",
+      "start_record": 1152,
+      "records": 128,
+      "sha256": "ec777cabf0fd0baeb71de68df487713b2f6f813a549cfd65b0ad82425fe8c32c"
+    },
+    {
+      "file": "observations_0010.pt",
+      "start_record": 1280,
+      "records": 128,
+      "sha256": "af629e8a228945fe39bff1f3368724af311c40a283b66f212b4d50634538d65f"
+    },
+    {
+      "file": "observations_0011.pt",
+      "start_record": 1408,
+      "records": 128,
+      "sha256": "41a40df23ec17bc6e0e62f25d3e37bd576a639f409891cfbc2664aee4277d08b"
+    },
+    {
+      "file": "observations_0012.pt",
+      "start_record": 1536,
+      "records": 128,
+      "sha256": "111af434ee3f84ff5464a630ab3831d01fbfb29b61e33fe4c90e91af4787921e"
+    },
+    {
+      "file": "observations_0013.pt",
+      "start_record": 1664,
+      "records": 128,
+      "sha256": "c42cbd3f382b824838b78308b06be1da1c1d65613d5554918c2d0ae9d175e0e3"
+    },
+    {
+      "file": "observations_0014.pt",
+      "start_record": 1792,
+      "records": 128,
+      "sha256": "25fedf77cf7108abc8874a9764c1e6985a396bbfec4f8b473d7bc6e95e5c94c8"
+    },
+    {
+      "file": "observations_0015.pt",
+      "start_record": 1920,
+      "records": 128,
+      "sha256": "833ba3519a52e2fa8df9c396610aeb91925b603900dc1cbbe616706bf7b07d2f"
+    }
+  ]
+}

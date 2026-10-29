@@ -1,0 +1,542 @@
+{
+  "case_id": "ferminet_seed33_C",
+  "seed": 33,
+  "arm": "C",
+  "source_checkpoint_sha256": "18a03235f2d7e217d40203dc277e2e8ec22e7886c5bbfa11a2b18c0e07ac096d",
+  "regions": [
+    {
+      "count": 1000141,
+      "probability": 0.9538087844848633,
+      "conditional_energy_ha": -1.1742630893997328,
+      "signed_error_contribution_mha": 0.2028034213703895,
+      "positive_error_contribution_mha": 4.493998590996895,
+      "negative_error_contribution_mha": -4.291195169626505,
+      "variance_share": 0.7427631676828306,
+      "conditional_variance_ha2": 0.0004806820746298332,
+      "bitmask": 0,
+      "bootstrap": {
+        "occupied_blocks": 16,
+        "signed_error_ci95_mha": [
+          0.13063982158009607,
+          0.275368841891386
+        ],
+        "variance_share_ci95": [
+          0.7245617294173603,
+          0.7609871864939712
+        ],
+        "status": "approximate_conditional"
+      }
+    },
+    {
+      "count": 47937,
+      "probability": 0.045716285705566406,
+      "conditional_energy_ha": -1.1756087784214568,
+      "signed_error_contribution_mha": -0.05179948675655578,
+      "positive_error_contribution_mha": 0.4070230621979666,
+      "negative_error_contribution_mha": -0.45882254895452235,
+      "variance_share": 0.16769478423237422,
+      "conditional_variance_ha2": 0.0022630527794062685,
+      "bitmask": 1,
+      "bootstrap": {
+        "occupied_blocks": 16,
+        "signed_error_ci95_mha": [
+          -0.06603620018978888,
+          -0.036802908825502766
+        ],
+        "variance_share_ci95": [
+          0.1516684065390504,
+          0.18466057957213647
+        ],
+        "status": "approximate_conditional"
+      }
+    },
+    {
+      "count": 436,
+      "probability": 0.000415802001953125,
+      "conditional_energy_ha": -1.4686458710525512,
+      "signed_error_contribution_mha": -0.12231654012583953,
+      "positive_error_contribution_mha": 0.0016890900758003704,
+      "negative_error_contribution_mha": -0.12400563020163993,
+      "variance_share": 0.08530487133337147,
+      "conditional_variance_ha2": 0.040180967540078855,
+      "bitmask": 2,
+      "bootstrap": {
+        "occupied_blocks": 16,
+        "signed_error_ci95_mha": [
+          -0.13809589198164954,
+          -0.10692798078275166
+        ],
+        "variance_share_ci95": [
+          0.07283790385770308,
+          0.09831462551344022
+        ],
+        "status": "approximate_conditional"
+      }
+    },
+    {
+      "count": 7,
+      "probability": 6.67572021484375e-06,
+      "conditional_energy_ha": -1.585017072945328,
+      "signed_error_contribution_mha": -0.0027406592474720913,
+      "positive_error_contribution_mha": 0.0,
+      "negative_error_contribution_mha": -0.0027406592474720913,
+      "variance_share": 0.0023875291405421285,
+      "conditional_variance_ha2": 0.06090368097083635,
+      "bitmask": 3,
+      "bootstrap": {
+        "occupied_blocks": 6,
+        "signed_error_ci95_mha": [
+          -0.005245010560503167,
+          -0.0007553767505060553
+        ],
+        "variance_share_ci95": [
+          0.00040020753428736595,
+          0.005304275627825429
+        ],
+        "status": "approximate_conditional"
+      }
+    },
+    {
+      "count": 55,
+      "probability": 5.245208740234375e-05,
+      "conditional_energy_ha": -1.0466274415422885,
+      "signed_error_contribution_mha": 0.0067059087727300015,
+      "positive_error_contribution_mha": 0.0068948710332765025,
+      "negative_error_contribution_mha": -0.00018896226054650048,
+      "variance_share": 0.001849647610881531,
+      "conditional_variance_ha2": 0.005532020381377423,
+      "bitmask": 4,
+      "bootstrap": {
+        "occupied_blocks": 16,
+        "signed_error_ci95_mha": [
+          0.00503631697242056,
+          0.008472509426979113
+        ],
+        "variance_share_ci95": [
+          0.0013786452896090116,
+          0.0023722152926540616
+        ],
+        "status": "approximate_conditional"
+      }
+    },
+    {
+      "count": 0,
+      "probability": 0.0,
+      "conditional_energy_ha": null,
+      "signed_error_contribution_mha": 0.0,
+      "positive_error_contribution_mha": 0.0,
+      "negative_error_contribution_mha": 0.0,
+      "variance_share": 0.0,
+      "conditional_variance_ha2": null,
+      "bitmask": 5,
+      "bootstrap": {
+        "occupied_blocks": 0,
+        "signed_error_ci95_mha": null,
+        "variance_share_ci95": null,
+        "status": "insufficient_occupied_blocks"
+      }
+    },
+    {
+      "count": 0,
+      "probability": 0.0,
+      "conditional_energy_ha": null,
+      "signed_error_contribution_mha": 0.0,
+      "positive_error_contribution_mha": 0.0,
+      "negative_error_contribution_mha": 0.0,
+      "variance_share": 0.0,
+      "conditional_variance_ha2": null,
+      "bitmask": 6,
+      "bootstrap": {
+        "occupied_blocks": 0,
+        "signed_error_ci95_mha": null,
+        "variance_share_ci95": null,
+        "status": "insufficient_occupied_blocks"
+      }
+    },
+    {
+      "count": 0,
+      "probability": 0.0,
+      "conditional_energy_ha": null,
+      "signed_error_contribution_mha": 0.0,
+      "positive_error_contribution_mha": 0.0,
+      "negative_error_contribution_mha": 0.0,
+      "variance_share": 0.0,
+      "conditional_variance_ha2": null,
+      "bitmask": 7,
+      "bootstrap": {
+        "occupied_blocks": 0,
+        "signed_error_ci95_mha": null,
+        "variance_share_ci95": null,
+        "status": "insufficient_occupied_blocks"
+      }
+    },
+    {
+      "count": 0,
+      "probability": 0.0,
+      "conditional_energy_ha": null,
+      "signed_error_contribution_mha": 0.0,
+      "positive_error_contribution_mha": 0.0,
+      "negative_error_contribution_mha": 0.0,
+      "variance_share": 0.0,
+      "conditional_variance_ha2": null,
+      "bitmask": 8,
+      "bootstrap": {
+        "occupied_blocks": 0,
+        "signed_error_ci95_mha": null,
+        "variance_share_ci95": null,
+        "status": "insufficient_occupied_blocks"
+      }
+    },
+    {
+      "count": 0,
+      "probability": 0.0,
+      "conditional_energy_ha": null,
+      "signed_error_contribution_mha": 0.0,
+      "positive_error_contribution_mha": 0.0,
+      "negative_error_contribution_mha": 0.0,
+      "variance_share": 0.0,
+      "conditional_variance_ha2": null,
+      "bitmask": 9,
+      "bootstrap": {
+        "occupied_blocks": 0,
+        "signed_error_ci95_mha": null,
+        "variance_share_ci95": null,
+        "status": "insufficient_occupied_blocks"
+      }
+    },
+    {
+      "count": 0,
+      "probability": 0.0,
+      "conditional_energy_ha": null,
+      "signed_error_contribution_mha": 0.0,
+      "positive_error_contribution_mha": 0.0,
+      "negative_error_contribution_mha": 0.0,
+      "variance_share": 0.0,
+      "conditional_variance_ha2": null,
+      "bitmask": 10,
+      "bootstrap": {
+        "occupied_blocks": 0,
+        "signed_error_ci95_mha": null,
+        "variance_share_ci95": null,
+        "status": "insufficient_occupied_blocks"
+      }
+    },
+    {
+      "count": 0,
+      "probability": 0.0,
+      "conditional_energy_ha": null,
+      "signed_error_contribution_mha": 0.0,
+      "positive_error_contribution_mha": 0.0,
+      "negative_error_contribution_mha": 0.0,
+      "variance_share": 0.0,
+      "conditional_variance_ha2": null,
+      "bitmask": 11,
+      "bootstrap": {
+        "occupied_blocks": 0,
+        "signed_error_ci95_mha": null,
+        "variance_share_ci95": null,
+        "status": "insufficient_occupied_blocks"
+      }
+    },
+    {
+      "count": 0,
+      "probability": 0.0,
+      "conditional_energy_ha": null,
+      "signed_error_contribution_mha": 0.0,
+      "positive_error_contribution_mha": 0.0,
+      "negative_error_contribution_mha": 0.0,
+      "variance_share": 0.0,
+      "conditional_variance_ha2": null,
+      "bitmask": 12,
+      "bootstrap": {
+        "occupied_blocks": 0,
+        "signed_error_ci95_mha": null,
+        "variance_share_ci95": null,
+        "status": "insufficient_occupied_blocks"
+      }
+    },
+    {
+      "count": 0,
+      "probability": 0.0,
+      "conditional_energy_ha": null,
+      "signed_error_contribution_mha": 0.0,
+      "positive_error_contribution_mha": 0.0,
+      "negative_error_contribution_mha": 0.0,
+      "variance_share": 0.0,
+      "conditional_variance_ha2": null,
+      "bitmask": 13,
+      "bootstrap": {
+        "occupied_blocks": 0,
+        "signed_error_ci95_mha": null,
+        "variance_share_ci95": null,
+        "status": "insufficient_occupied_blocks"
+      }
+    },
+    {
+      "count": 0,
+      "probability": 0.0,
+      "conditional_energy_ha": null,
+      "signed_error_contribution_mha": 0.0,
+      "positive_error_contribution_mha": 0.0,
+      "negative_error_contribution_mha": 0.0,
+      "variance_share": 0.0,
+      "conditional_variance_ha2": null,
+      "bitmask": 14,
+      "bootstrap": {
+        "occupied_blocks": 0,
+        "signed_error_ci95_mha": null,
+        "variance_share_ci95": null,
+        "status": "insufficient_occupied_blocks"
+      }
+    },
+    {
+      "count": 0,
+      "probability": 0.0,
+      "conditional_energy_ha": null,
+      "signed_error_contribution_mha": 0.0,
+      "positive_error_contribution_mha": 0.0,
+      "negative_error_contribution_mha": 0.0,
+      "variance_share": 0.0,
+      "conditional_variance_ha2": null,
+      "bitmask": 15,
+      "bootstrap": {
+        "occupied_blocks": 0,
+        "signed_error_ci95_mha": null,
+        "variance_share_ci95": null,
+        "status": "insufficient_occupied_blocks"
+      }
+    }
+  ],
+  "overlapping": {
+    "far": {
+      "count": 47944,
+      "probability": 0.04572296142578125,
+      "signed_error_contribution_mha": -0.05454014600402786,
+      "positive_error_contribution_mha": 0.4070230621979666,
+      "negative_error_contribution_mha": -0.46156320820199437,
+      "variance_share": 0.1700823133729164
+    },
+    "near_nucleus": {
+      "count": 443,
+      "probability": 0.00042247772216796875,
+      "signed_error_contribution_mha": -0.12505719937331167,
+      "positive_error_contribution_mha": 0.0016890900758003704,
+      "negative_error_contribution_mha": -0.12674628944911204,
+      "variance_share": 0.08769240047391365
+    },
+    "near_electron": {
+      "count": 55,
+      "probability": 5.245208740234375e-05,
+      "signed_error_contribution_mha": 0.0067059087727300015,
+      "positive_error_contribution_mha": 0.0068948710332765025,
+      "negative_error_contribution_mha": -0.00018896226054650048,
+      "variance_share": 0.0018496476108815303
+    },
+    "cancellation": {
+      "count": 0,
+      "probability": 0.0,
+      "signed_error_contribution_mha": 0.0,
+      "positive_error_contribution_mha": 0.0,
+      "negative_error_contribution_mha": 0.0,
+      "variance_share": 0.0
+    }
+  },
+  "radial_bins": {
+    "0_1": {
+      "count": 221049,
+      "probability": 0.21080875396728516,
+      "signed_error_contribution_mha": -0.0058823955360672074,
+      "positive_error_contribution_mha": 1.4721375316579481,
+      "negative_error_contribution_mha": -1.4780199271940153,
+      "variance_share": 0.34350213437463245
+    },
+    "1_2": {
+      "count": 580346,
+      "probability": 0.5534610748291016,
+      "signed_error_contribution_mha": 0.31546606513196973,
+      "positive_error_contribution_mha": 2.2806417207612295,
+      "negative_error_contribution_mha": -1.9651756556292597,
+      "variance_share": 0.3281512396159034
+    },
+    "2_3": {
+      "count": 199237,
+      "probability": 0.19000720977783203,
+      "signed_error_contribution_mha": -0.22239087957862255,
+      "positive_error_contribution_mha": 0.749803299686794,
+      "negative_error_contribution_mha": -0.9721941792654166,
+      "variance_share": 0.15826431263654778
+    },
+    "3_4": {
+      "count": 39858,
+      "probability": 0.03801155090332031,
+      "signed_error_contribution_mha": -0.029268917707976648,
+      "positive_error_contribution_mha": 0.2803480795314711,
+      "negative_error_contribution_mha": -0.3096169972394478,
+      "variance_share": 0.08727179431260577
+    },
+    "4_5": {
+      "count": 6757,
+      "probability": 0.006443977355957031,
+      "signed_error_contribution_mha": -0.019948079259227036,
+      "positive_error_contribution_mha": 0.08520998382972228,
+      "negative_error_contribution_mha": -0.10515806308894932,
+      "variance_share": 0.0496348856201566
+    },
+    "5_6": {
+      "count": 1119,
+      "probability": 0.0010671615600585938,
+      "signed_error_contribution_mha": -0.01714256163087575,
+      "positive_error_contribution_mha": 0.02142141562609067,
+      "negative_error_contribution_mha": -0.03856397725696642,
+      "variance_share": 0.017231529533234553
+    },
+    "6_inf": {
+      "count": 210,
+      "probability": 0.0002002716064453125,
+      "signed_error_contribution_mha": 0.011819412594051571,
+      "positive_error_contribution_mha": 0.020043583210682458,
+      "negative_error_contribution_mha": -0.008224170616630885,
+      "variance_share": 0.01594410390691948
+    }
+  },
+  "extreme": {
+    "count": 215,
+    "probability": 0.00020503997802734375,
+    "signed_error_contribution_mha": -0.11537880127741529,
+    "positive_error_contribution_mha": 0.006320725888608575,
+    "negative_error_contribution_mha": -0.12169952716602386,
+    "variance_share": 0.13357217993895593
+  },
+  "top_0_01_percent": {
+    "count": 104,
+    "probability": 9.918212890625e-05,
+    "signed_error_contribution_mha": -0.05867023921394061,
+    "positive_error_contribution_mha": 0.005765007641419899,
+    "negative_error_contribution_mha": -0.0644352468553605,
+    "variance_share": 0.08225620023306962
+  },
+  "variance_decomposition": {
+    "energy": 0.0006173026315547629,
+    "kinetic": 2.574975041463859,
+    "potential": 2.604187767326725,
+    "twice_covariance": -5.17854550615903,
+    "reconstruction_residual": 8.881784197001252e-16
+  },
+  "energy_mean": -1.1744430615759867,
+  "signed_error_mha": 0.03265264401330903,
+  "log_max_error": 1.7763568394002505e-15,
+  "sign_mismatches": 0,
+  "exact_zero_term_sums": 0,
+  "kinetic_audit": {
+    "passed": true,
+    "num_points": 96,
+    "nonfinite": 0,
+    "max_abs_difference": 2.842170943040401e-14,
+    "selection": {
+      "largest_residual": [
+        241321,
+        387875,
+        97316,
+        416691,
+        477770,
+        545779,
+        805947,
+        614859,
+        756176,
+        901972,
+        37577,
+        37065,
+        179820,
+        992821,
+        413409,
+        777299,
+        790693,
+        816832,
+        871986,
+        312234,
+        311722,
+        1033069,
+        911032,
+        839141,
+        649898,
+        767389,
+        96543,
+        680853,
+        375903,
+        376415,
+        517461,
+        240948
+      ],
+      "largest_cancellation": [
+        217168,
+        42685,
+        972976,
+        457181,
+        656460,
+        358816,
+        804431,
+        584484,
+        1045001,
+        295390,
+        739356,
+        968992,
+        1026667,
+        130244,
+        957497,
+        843640,
+        48567,
+        619344,
+        11991,
+        1014524,
+        1001024,
+        341984,
+        569539,
+        471228,
+        240379,
+        515117,
+        56694,
+        577388,
+        911303,
+        889067,
+        309970,
+        161000
+      ],
+      "stratified_ordinary": [
+        408483,
+        993847,
+        683514,
+        573568,
+        375037,
+        122193,
+        859824,
+        333349,
+        178028,
+        37187,
+        443764,
+        516673,
+        583843,
+        880559,
+        947334,
+        669488,
+        759484,
+        370710,
+        40650,
+        582117,
+        227821,
+        798371,
+        867836,
+        602980,
+        414307,
+        97117,
+        301742,
+        728882,
+        1021134,
+        132983,
+        460910,
+        177195
+      ]
+    }
+  },
+  "all_audits_passed": true,
+  "limits": "Exploratory attribution conditional on visited trajectories. Cancellation is a proxy, not node distance or causality."
+}

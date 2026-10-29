@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "experiment": "envelope_replication",
+  "seeds": [
+    101,
+    202,
+    303,
+    404,
+    505,
+    606
+  ],
+  "arms": {
+    "A": {
+      "envelope_type": "gaussian",
+      "clip_method": "tanh"
+    },
+    "C": {
+      "envelope_type": "soft_exponential",
+      "clip_method": "tanh"
+    }
+  },
+  "model": {
+    "num_determinants": 8,
+    "hidden_dim_one": 64,
+    "hidden_dim_two": 16,
+    "num_layers": 3
+  },
+  "envelope_scale": 2.0,
+  "training": {
+    "num_epochs": 10000,
+    "num_walkers": 512,
+    "mcmc_steps_per_epoch": 10,
+    "burn_in_steps": 1000,
+    "lr": 0.0001,
+    "jastrow_lr": 1e-05,
+    "grad_clip": 1.0,
+    "clip_factor": 5.0,
+    "two_stage_jastrow": false,
+    "restore_best": false,
+    "lr_schedule": "warmup_inverse",
+    "lr_warmup_epochs": 500,
+    "lr_decay_epochs": 10000,
+    "lr_min_ratio": 0.1
+  },
+  "evaluation": {
+    "num_walkers": 512,
+    "num_steps": 2048,
+    "burn_in_steps": 1000,
+    "decorrelation_steps": 20,
+    "energy_batch_size": 128
+  },
+  "zero_evaluation_records": 512,
+  "records_per_shard": 128,
+  "training_dtype": "float32",
+  "sampling_execution": "eager",
+  "schedule_seed": 20261026,
+  "evaluation_seed_base": 20000000,
+  "zero_evaluation_seed_base": 21000000,
+  "practical_improvement_mha": 0.2,
+  "cpu_threads_per_worker": 1,
+  "checkpoint_seconds": 300,
+  "log_seconds": 10,
+  "heartbeat_seconds": 15,
+  "max_wall_seconds": 32400,
+  "max_projected_seconds": 28800,
+  "timing_safety_factor": 1.25,
+  "smoke": false,
+  "parent": {
+    "initial_epochs": 20000,
+    "final_epochs": 50000,
+    "jastrow_stage1_epochs": 1000,
+    "initial_lr": 0.001,
+    "initial_jastrow_lr": 0.0001,
+    "burn_in_steps": 500
+  },
+  "batches": [
+    [
+      101,
+      202
+    ],
+    [
+      303,
+      404
+    ],
+    [
+      505,
+      606
+    ]
+  ],
+  "historical_source_commit": "9b001c5bbd4c143058248bbc0c6e3585412ae27c",
+  "primary": {
+    "contrast": "C-A",
+    "critical_value": 2.570581835636305,
+    "df": 5,
+    "alpha": 0.05
+  }
+}

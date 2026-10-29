@@ -1,0 +1,84 @@
+"""Independent, frozen-wavefunction evaluation with traceable uncertainty."""
+import os
+import time
+from typing import Any, Dict, Optional, Union
+
+import torch
+from torch import nn
+
+from .hamiltonian import MolecularSystem, compute_local_energy
+from .mcmc import MCMCSampler
+from .vmc_statistics import energy_statistics, apply_reference
+
+
+def evaluate_frozen_wavefunction(
+    model: nn.Module, system: MolecularSystem, num_walkers: int = 1024,
+    num_steps: int = 100, burn_in_steps: int = 40, decorrelation_steps: int = 10,
+    step_size: float = 0.5, target_acceptance: Optional[float] = None,
+    move_mode: str = 'all', device: Optional[Union[str, torch.device]] = None,
+    dtype: torch.dtype = torch.float32, seed: int = 2024, verbose: bool = True,
+    exact_energy: Optional[float] = None, hf_energy: Optional[float] = None,
+    reference_label: Optional[str] = None, reference_source: Optional[str] = None,
+    max_seconds: Optional[float] = None, trajectory_path: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Approximate intervals conditional on this checkpoint, not training error.
+
+    max_seconds bounds production sampling independently of observed energies.
+    Every observation must be finite; invalid samples are never discarded.
+    """
+    if num_steps < 1 or num_walkers < 1 or decorrelation_steps < 1:
+        raise ValueError('Evaluation requires positive steps, walkers and decorrelation')
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    target_device = torch.device(device) if device is not None else system.nuclear_coords.device
+    was_training = model.training
+    model.eval()
+    start = time.perf_counter()
+    trajectory = []
+    try:
+        sampler = MCMCSampler(model, system, num_walkers=num_walkers,
+            step_size=step_size, target_acceptance=target_acceptance,
+            move_mode=move_mode, device=target_device, dtype=dtype)
+        sampler.burn_in(burn_in_steps)
+        production_start = time.perf_counter()
+        for _ in range(num_steps):
+            if trajectory and max_seconds is not None and time.perf_counter()-production_start >= max_seconds:
+                break
+            walkers = sampler.sample(decorrelation_steps, adapt=False)
+            r = walkers.detach().clone().requires_grad_(True)
+            energies, _, _ = compute_local_energy(model, system, r)
+            if not torch.isfinite(energies).all():
+                raise FloatingPointError('Nonfinite energy in frozen evaluation; no observations were discarded')
+            trajectory.append(energies.detach().cpu())
+        series = torch.stack(trajectory)
+        result = energy_statistics(series)
+        result.update(decorrelation_steps=decorrelation_steps,
+            eval_time_sec=time.perf_counter()-start, time_records=len(trajectory),
+            requested_time_records=num_steps, seed=seed,
+            stopping_reason='completed' if len(trajectory)==num_steps else 'time_budget',
+            mcmc_acceptance=sampler.last_acceptance_rate, mcmc_step_size=sampler.step_size,
+            spin_projection=getattr(getattr(model, 'spin_projector', None), 'mode', 'none'))
+        if trajectory_path is not None:
+            torch.save(series, trajectory_path)
+            result['trajectory_path'] = os.path.abspath(trajectory_path)
+    finally:
+        model.train(was_training)
+
+    # Reference matching includes electron number, geometry and target spin.
+    projector = getattr(model, 'spin_projector', None)
+    charges = system.nuclear_charges.detach().cpu().double()
+    nuclei = system.nuclear_coords.detach().cpu().double()
+    if exact_energy is None and system.n_up == system.n_down == 1 and getattr(projector, 'mode', None) == 'singlet':
+        if charges.shape == (2,) and torch.equal(charges, torch.ones(2, dtype=torch.float64)):
+            bond = float(torch.linalg.vector_norm(nuclei[0]-nuclei[1]))
+            if abs(bond-1.4) <= 1e-6:
+                exact_energy = -1.174475714220
+                hf_energy = -1.13362957 if hf_energy is None else hf_energy
+                reference_label = reference_label or 'H2 BO singlet, R=1.4 bohr'
+                reference_source = reference_source or 'https://doi.org/10.1103/PhysRevA.82.032509'
+    apply_reference(result, exact_energy, hf_energy, reference_label, reference_source)
+    if verbose:
+        print(f"Frozen energy: {result['energy_mean']:.8f} +/- {result['energy_sem']:.8f} Ha; "
+              f"diagnostics={result['diagnostics_status']}; chemical_accuracy={result['chemical_accuracy_status']}")
+    return result

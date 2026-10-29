@@ -1,0 +1,28 @@
+Warning: Looks like you're using an outdated `kaggle` version (installed: 2.2.4), please consider upgrading to the latest version (2.2.5)
+Kernel version 2 successfully pushed.  Please check progress at https://www.kaggle.com/code/hwbwhzbsh/ferminet-factorial-smoke
+
+{"source_commit": "d357eed4b0761442c1284ba98116fc95bb7304a9", "long_plan_sha256": "96ad8912f83ea9d064eac193199970b48b5cce927508d60c6a12d5665448cd78", "phase": "smoke_submitted", "smoke_kernel": "hwbwhzbsh/ferminet-factorial-smoke"}
+Warning: Looks like you're using an outdated `kaggle` version (installed: 2.2.4), please consider upgrading to the latest version (2.2.5)
+hwbwhzbsh/ferminet-factorial-smoke has status "KernelWorkerStatus.RUNNING"
+
+Warning: Looks like you're using an outdated `kaggle` version (installed: 2.2.4), please consider upgrading to the latest version (2.2.5)
+hwbwhzbsh/ferminet-factorial-smoke has status "KernelWorkerStatus.COMPLETE"
+
+{"source_commit": "d357eed4b0761442c1284ba98116fc95bb7304a9", "long_plan_sha256": "96ad8912f83ea9d064eac193199970b48b5cce927508d60c6a12d5665448cd78", "phase": "timing_rejected", "smoke_kernel": "hwbwhzbsh/ferminet-factorial-smoke", "receipt": "C:\\Users\\Administrator\\.gemini\\antigravity\\scratch\\ferminet_pytorch\\.kaggle_deploy\\factorial\\d357eed4b076\\gate.json", "timing": {"projected_wall_seconds": 29943.204990278922, "seconds_per_update": 0.23354450830526885, "seconds_per_record_including_observation_analysis": 0.6586795931562506, "evaluation_burn_seconds": 7.817612156999985, "training_burn_seconds": 7.658048117000021, "safety_factor": 1.25, "startup_reserve_seconds": 900, "within_budget": false}}
+{
+  "source_commit": "d357eed4b0761442c1284ba98116fc95bb7304a9",
+  "long_plan_sha256": "96ad8912f83ea9d064eac193199970b48b5cce927508d60c6a12d5665448cd78",
+  "phase": "timing_rejected",
+  "smoke_kernel": "hwbwhzbsh/ferminet-factorial-smoke",
+  "receipt": "C:\\Users\\Administrator\\.gemini\\antigravity\\scratch\\ferminet_pytorch\\.kaggle_deploy\\factorial\\d357eed4b076\\gate.json",
+  "timing": {
+    "projected_wall_seconds": 29943.204990278922,
+    "seconds_per_update": 0.23354450830526885,
+    "seconds_per_record_including_observation_analysis": 0.6586795931562506,
+    "evaluation_burn_seconds": 7.817612156999985,
+    "training_burn_seconds": 7.658048117000021,
+    "safety_factor": 1.25,
+    "startup_reserve_seconds": 900,
+    "within_budget": false
+  }
+}

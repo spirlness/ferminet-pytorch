@@ -1,0 +1,24 @@
+{"event": "worker_start", "timestamp_utc": "2026-10-23T04:08:42.008149+00:00", "worker": 1, "pid": 48, "device": "cuda:0", "visible_devices": "1"}
+{"event": "case_start", "timestamp_utc": "2026-10-23T04:08:42.016198+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "initializing", "device": "cuda:0"}
+{"event": "continuation_loaded", "timestamp_utc": "2026-10-23T04:08:47.076995+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "continued", "epoch": 20000, "parent_sha256": "bd27f05b681b927802b95740862f75822572f8d6a9c44f10f151edad53a2725d", "learning_rates": [1e-05, 1.0000000000000002e-06]}
+{"event": "progress", "timestamp_utc": "2026-10-23T04:08:47.077446+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "sampling_benchmark", "epoch": 20000}
+W1023 04:09:00.113000 48 torch/_inductor/utils.py:1731] [0/0] Not enough SMs to use max_autotune_gemm mode
+/usr/local/lib/python3.13/dist-packages/torch/_inductor/lowering.py:7836: UserWarning: 
+Online softmax is disabled on the fly since Inductor decides to
+split the reduction. Cut an issue to PyTorch if this is an
+important use case and you want to speed it up with online
+softmax.
+
+  warnings.warn(
+{"event": "sampling_execution", "timestamp_utc": "2026-10-23T04:09:32.502141+00:00", "interaction": "psiformer", "seed": 11, "requested": "auto", "selected": "compiled", "scope": "Sampling forward only; exact kinetic remains eager", "compile_seconds": 27.063264359000016, "eager_seconds": 0.0071313043666672606, "compiled_seconds": 0.002978818199998538, "estimated_seconds_saved": 1370.3204350006783, "max_log_difference": 1.9073486328125e-06, "signs_equal": true, "vmc_eager_seconds": 0.25599241043749643, "vmc_compiled_seconds": 0.21151093031249601, "vmc_estimated_seconds_saved": 1334.4444037500125, "probe_updates_discarded": 44, "complete_training_state_restored": true}
+{"event": "progress", "timestamp_utc": "2026-10-23T04:09:32.502651+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "precision_audit", "epoch": 20000}
+{"event": "progress", "timestamp_utc": "2026-10-23T04:09:32.884337+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "training", "epoch": 20000, "num_epochs": 20001}
+{"event": "training_step", "timestamp_utc": "2026-10-23T04:09:33.106388+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "training", "epoch": 20001, "num_epochs": 20001, "energy_mean": -1.1724222898483276, "energy_var": 0.0014928010059520602, "acceptance": 0.38671875, "stage": 2, "step_seconds": 0.2212900889999787, "training_seconds": 0.22179786999998896, "learning_rates": [1.018e-05, 1.018e-06], "remaining_budget_seconds": 119.77820213000001, "estimated_training_seconds_left": 0.0}
+{"event": "final_checkpoint_saved", "timestamp_utc": "2026-10-23T04:09:33.772539+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "checkpoint_saved", "epoch": 20001, "checkpoint": "/kaggle/working/ferminet_results/psiformer_seed11/final_checkpoint.pt", "checkpoint_epoch": 20001}
+{"event": "progress", "timestamp_utc": "2026-10-23T04:09:34.270516+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "evaluation_preparing", "epoch": 20001}
+{"event": "progress", "timestamp_utc": "2026-10-23T04:09:34.301602+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "evaluation_burn_in", "burn_in_steps": 0, "requested_burn_in_steps": 4}
+{"event": "progress", "timestamp_utc": "2026-10-23T04:09:34.633955+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "evaluating", "time_records": 1, "requested_time_records": 8, "evaluation_seconds": 0.3024553390000051}
+{"event": "progress", "timestamp_utc": "2026-10-23T04:09:35.864478+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "evaluating", "time_records": 5, "requested_time_records": 8, "evaluation_seconds": 1.5329948859999831}
+{"event": "progress", "timestamp_utc": "2026-10-23T04:09:36.761659+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "evaluating", "time_records": 8, "requested_time_records": 8, "evaluation_seconds": 2.4303023450000296}
+Frozen energy: -1.16586350 +/- 0.00182332 Ha; diagnostics=insufficient_evidence; chemical_accuracy=insufficient_evidence
+{"event": "case_completed", "timestamp_utc": "2026-10-23T04:09:36.786773+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "completed", "epoch": 20001, "evaluation_energy": -1.165863496892973, "energy_sem": 0.00182332367760206, "diagnostics": "insufficient_evidence", "chemical_accuracy": "insufficient_evidence"}

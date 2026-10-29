@@ -1,0 +1,43 @@
+{
+  "timestamp_utc": "2026-10-23T12:40:19.387926+00:00",
+  "local_git_head": "ae8e5c462f7978cc8b869cc5bda74a83a1beb07a",
+  "campaign_source_commit": "114377b6be860d6f4e19de1642a76ce957119a12",
+  "kernel": "hwbwhzbsh/ferminet-t4x2-continue-multiseed",
+  "all_six_checkpoint_hashes_verified_against_published_summary": true,
+  "diagnostic_mode": "Read-only fixed checkpoints and existing trajectories; zero optimizer updates; no new MCMC transitions; no Kaggle jobs submitted",
+  "source_sha256": {
+    "ferminet_pytorch/model.py": "8975ae7d1c246beb0a4eb64d6701c74c5ebbab6f3a95b19edc29710a98cb66c8",
+    "ferminet_pytorch/loss.py": "ed98fa59a21483aee6f3bf3c19888ad01049523b597f95a9ba50a3bca25d7325",
+    "ferminet_pytorch/envelope.py": "7bf149a119be9a274a8af42a6c7756fa60ea971dea95cc0d45841a25f05e13eb",
+    "ferminet_pytorch/jastrow.py": "bcb9d0a99ff83ce80fe77b95b0d0a5d25fde68641d80fee435dcdbfe43bee123",
+    "ferminet_pytorch/physical_config.py": "a3801ff2b5e6bdde9163a932c0f219bfa9aeae01e4baf162f89363367914257b",
+    "ferminet_pytorch/psiformer_attention.py": "502c65e4cf951bbc30763f801f95e29cdb4fe3f169d9b8faccc72ebe634a345f",
+    "ferminet_pytorch/kinetic_modern.py": "44fbd1c25885f9c28b8ad4e52b26c0569df158d7128b18af7ba0d1a9a3d2a882",
+    "ferminet_pytorch/evaluation.py": "7fcf56787c0c4b6d2ec11262fdf1eb74f8dd81f7b3e95e957a68a0c47b11ea51",
+    "ferminet_pytorch/vmc_statistics.py": "796463a322acc8aeadb291bb26f1886a1e85d8472b4c8e77adf70ebe3a6061f8"
+  },
+  "reference_repository": {
+    "repository": "https://github.com/google-deepmind/ferminet",
+    "commit": "e9d5a604d15c617864e7caefd948d87453b01ae6"
+  },
+  "reference_files_sha256": {
+    "envelopes.py": "54865b9e8f13e24f252f6a06b279ddd0bd9e26ca9fd4e6d064ce9744ea84f048",
+    "jastrows.py": "e5f1a24fda6db134f82a780a3cd50e164c26feb07721ff35a2fdd1dd0c7e3e40",
+    "loss.py": "a52974116d7cfd2f324369504f1a923ee7e7e0176a19bf444cff924e1374a353",
+    "networks.py": "32151701f4d85dba445a9ec15fd639ec76bd6a29e4d2d36c9fb8ac7bfadb82df",
+    "psiformer.py": "651dcc6b437928bf3ddd33b26ed2b301673004999c445acaea134a0a717b4840"
+  },
+  "evidence_sha256": {
+    "diagnose_checkpoints.py": "71ca43c49de02a81beb71f279f42f73d7b2dedff52fda4ca7304b1fc92bffc78",
+    "check_cusps.py": "545fe02d67064f07460f7db90af7b550dadae9fa9d160133061c17c9a89d8da2",
+    "diagnostics.json": "d74cf18e316f07908f64d9566ebfcae79921fa0113537ed6285f9f1f137a3e89",
+    "diagnostics_console.log": "815411fa350bb101e076c80d31a402aaee8d2c3bdd378d727c2a41b7bc223aec",
+    "cusp_checks.json": "523786dc417e9c9b3175b59832bb9fb5c787cccfdffe4f91787d0a3a2c1b25c8",
+    "cusp_console.log": "c62890e03342f14997b2220aac5f5d2e2b6aa0f5340990357f9081f89ad1131a",
+    "tail_uncertainty.json": "bcf8e6bd7b0334c7b078b44f942c6bbdf9480e468d93449aff23a48b9ac97d62",
+    "energy_shift_invariance.json": "f1e2ac1aa77da006d167c033a70c0f800f57187cb602a9efe3b3014c3a98c1ee",
+    "analyze_tails.py": "c0b71d9768013bd858fe967fc4c0f9b6b96ee448d54d107399304847a1f4f1d0"
+  },
+  "diagnostic_scripts_portability_note": "Archived scripts resolve downloaded inputs relative to the repository and explicitly require six checkpoints; the original executed scripts are retained in campaign_runs. Numerical operations are unchanged.",
+  "postanalysis_reproduction": "analyze_tails.py reproduced all six archived block-bootstrap summaries and the energy-origin counterexample exactly."
+}

@@ -1,0 +1,181 @@
+{
+  "source_commit": "114377b6be860d6f4e19de1642a76ce957119a12",
+  "kernel": "hwbwhzbsh/ferminet-t4x2-continue-multiseed",
+  "heartbeat": {
+    "event": "heartbeat",
+    "timestamp_utc": "2026-10-23T04:12:56.458665+00:00",
+    "cases": [
+      {
+        "interaction": "ferminet",
+        "seed": 11,
+        "status": "training",
+        "epoch": 20063,
+        "time_records": null,
+        "updated_utc": "2026-10-23T04:12:54.671177+00:00"
+      },
+      {
+        "interaction": "psiformer",
+        "seed": 11,
+        "status": "training",
+        "epoch": 20001,
+        "time_records": null,
+        "updated_utc": "2026-10-23T04:12:48.370601+00:00"
+      },
+      {
+        "interaction": "ferminet",
+        "seed": 22,
+        "status": "pending",
+        "epoch": null,
+        "time_records": null,
+        "updated_utc": null
+      },
+      {
+        "interaction": "psiformer",
+        "seed": 22,
+        "status": "pending",
+        "epoch": null,
+        "time_records": null,
+        "updated_utc": null
+      },
+      {
+        "interaction": "ferminet",
+        "seed": 33,
+        "status": "pending",
+        "epoch": null,
+        "time_records": null,
+        "updated_utc": null
+      },
+      {
+        "interaction": "psiformer",
+        "seed": 33,
+        "status": "pending",
+        "epoch": null,
+        "time_records": null,
+        "updated_utc": null
+      }
+    ],
+    "workers": [
+      {
+        "worker": 0,
+        "pid": 46,
+        "exit_code": null,
+        "seconds_since_output": 1.7,
+        "reader_error": null
+      },
+      {
+        "worker": 1,
+        "pid": 48,
+        "exit_code": null,
+        "seconds_since_output": 8.0,
+        "reader_error": null
+      }
+    ],
+    "gpus": [
+      {
+        "index": 0,
+        "name": "Tesla T4",
+        "utilization_percent": 37,
+        "memory_used_mib": 179,
+        "memory_total_mib": 15360
+      },
+      {
+        "index": 1,
+        "name": "Tesla T4",
+        "utilization_percent": 39,
+        "memory_used_mib": 233,
+        "memory_total_mib": 15360
+      }
+    ]
+  },
+  "latest_training": {
+    "ferminet": {
+      "event": "training_step",
+      "timestamp_utc": "2026-10-23T04:12:54.671733+00:00",
+      "interaction": "ferminet",
+      "seed": 11,
+      "pid": 46,
+      "status": "training",
+      "epoch": 20063,
+      "num_epochs": 50000,
+      "energy_mean": -1.170444369316101,
+      "energy_var": 0.001760017708875239,
+      "acceptance": 0.416015625,
+      "stage": 2,
+      "step_seconds": 0.1600498149999794,
+      "training_seconds": 10.198898328999974,
+      "learning_rates": [
+        2.1340000000000002e-05,
+        2.1340000000000002e-06
+      ],
+      "remaining_budget_seconds": 8389.801101671,
+      "estimated_training_seconds_left": 4791.411311654383
+    },
+    "psiformer": {
+      "event": "training_step",
+      "timestamp_utc": "2026-10-23T04:12:48.371066+00:00",
+      "interaction": "psiformer",
+      "seed": 11,
+      "pid": 48,
+      "status": "training",
+      "epoch": 20001,
+      "num_epochs": 50000,
+      "energy_mean": -1.1724222898483276,
+      "energy_var": 0.0014928010059520602,
+      "acceptance": 0.38671875,
+      "stage": 2,
+      "step_seconds": 0.20475250199996253,
+      "training_seconds": 0.2053149119999489,
+      "learning_rates": [
+        1.018e-05,
+        1.018e-06
+      ],
+      "remaining_budget_seconds": 8399.794685088,
+      "estimated_training_seconds_left": 6142.370307496876
+    }
+  },
+  "sampling_performance": {
+    "ferminet": {
+      "event": "sampling_execution",
+      "timestamp_utc": "2026-10-23T04:12:44.215491+00:00",
+      "interaction": "ferminet",
+      "seed": 11,
+      "requested": "auto",
+      "selected": "compiled",
+      "scope": "Sampling forward only; exact kinetic remains eager",
+      "compile_seconds": 25.875915400999986,
+      "eager_seconds": 0.005975476899999421,
+      "compiled_seconds": 0.0025190397666676745,
+      "estimated_seconds_saved": 1140.6242539994762,
+      "max_log_difference": 1.430511474609375e-06,
+      "signs_equal": true,
+      "vmc_eager_seconds": 0.19721408406249807,
+      "vmc_compiled_seconds": 0.16131366393749857,
+      "vmc_estimated_seconds_saved": 1077.012603749985,
+      "probe_updates_discarded": 44,
+      "complete_training_state_restored": true
+    },
+    "psiformer": {
+      "event": "sampling_execution",
+      "timestamp_utc": "2026-10-23T04:12:47.820808+00:00",
+      "interaction": "psiformer",
+      "seed": 11,
+      "requested": "auto",
+      "selected": "compiled",
+      "scope": "Sampling forward only; exact kinetic remains eager",
+      "compile_seconds": 27.120306728999992,
+      "eager_seconds": 0.007526171366665343,
+      "compiled_seconds": 0.003225473866666562,
+      "estimated_seconds_saved": 1419.2301749995977,
+      "max_log_difference": 2.384185791015625e-06,
+      "signs_equal": true,
+      "vmc_eager_seconds": 0.2519842078749974,
+      "vmc_compiled_seconds": 0.20108565312500204,
+      "vmc_estimated_seconds_saved": 1526.9566424998616,
+      "probe_updates_discarded": 44,
+      "complete_training_state_restored": true
+    }
+  },
+  "status": "RUNNING",
+  "both_workers_training_confirmed": true,
+  "gate_receipt": "physics_evidence/continuation_t4_smoke_20261023/gate.json"
+}

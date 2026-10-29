@@ -1,0 +1,53 @@
+From https://github.com/spirlness/ferminet-pytorch
+ * branch            d2618dfb6780f1da49f0bb4ab247d29ec15e41f8 -> FETCH_HEAD
+HEAD is now at d2618df fix: stream Kaggle training progress and gate long runs on one epoch validation
+{
+  "source_repository": "https://github.com/spirlness/ferminet-pytorch.git",
+  "source_commit": "d2618dfb6780f1da49f0bb4ab247d29ec15e41f8",
+  "python": "3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]",
+  "torch": "2.11.0+cu128",
+  "numpy": "2.1.3",
+  "cuda": "12.8",
+  "gpu_names": [
+    "Tesla T4",
+    "Tesla T4"
+  ],
+  "config": "configs/kaggle_t4x2.json",
+  "resume_kernel": null
+}
+Runtime tests starting on physical GPU 0
+test_frozen_energy_chunking_preserves_chain_axis_and_model (tests.test_campaign_runtime.TestCampaignCUDA.test_frozen_energy_chunking_preserves_chain_axis_and_model) ... ok
+test_resume_preserves_updates_rng_stages_and_cache (tests.test_campaign_runtime.TestCampaignCUDA.test_resume_preserves_updates_rng_stages_and_cache) ... ok
+test_resume_rejects_changed_training_schedule (tests.test_campaign_runtime.TestCampaignCUDA.test_resume_rejects_changed_training_schedule) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 11.655s
+
+OK
+
+Runtime tests passed on physical GPU 0
+Runtime tests starting on physical GPU 1
+test_frozen_energy_chunking_preserves_chain_axis_and_model (tests.test_campaign_runtime.TestCampaignCUDA.test_frozen_energy_chunking_preserves_chain_axis_and_model) ... ok
+test_resume_preserves_updates_rng_stages_and_cache (tests.test_campaign_runtime.TestCampaignCUDA.test_resume_preserves_updates_rng_stages_and_cache) ... ok
+test_resume_rejects_changed_training_schedule (tests.test_campaign_runtime.TestCampaignCUDA.test_resume_rejects_changed_training_schedule) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 5.047s
+
+OK
+
+Runtime tests passed on physical GPU 1
+{"event": "campaign_start", "timestamp_utc": "2026-10-22T08:47:56.229806+00:00", "workers": [{"worker": 0, "pid": 46, "exit_code": null, "seconds_since_output": 0.0, "reader_error": null}, {"worker": 1, "pid": 48, "exit_code": null, "seconds_since_output": 0.0, "reader_error": null}]}
+{"event": "heartbeat", "timestamp_utc": "2026-10-22T08:47:56.280259+00:00", "cases": [{"interaction": "ferminet", "seed": 11, "status": "pending", "epoch": null, "time_records": null, "updated_utc": null}, {"interaction": "psiformer", "seed": 11, "status": "pending", "epoch": null, "time_records": null, "updated_utc": null}, {"interaction": "ferminet", "seed": 22, "status": "pending", "epoch": null, "time_records": null, "updated_utc": null}, {"interaction": "psiformer", "seed": 22, "status": "pending", "epoch": null, "time_records": null, "updated_utc": null}, {"interaction": "ferminet", "seed": 33, "status": "pending", "epoch": null, "time_records": null, "updated_utc": null}, {"interaction": "psiformer", "seed": 33, "status": "pending", "epoch": null, "time_records": null, "updated_utc": null}], "workers": [{"worker": 0, "pid": 46, "exit_code": null, "seconds_since_output": 0.0, "reader_error": null}, {"worker": 1, "pid": 48, "exit_code": null, "seconds_since_output": 0.0, "reader_error": null}], "gpus": [{"index": 0, "name": "Tesla T4", "utilization_percent": 0, "memory_used_mib": 3, "memory_total_mib": 15360}, {"index": 1, "name": "Tesla T4", "utilization_percent": 0, "memory_used_mib": 3, "memory_total_mib": 15360}]}
+[worker 0] {"event": "worker_start", "timestamp_utc": "2026-10-22T08:47:58.284956+00:00", "worker": 0, "pid": 46, "device": "cuda:0", "visible_devices": "0"}
+[worker 0] {"event": "case_start", "timestamp_utc": "2026-10-22T08:47:58.292398+00:00", "interaction": "ferminet", "seed": 11, "pid": 46, "status": "initializing", "device": "cuda:0"}
+[worker 1] {"event": "worker_start", "timestamp_utc": "2026-10-22T08:47:58.339185+00:00", "worker": 1, "pid": 48, "device": "cuda:0", "visible_devices": "1"}
+[worker 1] {"event": "case_start", "timestamp_utc": "2026-10-22T08:47:58.346796+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "initializing", "device": "cuda:0"}
+[worker 0] {"event": "progress", "timestamp_utc": "2026-10-22T08:48:01.595192+00:00", "interaction": "ferminet", "seed": 11, "pid": 46, "status": "burn_in", "burn_in_steps": 0, "requested_burn_in_steps": 500}
+[worker 1] {"event": "progress", "timestamp_utc": "2026-10-22T08:48:01.733786+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "burn_in", "burn_in_steps": 0, "requested_burn_in_steps": 500}
+[worker 0] {"event": "progress", "timestamp_utc": "2026-10-22T08:48:04.919455+00:00", "interaction": "ferminet", "seed": 11, "pid": 46, "status": "precision_audit", "epoch": 0}
+[worker 0] {"event": "progress", "timestamp_utc": "2026-10-22T08:48:05.257039+00:00", "interaction": "ferminet", "seed": 11, "pid": 46, "status": "training", "epoch": 0, "num_epochs": 20000}
+[worker 1] {"event": "progress", "timestamp_utc": "2026-10-22T08:48:05.498110+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "precision_audit", "epoch": 0}
+[worker 0] {"event": "training_step", "timestamp_utc": "2026-10-22T08:48:05.654798+00:00", "interaction": "ferminet", "seed": 11, "pid": 46, "status": "training", "epoch": 1, "num_epochs": 20000, "energy_mean": 1.1774239540100098, "energy_var": 2.740683078765869, "acceptance": 0.208984375, "stage": 1, "step_seconds": 0.3968965649999916, "training_seconds": 0.3974005169999941, "learning_rates": [0.0009999975572749199], "remaining_budget_seconds": 8399.602599483, "estimated_training_seconds_left": 7937.534403434832}
+[worker 1] {"event": "progress", "timestamp_utc": "2026-10-22T08:48:05.996839+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "training", "epoch": 0, "num_epochs": 20000}
+[worker 1] {"event": "training_step", "timestamp_utc": "2026-10-22T08:48:06.394938+00:00", "interaction": "psiformer", "seed": 11, "pid": 48, "status": "training", "epoch": 1, "num_epochs": 20000, "energy_mean": -0.41233396530151367, "energy_var": 1.522780418395996, "acceptance": 0.240234375, "stage": 1, "step_seconds": 0.39720289699999967, "training_seconds": 0.39787944800002606, "learning_rates": [0.0009999975572749199], "remaining_budget_seconds": 8399.602120552, "estimated_training_seconds_left": 7943.660737102993}

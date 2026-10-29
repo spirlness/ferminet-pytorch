@@ -1,0 +1,113 @@
+{
+  "total_samples": 32768,
+  "num_valid": 32768,
+  "num_invalid": 0,
+  "energy_mean": -1.061188645486632,
+  "energy_var": 0.12347790010118279,
+  "energy_std": 0.3513942232040572,
+  "energy_sem": 0.0028864999792503196,
+  "energy_sem_naive": 0.0019411971726356885,
+  "energy_sem_ess": 0.0028864999792503196,
+  "energy_sem_block": 0.0018956582082071973,
+  "energy_ci95": [
+    -1.0668461854459625,
+    -1.0555311055273013
+  ],
+  "interval_method": "approximate_normal_95_percent",
+  "rho_1": 0.22706737207822716,
+  "rho_1_batch": -0.12998098624673735,
+  "tau_int": 2.2110767466815275,
+  "ess_fraction": 0.45226833555227786,
+  "effective_sample_size": 14819.92881937704,
+  "split_rhat": 1.0168836645375634,
+  "reblocking": [
+    {
+      "block_length": 1,
+      "num_blocks": 64,
+      "sem": 0.0018956582082071973
+    },
+    {
+      "block_length": 2,
+      "num_blocks": 32,
+      "sem": 0.0018157037365737548
+    },
+    {
+      "block_length": 4,
+      "num_blocks": 16,
+      "sem": 0.0018760561314789621
+    }
+  ],
+  "blocking_plateau": false,
+  "diagnostics_status": "insufficient_evidence",
+  "diagnostics_reasons": [
+    "fewer_than_128_time_records",
+    "split_rhat_above_1.01",
+    "no_reblocking_plateau"
+  ],
+  "decorrelation_steps": 20,
+  "eval_time_sec": 49.189241307999964,
+  "time_records": 64,
+  "requested_time_records": 64,
+  "energy_batch_size": 128,
+  "burn_in_seconds": 7.3907769499999745,
+  "production_seconds": 41.79846547799997,
+  "seed": 900113,
+  "stopping_reason": "completed",
+  "mcmc_acceptance": 0.21484375,
+  "mcmc_step_size": 1.0653444050850198,
+  "spin_projection": "singlet",
+  "trajectory_path": "/kaggle/working/ferminet_results/ferminet_seed11_D/evaluation/energy.pt",
+  "observations_manifest": "/kaggle/working/ferminet_results/ferminet_seed11_D/evaluation/observations/manifest.json",
+  "reference_label": "H2 BO singlet, R=1.4 bohr",
+  "reference_source": "https://doi.org/10.1103/PhysRevA.82.032509",
+  "chemical_accuracy_met": false,
+  "chemical_accuracy_status": "insufficient_evidence",
+  "exact_energy": -1.17447571422,
+  "abs_error_ha": 0.11328706873336802,
+  "abs_error_mha": 113.28706873336802,
+  "abs_error_kcal": 71.0887089118776,
+  "hf_energy": -1.13362957,
+  "correlation_retrieved_pct": -177.35070444641434,
+  "tail_summary": {
+    "total_samples": 32768,
+    "energy_mean": -1.061188645486632,
+    "regions_overlap": true,
+    "regions": {
+      "far_nearest_nucleus_gt_3": {
+        "count": 10401,
+        "extreme_count": 2714,
+        "top_count": 3,
+        "variance_share": 0.7431977471682778,
+        "signed_error_contribution_mha": 132.1069071515731
+      },
+      "near_nucleus_lt_0.05": {
+        "count": 14,
+        "extreme_count": 10,
+        "top_count": 0,
+        "variance_share": 0.002107991043557284,
+        "signed_error_contribution_mha": -0.26008447865883433
+      },
+      "near_electron_lt_0.1": {
+        "count": 1,
+        "extreme_count": 1,
+        "top_count": 0,
+        "variance_share": 0.00027057880391551315,
+        "signed_error_contribution_mha": 0.035388055054280554
+      }
+    },
+    "extreme_threshold_abs_error_ha": 0.5,
+    "extreme_count": 2950,
+    "top_count": 3,
+    "top_variance_share": 0.005762357732352907,
+    "limits": "Spatial flags overlap; variance attribution does not establish a causal mechanism."
+  },
+  "extreme_precision_audit": {
+    "passed": true,
+    "points": 32,
+    "max_log_difference": 1.0285367908480225e-06,
+    "energy_rms_difference_ha": 9.376462252335259e-07,
+    "max_energy_difference_ha": 2.4867796608596393e-06,
+    "scope": "Fixed sampled points only; no universal error bound"
+  },
+  "total_with_observations_seconds": 49.49259125200001
+}

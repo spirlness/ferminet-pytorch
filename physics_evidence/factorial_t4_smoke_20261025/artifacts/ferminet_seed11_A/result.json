@@ -1,0 +1,183 @@
+{
+  "seed": 11,
+  "arm": "A",
+  "case_id": "ferminet_seed11_A",
+  "status": "completed",
+  "epochs": 20,
+  "cumulative_parent_plus_updates": 50020,
+  "parent_checkpoint_sha256": "52c2fd0c364924ffbcecf66a071b3ecf539ec4c3748fe10fa21c384cbbe63cd3",
+  "model_identity": {
+    "n_up": 1,
+    "n_down": 1,
+    "num_determinants": 8,
+    "num_layers": 3,
+    "hidden_dim_one": 64,
+    "hidden_dim_two": 16,
+    "interaction_type": "ferminet",
+    "eps": 1e-24,
+    "envelope_type": "gaussian",
+    "envelope_scale": 2.0,
+    "smooth_cuspless": true,
+    "spin_mode": "singlet",
+    "jastrow_class": "KatoCuspJastrow"
+  },
+  "precision_before": {
+    "passed": true,
+    "points": 32,
+    "max_log_difference": 7.75840296007857e-07,
+    "energy_rms_difference_ha": 4.6659956698187855e-07,
+    "max_energy_difference_ha": 1.2035620935435531e-06,
+    "scope": "Fixed sampled points only; no universal error bound"
+  },
+  "precision_after": {
+    "passed": true,
+    "points": 32,
+    "max_log_difference": 5.59151666301716e-07,
+    "energy_rms_difference_ha": 3.8884675619391996e-07,
+    "max_energy_difference_ha": 1.3803947940260741e-06,
+    "scope": "Fixed sampled points only; no universal error bound"
+  },
+  "checkpoint_sha256": "a737a0c5956de746d033140cf886704e9985545363ed5c40f14ad3628046049f",
+  "zero_evaluation": "zero_seed11_gaussian/result.json",
+  "evaluation": {
+    "total_samples": 32768,
+    "num_valid": 32768,
+    "num_invalid": 0,
+    "energy_mean": -1.1737759700813866,
+    "energy_var": 0.0032445053566426533,
+    "energy_std": 0.05696055965879069,
+    "energy_sem": 0.0003357966224911273,
+    "energy_sem_naive": 0.0003146656093352484,
+    "energy_sem_ess": 0.0003172431232125045,
+    "energy_sem_block": 0.0003357966224911273,
+    "energy_ci95": [
+      -1.1744341314614692,
+      -1.1731178087013039
+    ],
+    "interval_method": "approximate_normal_95_percent",
+    "rho_1": 0.008224827780502016,
+    "rho_1_batch": -0.021692440865591977,
+    "tau_int": 1.0164496555610039,
+    "ess_fraction": 0.9838165565101944,
+    "effective_sample_size": 32237.70092372605,
+    "split_rhat": 1.0000629309065443,
+    "reblocking": [
+      {
+        "block_length": 1,
+        "num_blocks": 64,
+        "sem": 0.00032142378534462374
+      },
+      {
+        "block_length": 2,
+        "num_blocks": 32,
+        "sem": 0.0003165628950920414
+      },
+      {
+        "block_length": 4,
+        "num_blocks": 16,
+        "sem": 0.0003357966224911273
+      }
+    ],
+    "blocking_plateau": false,
+    "diagnostics_status": "insufficient_evidence",
+    "diagnostics_reasons": [
+      "fewer_than_128_time_records",
+      "no_reblocking_plateau"
+    ],
+    "decorrelation_steps": 20,
+    "eval_time_sec": 50.516179351999995,
+    "time_records": 64,
+    "requested_time_records": 64,
+    "energy_batch_size": 128,
+    "burn_in_seconds": 7.658153872000014,
+    "production_seconds": 42.85802723799998,
+    "seed": 900110,
+    "stopping_reason": "completed",
+    "mcmc_acceptance": 0.208984375,
+    "mcmc_step_size": 0.9008850145673793,
+    "spin_projection": "singlet",
+    "trajectory_path": "/kaggle/working/ferminet_results/ferminet_seed11_A/evaluation/energy.pt",
+    "observations_manifest": "/kaggle/working/ferminet_results/ferminet_seed11_A/evaluation/observations/manifest.json",
+    "reference_label": "H2 BO singlet, R=1.4 bohr",
+    "reference_source": "https://doi.org/10.1103/PhysRevA.82.032509",
+    "chemical_accuracy_met": false,
+    "chemical_accuracy_status": "insufficient_evidence",
+    "exact_energy": -1.17447571422,
+    "abs_error_ha": 0.0006997441386134007,
+    "abs_error_mha": 0.6997441386134007,
+    "abs_error_kcal": 0.4390960763558781,
+    "hf_energy": -1.13362957,
+    "correlation_retrieved_pct": 98.28687835296145,
+    "tail_summary": {
+      "total_samples": 32768,
+      "energy_mean": -1.1737759700813866,
+      "regions_overlap": true,
+      "regions": {
+        "far_nearest_nucleus_gt_3": {
+          "count": 1315,
+          "extreme_count": 7,
+          "top_count": 3,
+          "variance_share": 0.8917661033830863,
+          "signed_error_contribution_mha": -0.24044269307297303
+        },
+        "near_nucleus_lt_0.05": {
+          "count": 15,
+          "extreme_count": 5,
+          "top_count": 0,
+          "variance_share": 0.023131380510915508,
+          "signed_error_contribution_mha": -0.17379601267686995
+        },
+        "near_electron_lt_0.1": {
+          "count": 4,
+          "extreme_count": 0,
+          "top_count": 0,
+          "variance_share": 0.0016717250003005677,
+          "signed_error_contribution_mha": 0.025011558167597748
+        }
+      },
+      "extreme_threshold_abs_error_ha": 0.5,
+      "extreme_count": 11,
+      "top_count": 3,
+      "top_variance_share": 0.8498263853482823,
+      "limits": "Spatial flags overlap; variance attribution does not establish a causal mechanism."
+    },
+    "extreme_precision_audit": {
+      "passed": true,
+      "points": 32,
+      "max_log_difference": 2.2724722299471978e-06,
+      "energy_rms_difference_ha": 2.517572994885496e-06,
+      "max_energy_difference_ha": 8.177651821483778e-06,
+      "scope": "Fixed sampled points only; no universal error bound"
+    },
+    "total_with_observations_seconds": 50.84390430299999
+  },
+  "training_seconds": 4.656557580000026,
+  "init_seconds": 23.900085491000027,
+  "rethermalization_seconds": 7.238447202000032,
+  "step_seconds": [
+    0.39149895399998513,
+    0.25191327300001376,
+    0.24396096899999975,
+    0.2394053589999885,
+    0.22000054800003,
+    0.21910423999997874,
+    0.2191156349999801,
+    0.22638613999998825,
+    0.22550877800000535,
+    0.21928886799997827,
+    0.22012278899995863,
+    0.21878615599996465,
+    0.22260862699999961,
+    0.2201969850000296,
+    0.2182699559999719,
+    0.22056807799998523,
+    0.21800153799995314,
+    0.22458018899999388,
+    0.21768623200000548,
+    0.21694184399996175
+  ],
+  "device": {
+    "visible_devices": "0",
+    "name": "Tesla T4"
+  }
+}

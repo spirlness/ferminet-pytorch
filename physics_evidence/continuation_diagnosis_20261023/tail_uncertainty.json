@@ -1,0 +1,176 @@
+[
+  {
+    "case": "ferminet_seed11",
+    "block_size": 128,
+    "block_count": 16,
+    "bootstrap_replicates": 20000,
+    "block_bootstrap_percentile_ci95_Ha": [
+      -1.1737740705710658,
+      -1.1735636321771805
+    ],
+    "signed_error_ci95_mHa": [
+      0.7016436489342137,
+      0.9120820428194509
+    ],
+    "half_mean_difference_mHa": 0.06705660255312829,
+    "energy_below_minus2_count": 141,
+    "energy_below_minus2_variance_share": 0.8093161872095161,
+    "energy_above_zero_count": 0,
+    "eight_segment_means": [
+      -1.1738903226197799,
+      -1.1736818577680208,
+      -1.1735728714413396,
+      -1.1736578166903746,
+      -1.1735949826360335,
+      -1.1736550075234946,
+      -1.1734813743148553,
+      -1.1738032776349188
+    ],
+    "limits": "Conditional empirical block bootstrap cannot account for unsampled tails/modes; only 16 blocks; no new observations."
+  },
+  {
+    "case": "ferminet_seed22",
+    "block_size": 128,
+    "block_count": 16,
+    "bootstrap_replicates": 20000,
+    "block_bootstrap_percentile_ci95_Ha": [
+      -1.1728925939379633,
+      -1.1727442802600254
+    ],
+    "signed_error_ci95_mHa": [
+      1.5831202820366652,
+      1.7314339599745487
+    ],
+    "half_mean_difference_mHa": -0.18051858830991918,
+    "energy_below_minus2_count": 165,
+    "energy_below_minus2_variance_share": 0.8964158680341797,
+    "energy_above_zero_count": 0,
+    "eight_segment_means": [
+      -1.1727809205674893,
+      -1.172676091216331,
+      -1.1726255258000478,
+      -1.1728300653456603,
+      -1.1730019888627763,
+      -1.1727794338611999,
+      -1.1728935373675748,
+      -1.1729597171912163
+    ],
+    "limits": "Conditional empirical block bootstrap cannot account for unsampled tails/modes; only 16 blocks; no new observations."
+  },
+  {
+    "case": "ferminet_seed33",
+    "block_size": 128,
+    "block_count": 16,
+    "bootstrap_replicates": 20000,
+    "block_bootstrap_percentile_ci95_Ha": [
+      -1.1732829794764859,
+      -1.1731656621968372
+    ],
+    "signed_error_ci95_mHa": [
+      1.1927347435141122,
+      1.310052023162811
+    ],
+    "half_mean_difference_mHa": 0.05707238574981233,
+    "energy_below_minus2_count": 122,
+    "energy_below_minus2_variance_share": 0.8113287760214417,
+    "energy_above_zero_count": 0,
+    "eight_segment_means": [
+      -1.1732928594221546,
+      -1.1733559584395135,
+      -1.1732507235597704,
+      -1.173105037529615,
+      -1.1732631664694133,
+      -1.1731632688117495,
+      -1.1732688058743361,
+      -1.1730810482525553
+    ],
+    "limits": "Conditional empirical block bootstrap cannot account for unsampled tails/modes; only 16 blocks; no new observations."
+  },
+  {
+    "case": "psiformer_seed11",
+    "block_size": 128,
+    "block_count": 16,
+    "bootstrap_replicates": 20000,
+    "block_bootstrap_percentile_ci95_Ha": [
+      -1.1715478130509276,
+      -1.1711923990267663
+    ],
+    "signed_error_ci95_mHa": [
+      2.9279011690723777,
+      3.28331519323366
+    ],
+    "half_mean_difference_mHa": -0.14817517244924971,
+    "energy_below_minus2_count": 101,
+    "energy_below_minus2_variance_share": 0.8950202187265851,
+    "energy_above_zero_count": 70,
+    "eight_segment_means": [
+      -1.1711320109245733,
+      -1.1714176547390938,
+      -1.171072251549634,
+      -1.171524487811427,
+      -1.1713036617234307,
+      -1.1710505611058566,
+      -1.1715641615684318,
+      -1.1718207213168053
+    ],
+    "limits": "Conditional empirical block bootstrap cannot account for unsampled tails/modes; only 16 blocks; no new observations."
+  },
+  {
+    "case": "psiformer_seed22",
+    "block_size": 128,
+    "block_count": 16,
+    "bootstrap_replicates": 20000,
+    "block_bootstrap_percentile_ci95_Ha": [
+      -1.1726638357988233,
+      -1.1723071938323002
+    ],
+    "signed_error_ci95_mHa": [
+      1.8118784211766936,
+      2.1685203876997683
+    ],
+    "half_mean_difference_mHa": 0.25431268784048555,
+    "energy_below_minus2_count": 196,
+    "energy_below_minus2_variance_share": 0.8159877284846587,
+    "energy_above_zero_count": 127,
+    "eight_segment_means": [
+      -1.1727016240244659,
+      -1.1728376462062617,
+      -1.1726181312808603,
+      -1.1723024679919054,
+      -1.1725154962998918,
+      -1.1720874087345365,
+      -1.1723758497370325,
+      -1.1724638639806715
+    ],
+    "limits": "Conditional empirical block bootstrap cannot account for unsampled tails/modes; only 16 blocks; no new observations."
+  },
+  {
+    "case": "psiformer_seed33",
+    "block_size": 128,
+    "block_count": 16,
+    "bootstrap_replicates": 20000,
+    "block_bootstrap_percentile_ci95_Ha": [
+      -1.1710892175246255,
+      -1.1707166929121269
+    ],
+    "signed_error_ci95_mHa": [
+      3.386496695374497,
+      3.7590213078730894
+    ],
+    "half_mean_difference_mHa": 0.1887991350542073,
+    "energy_below_minus2_count": 132,
+    "energy_below_minus2_variance_share": 0.9148987010568563,
+    "energy_above_zero_count": 39,
+    "eight_segment_means": [
+      -1.1713077859056473,
+      -1.170974768044545,
+      -1.1705636168073552,
+      -1.17109159290992,
+      -1.1705714296133323,
+      -1.1706835934648354,
+      -1.1708300217383607,
+      -1.1710975223107216
+    ],
+    "limits": "Conditional empirical block bootstrap cannot account for unsampled tails/modes; only 16 blocks; no new observations."
+  }
+]

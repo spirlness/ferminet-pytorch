@@ -1,0 +1,82 @@
+{
+  "kernel": "hwbwhzbsh/ferminet-t4x2-multiseed",
+  "kernel_version": 2,
+  "source_commit": "d2618dfb6780f1da49f0bb4ab247d29ec15e41f8",
+  "archived_at_utc": "2026-10-22T14:12:37.304529+00:00",
+  "origin": "Kaggle kernels output and kernels_logs; downloaded after COMPLETE",
+  "files": {
+    "console.log": {
+      "bytes": 3341504,
+      "sha256": "3065aba0df3869fb65a778045e7cb17ea44db4901ed1a2f8e859a691c1a8a8a7"
+    },
+    "ferminet_results/bootstrap.json": {
+      "bytes": 390,
+      "sha256": "4985d645cd68c50901f4ceffc67750ad09c12045e22fa9a3a461fc21f7b48aea"
+    },
+    "ferminet_results/campaign.json": {
+      "bytes": 5198,
+      "sha256": "c3ce5325f777d05ea85e6f6d1741eebb96211f99e3727f5ee77eb828575c2316"
+    },
+    "ferminet_results/summary.json": {
+      "bytes": 37939,
+      "sha256": "36cc56b35911f3c76e0bb867e928b739bb9ac46305fc7dda85bf597bc36aec1d"
+    },
+    "ferminet_results/runtime_tests_gpu0.log": {
+      "bytes": 573,
+      "sha256": "d2615e49f3a15ccd29284c6184360417fd64c929da5d9bb62eda4d9a7e8e4153"
+    },
+    "ferminet_results/runtime_tests_gpu1.log": {
+      "bytes": 572,
+      "sha256": "714b0e345c32ce62d5ce93c6176f374e16aa2fd1be2f1db4de6cb2bd5f3eeb3f"
+    },
+    "ferminet_results/ferminet_seed11/result.json": {
+      "bytes": 4548,
+      "sha256": "6dc7723e5d767b8bb524f909edb742883ea1c3317e6575a6479dcb352c4dc3b9"
+    },
+    "ferminet_results/ferminet_seed11/manifest.json": {
+      "bytes": 5120,
+      "sha256": "648365e94980f2a14486ec851c63b43ee76b282c9c8383a661679d5b8c4a7484"
+    },
+    "ferminet_results/ferminet_seed22/result.json": {
+      "bytes": 4562,
+      "sha256": "ca75e6b06d63fb71403f4cb3e7ea2ffd6cb480d0cc617a92ce34438bb4e890f6"
+    },
+    "ferminet_results/ferminet_seed22/manifest.json": {
+      "bytes": 5120,
+      "sha256": "085749666e934ae5053710346914904e441c54328dacb232090e3f203760c21a"
+    },
+    "ferminet_results/ferminet_seed33/result.json": {
+      "bytes": 4562,
+      "sha256": "747e30ae38f5f74f980b610f8b502af860e2e56f0ed9853ebcb8067c7efeee9c"
+    },
+    "ferminet_results/ferminet_seed33/manifest.json": {
+      "bytes": 5120,
+      "sha256": "0570ad9d7d042ee71b36e6d669fd3d657406a299433e94e3dbb1bce100673b6c"
+    },
+    "ferminet_results/psiformer_seed11/result.json": {
+      "bytes": 4561,
+      "sha256": "6c4214c393d94d2ef96ab08d60940c676555bf71647cb467e5219dc5818bdb30"
+    },
+    "ferminet_results/psiformer_seed11/manifest.json": {
+      "bytes": 5121,
+      "sha256": "a0e87d7fb9086f0b5ae182827946838db0743649c6586bfecbf002bf26d231ac"
+    },
+    "ferminet_results/psiformer_seed22/result.json": {
+      "bytes": 4556,
+      "sha256": "2a98fb060c586bf5fab449cd35dc37bbdf47fbc8036aae3b3590edc8a852c2a5"
+    },
+    "ferminet_results/psiformer_seed22/manifest.json": {
+      "bytes": 5121,
+      "sha256": "b2323dc822217af81ea3d2df86dbd14deed45fb5482607887a3e895861d957ea"
+    },
+    "ferminet_results/psiformer_seed33/result.json": {
+      "bytes": 4567,
+      "sha256": "ca3c7574d9646bef4a4e0897494b9ff1aadcc68e4a54f3f39ecdf5a1c71ef867"
+    },
+    "ferminet_results/psiformer_seed33/manifest.json": {
+      "bytes": 5121,
+      "sha256": "0614c3e934a09d19578a2cfdc16cf434a902ba420796d63146a3b4409757e598"
+    }
+  },
+  "scope": "Raw result, source/configuration manifests, runtime tests and decoded console log. Checkpoint and evaluation trajectory .pt files are not archived here; hashes/paths are recorded in results and outputs remain on Kaggle."
+}

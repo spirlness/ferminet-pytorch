@@ -1,5 +1,7 @@
 # FermiNet-PyTorch 综合深度代码审查报告 (Code Review)
 
+> 历史审查（2026-10-15）：保留当时的问题、接口与测试基线，不能据此判断当前版本的问题状态或测试覆盖。当前 0.3.0 架构见[重构说明](ARCHITECTURE_REDUNDANCY_REVIEW_AND_REFACTORING_PROPOSAL.md)，后续修复与验收分别见[物理正确性报告](PHYSICS_CORRECTNESS_REPORT.md)及[第二轮报告](REFACTOR_PHASE2_REPORT.md)。
+
 **审查基准版本**：`ferminet_pytorch` (Python 3.9+, PyTorch 2.0+)  
 **审查时间**：2026-10-15  
 **工作目录**：`c:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch`  

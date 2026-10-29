@@ -1,0 +1,183 @@
+{
+  "seed": 11,
+  "arm": "C",
+  "case_id": "ferminet_seed11_C",
+  "status": "completed",
+  "epochs": 20,
+  "cumulative_parent_plus_updates": 50020,
+  "parent_checkpoint_sha256": "52c2fd0c364924ffbcecf66a071b3ecf539ec4c3748fe10fa21c384cbbe63cd3",
+  "model_identity": {
+    "n_up": 1,
+    "n_down": 1,
+    "num_determinants": 8,
+    "num_layers": 3,
+    "hidden_dim_one": 64,
+    "hidden_dim_two": 16,
+    "interaction_type": "ferminet",
+    "eps": 1e-24,
+    "envelope_type": "soft_exponential",
+    "envelope_scale": 2.0,
+    "smooth_cuspless": true,
+    "spin_mode": "singlet",
+    "jastrow_class": "KatoCuspJastrow"
+  },
+  "precision_before": {
+    "passed": true,
+    "points": 32,
+    "max_log_difference": 4.734099059433561e-07,
+    "energy_rms_difference_ha": 3.496213959910723e-07,
+    "max_energy_difference_ha": 8.003599476502643e-07,
+    "scope": "Fixed sampled points only; no universal error bound"
+  },
+  "precision_after": {
+    "passed": true,
+    "points": 32,
+    "max_log_difference": 5.56125488770931e-07,
+    "energy_rms_difference_ha": 5.792541256349462e-07,
+    "max_energy_difference_ha": 1.5330169877980637e-06,
+    "scope": "Fixed sampled points only; no universal error bound"
+  },
+  "checkpoint_sha256": "c1108429920807dfff0554bccaddf1d64af4ee6f7012592df0db401d81f2d420",
+  "zero_evaluation": "zero_seed11_soft_exponential\\result.json",
+  "evaluation": {
+    "total_samples": 32768,
+    "num_valid": 32768,
+    "num_invalid": 0,
+    "energy_mean": -0.6713884360451472,
+    "energy_var": 0.50485530273478,
+    "energy_std": 0.7105317042432238,
+    "energy_sem": 0.004656911752768343,
+    "energy_sem_naive": 0.00392517020561264,
+    "energy_sem_ess": 0.004656911752768343,
+    "energy_sem_block": 0.0043756421971729385,
+    "energy_ci95": [
+      -0.6805159830805732,
+      -0.6622608890097212
+    ],
+    "interval_method": "approximate_normal_95_percent",
+    "rho_1": 0.10805822363375321,
+    "rho_1_batch": 0.20142173949679149,
+    "tau_int": 1.4075992580070893,
+    "ess_fraction": 0.7104294736669743,
+    "effective_sample_size": 23279.352993119413,
+    "split_rhat": 1.0062409505718686,
+    "reblocking": [
+      {
+        "block_length": 1,
+        "num_blocks": 64,
+        "sem": 0.0035157549394415934
+      },
+      {
+        "block_length": 2,
+        "num_blocks": 32,
+        "sem": 0.0038328639219057737
+      },
+      {
+        "block_length": 4,
+        "num_blocks": 16,
+        "sem": 0.0043756421971729385
+      }
+    ],
+    "blocking_plateau": false,
+    "diagnostics_status": "insufficient_evidence",
+    "diagnostics_reasons": [
+      "fewer_than_128_time_records",
+      "no_reblocking_plateau"
+    ],
+    "decorrelation_steps": 20,
+    "eval_time_sec": 105.88962609998998,
+    "time_records": 64,
+    "requested_time_records": 64,
+    "energy_batch_size": 128,
+    "burn_in_seconds": 13.08523339999374,
+    "production_seconds": 92.80439390000538,
+    "seed": 900112,
+    "stopping_reason": "completed",
+    "mcmc_acceptance": 0.2578125,
+    "mcmc_step_size": 1.2292012131175996,
+    "spin_projection": "singlet",
+    "trajectory_path": "C:\\Users\\Administrator\\.gemini\\antigravity\\scratch\\ferminet_pytorch\\campaign_runs\\factorial_local_20261025\\ferminet_seed11_C\\evaluation\\energy.pt",
+    "observations_manifest": "C:\\Users\\Administrator\\.gemini\\antigravity\\scratch\\ferminet_pytorch\\campaign_runs\\factorial_local_20261025\\ferminet_seed11_C\\evaluation\\observations\\manifest.json",
+    "reference_label": "H2 BO singlet, R=1.4 bohr",
+    "reference_source": "https://doi.org/10.1103/PhysRevA.82.032509",
+    "chemical_accuracy_met": false,
+    "chemical_accuracy_status": "insufficient_evidence",
+    "exact_energy": -1.17447571422,
+    "abs_error_ha": 0.5030872781748528,
+    "abs_error_mha": 503.08727817485277,
+    "abs_error_kcal": 315.6920333035935,
+    "hf_energy": -1.13362957,
+    "correlation_retrieved_pct": -1131.6640598074407,
+    "tail_summary": {
+      "total_samples": 32768,
+      "energy_mean": -0.6713884360451472,
+      "regions_overlap": true,
+      "regions": {
+        "far_nearest_nucleus_gt_3": {
+          "count": 26920,
+          "extreme_count": 13005,
+          "top_count": 3,
+          "variance_share": 0.8690506265194686,
+          "signed_error_contribution_mha": 516.9435914418507
+        },
+        "near_nucleus_lt_0.05": {
+          "count": 13,
+          "extreme_count": 10,
+          "top_count": 0,
+          "variance_share": 0.0007652420609734232,
+          "signed_error_contribution_mha": -0.06624007090671544
+        },
+        "near_electron_lt_0.1": {
+          "count": 1,
+          "extreme_count": 0,
+          "top_count": 0,
+          "variance_share": 1.5452711049693944e-05,
+          "signed_error_contribution_mha": -7.657838258260194e-05
+        }
+      },
+      "extreme_threshold_abs_error_ha": 0.5,
+      "extreme_count": 13110,
+      "top_count": 3,
+      "top_variance_share": 0.0019498210755755786,
+      "limits": "Spatial flags overlap; variance attribution does not establish a causal mechanism."
+    },
+    "extreme_precision_audit": {
+      "passed": true,
+      "points": 32,
+      "max_log_difference": 1.1284916645593057e-06,
+      "energy_rms_difference_ha": 1.2171291958279424e-06,
+      "max_energy_difference_ha": 3.178876268883357e-06,
+      "scope": "Fixed sampled points only; no universal error bound"
+    },
+    "total_with_observations_seconds": 106.3729056000011
+  },
+  "training_seconds": 7.533485499996459,
+  "init_seconds": 33.58149160002358,
+  "rethermalization_seconds": 10.750344500003848,
+  "step_seconds": [
+    0.4427655000181403,
+    0.3865319000033196,
+    0.4016585999925155,
+    0.4554741000174545,
+    0.4129187000216916,
+    0.29644929998903535,
+    0.39946100002271123,
+    0.4014849000086542,
+    0.37653219999629073,
+    0.4299744999734685,
+    0.3495476999960374,
+    0.36355660000117496,
+    0.3412904000142589,
+    0.4403782000008505,
+    0.34423570000217296,
+    0.35493729999870993,
+    0.3168897000141442,
+    0.4094956000044476,
+    0.3172387000231538,
+    0.2900511000188999
+  ],
+  "device": {
+    "visible_devices": null,
+    "name": "NVIDIA GeForce RTX 3060 Laptop GPU"
+  }
+}

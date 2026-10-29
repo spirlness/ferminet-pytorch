@@ -1,0 +1,582 @@
+test_cuda_numerical_equivalence_float64 (test_compile.TestCompileNumericalEquivalence.test_cuda_numerical_equivalence_float64)
+GPU (CUDA) 双精度下 Inductor 编译与 Eager 模式绝对误差严格 < 1e-6 且符号完全一致. ... In file included from //?/F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/driver.c:2:
+In file included from F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/include/cuda.h:56:
+In file included from G:/msys2/ucrt64/include/stdlib.h:9:
+In file included from G:/msys2/ucrt64/include/corecrt.h:10:
+In file included from G:/msys2/ucrt64/include/_mingw.h:306:
+G:/msys2/ucrt64/include/vadefs.h:35: error: #error VARARGS not implemented for this compiler
+ERROR
+test_cuda_numerical_equivalence_float32 (test_compile.TestCompileNumericalEquivalence.test_cuda_numerical_equivalence_float32)
+GPU (CUDA) 单精度下 Inductor 融合编译输出绝对误差 < 1e-5 (浮点重排容差) 且符号精确一致. ... In file included from //?/F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/driver.c:2:
+In file included from F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/include/cuda.h:56:
+In file included from G:/msys2/ucrt64/include/stdlib.h:9:
+In file included from G:/msys2/ucrt64/include/corecrt.h:10:
+In file included from G:/msys2/ucrt64/include/_mingw.h:306:
+G:/msys2/ucrt64/include/vadefs.h:35: error: #error VARARGS not implemented for this compiler
+In file included from //?/F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/driver.c:2:
+In file included from F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/include/cuda.h:56:
+In file included from G:/msys2/ucrt64/include/stdlib.h:9:
+In file included from G:/msys2/ucrt64/include/corecrt.h:10:
+In file included from G:/msys2/ucrt64/include/_mingw.h:306:
+G:/msys2/ucrt64/include/vadefs.h:35: error: #error VARARGS not implemented for this compiler
+In file included from //?/F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/driver.c:2:
+In file included from F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/include/cuda.h:56:
+In file included from G:/msys2/ucrt64/include/stdlib.h:9:
+In file included from G:/msys2/ucrt64/include/corecrt.h:10:
+In file included from G:/msys2/ucrt64/include/_mingw.h:306:
+G:/msys2/ucrt64/include/vadefs.h:35: error: #error VARARGS not implemented for this compiler
+In file included from //?/F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/driver.c:2:
+In file included from F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/include/cuda.h:56:
+In file included from G:/msys2/ucrt64/include/stdlib.h:9:
+In file included from G:/msys2/ucrt64/include/corecrt.h:10:
+In file included from G:/msys2/ucrt64/include/_mingw.h:306:
+G:/msys2/ucrt64/include/vadefs.h:35: error: #error VARARGS not implemented for this compiler
+W1022 13:07:20.131000 18524 site-packages\torch\_inductor\utils.py:1806] [0/1] Not enough SMs to use max_autotune_gemm mode
+In file included from //?/F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/driver.c:2:
+In file included from F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/include/cuda.h:56:
+In file included from G:/msys2/ucrt64/include/stdlib.h:9:
+In file included from G:/msys2/ucrt64/include/corecrt.h:10:
+In file included from G:/msys2/ucrt64/include/_mingw.h:306:
+G:/msys2/ucrt64/include/vadefs.h:35: error: #error VARARGS not implemented for this compiler
+ERROR
+test_cuda_mcmc_sampler_with_inductor_forward (test_compile.TestCompileMCMCSampler.test_cuda_mcmc_sampler_with_inductor_forward)
+GPU (CUDA) 环境下使用 Inductor 编译前向的 MCMC 采样正常. ... In file included from //?/F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/driver.c:2:
+In file included from F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/include/cuda.h:56:
+In file included from G:/msys2/ucrt64/include/stdlib.h:9:
+In file included from G:/msys2/ucrt64/include/corecrt.h:10:
+In file included from G:/msys2/ucrt64/include/_mingw.h:306:
+G:/msys2/ucrt64/include/vadefs.h:35: error: #error VARARGS not implemented for this compiler
+In file included from //?/F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/driver.c:2:
+In file included from F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/include/cuda.h:56:
+In file included from G:/msys2/ucrt64/include/stdlib.h:9:
+In file included from G:/msys2/ucrt64/include/corecrt.h:10:
+In file included from G:/msys2/ucrt64/include/_mingw.h:306:
+G:/msys2/ucrt64/include/vadefs.h:35: error: #error VARARGS not implemented for this compiler
+In file included from //?/F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/driver.c:2:
+In file included from F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/include/cuda.h:56:
+In file included from G:/msys2/ucrt64/include/stdlib.h:9:
+In file included from G:/msys2/ucrt64/include/corecrt.h:10:
+In file included from G:/msys2/ucrt64/include/_mingw.h:306:
+G:/msys2/ucrt64/include/vadefs.h:35: error: #error VARARGS not implemented for this compiler
+In file included from //?/F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/driver.c:2:
+In file included from F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/include/cuda.h:56:
+In file included from G:/msys2/ucrt64/include/stdlib.h:9:
+In file included from G:/msys2/ucrt64/include/corecrt.h:10:
+In file included from G:/msys2/ucrt64/include/_mingw.h:306:
+G:/msys2/ucrt64/include/vadefs.h:35: error: #error VARARGS not implemented for this compiler
+Failed to compile. cc_cmd: ['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpzqlf8e86\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpzqlf8e86', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']
+Failed to compile. cc_cmd: ['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmp2d0ityno\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmp2d0ityno', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']
+Failed to compile. cc_cmd: ['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpsyf121ks\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpsyf121ks', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']
+Failed to compile. cc_cmd: ['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpywa4a5ih\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpywa4a5ih', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']
+Failed to compile. cc_cmd: ['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmp0wiztk54\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmp0wiztk54', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']
+Failed to compile. cc_cmd: ['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmp36am6t0c\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmp36am6t0c', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']
+Failed to compile. cc_cmd: ['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpdtlbpt78\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpdtlbpt78', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']
+Failed to compile. cc_cmd: ['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpgoel6402\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpgoel6402', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']
+Failed to compile. cc_cmd: ['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpprivvo2r\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpprivvo2r', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']
+Failed to compile. cc_cmd: ['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpr5ujm79m\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpr5ujm79m', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']In file included from //?/F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/driver.c:2:
+In file included from F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/include/cuda.h:56:
+In file included from G:/msys2/ucrt64/include/stdlib.h:9:
+In file included from G:/msys2/ucrt64/include/corecrt.h:10:
+In file included from G:/msys2/ucrt64/include/_mingw.h:306:
+G:/msys2/ucrt64/include/vadefs.h:35: error: #error VARARGS not implemented for this compiler
+ERROR
+test_train_vmc_compile_flag_cuda (test_compile.TestCompileVMCIntegration.test_train_vmc_compile_flag_cuda)
+GPU (CUDA) 环境下启用 compile=True 顺利完成端到端 VMC 训练并记录历史最优能量. ... In file included from //?/F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/driver.c:2:
+In file included from F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/include/cuda.h:56:
+In file included from G:/msys2/ucrt64/include/stdlib.h:9:
+In file included from G:/msys2/ucrt64/include/corecrt.h:10:
+In file included from G:/msys2/ucrt64/include/_mingw.h:306:
+G:/msys2/ucrt64/include/vadefs.h:35: error: #error VARARGS not implemented for this compiler
+In file included from //?/F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/driver.c:2:
+In file included from F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/include/cuda.h:56:
+In file included from G:/msys2/ucrt64/include/stdlib.h:9:
+In file included from G:/msys2/ucrt64/include/corecrt.h:10:
+In file included from G:/msys2/ucrt64/include/_mingw.h:306:
+G:/msys2/ucrt64/include/vadefs.h:35: error: #error VARARGS not implemented for this compiler
+In file included from //?/F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/driver.c:2:
+In file included from F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/include/cuda.h:56:
+In file included from G:/msys2/ucrt64/include/stdlib.h:9:
+In file included from G:/msys2/ucrt64/include/corecrt.h:10:
+In file included from G:/msys2/ucrt64/include/_mingw.h:306:
+G:/msys2/ucrt64/include/vadefs.h:35: error: #error VARARGS not implemented for this compiler
+In file included from //?/F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/driver.c:2:
+In file included from F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/include/cuda.h:56:
+In file included from G:/msys2/ucrt64/include/stdlib.h:9:
+In file included from G:/msys2/ucrt64/include/corecrt.h:10:
+In file included from G:/msys2/ucrt64/include/_mingw.h:306:
+G:/msys2/ucrt64/include/vadefs.h:35: error: #error VARARGS not implemented for this compiler
+In file included from //?/F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/driver.c:2:
+In file included from F:/conda/envs/torch/Lib/site-packages/triton/backends/nvidia/include/cuda.h:56:
+In file included from G:/msys2/ucrt64/include/stdlib.h:9:
+In file included from G:/msys2/ucrt64/include/corecrt.h:10:
+In file included from G:/msys2/ucrt64/include/_mingw.h:306:
+G:/msys2/ucrt64/include/vadefs.h:35: error: #error VARARGS not implemented for this compiler
+ERROR
+
+======================================================================
+ERROR: test_cuda_numerical_equivalence_float64 (test_compile.TestCompileNumericalEquivalence.test_cuda_numerical_equivalence_float64)
+GPU (CUDA) 双精度下 Inductor 编译与 Eager 模式绝对误差严格 < 1e-6 且符号完全一致.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_compile.py", line 265, in test_cuda_numerical_equivalence_float64
+    log_compiled, sign_compiled = compiled_fn(r)
+                                  ~~~~~~~~~~~^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_dynamo\eval_frame.py", line 1278, in compile_wrapper
+    raise e.remove_dynamo_frames() from None  # see TORCHDYNAMO_VERBOSE=1
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\compile_fx.py", line 1192, in _compile_fx_inner
+    raise InductorError(e, currentframe()).with_traceback(
+        e.__traceback__
+    ) from None
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\compile_fx.py", line 1169, in _compile_fx_inner
+    mb_compiled_graph = fx_codegen_and_compile(
+        gm,
+    ...<3 lines>...
+        **graph_kwargs,
+    )
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\compile_fx.py", line 2001, in fx_codegen_and_compile
+    return scheme.codegen_and_compile(gm, example_inputs, inputs_to_check, graph_kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\compile_fx.py", line 1749, in codegen_and_compile
+    compiled_module = graph.compile_to_module()
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\graph.py", line 3060, in compile_to_module
+    return self._compile_to_module()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\graph.py", line 3066, in _compile_to_module
+    self.codegen_with_cpp_wrapper() if self.cpp_wrapper else self.codegen()
+                                                             ~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\graph.py", line 3002, in codegen
+    self.scheduler.codegen()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\scheduler.py", line 10015, in codegen
+    self._codegen_partitions()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\scheduler.py", line 10167, in _codegen_partitions
+    self._codegen(partition)
+    ~~~~~~~~~~~~~^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\scheduler.py", line 10363, in _codegen
+    self.get_backend(device).codegen_node(node)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\cuda_combined_scheduling.py", line 205, in codegen_node
+    return self._triton_scheduling.codegen_node(node)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\simd.py", line 3070, in codegen_node
+    return self._codegen_nodes(nodes, coalesce_analysis)  # type: ignore[arg-type]
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\simd.py", line 3041, in _codegen_nodes
+    return self.codegen_node_schedule(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        SIMDKernelFeatures(node_schedule, numel, rnumel, coalesce_analysis)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\simd.py", line 3167, in codegen_node_schedule
+    src_code = kernel.codegen_kernel()
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\triton.py", line 7327, in codegen_kernel
+    **self.inductor_meta_common(),
+      ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\triton.py", line 6968, in inductor_meta_common
+    "backend_hash": torch.utils._triton.triton_hash_with_backend(),
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\utils\_triton.py", line 278, in triton_hash_with_backend
+    backend = triton_backend()
+  File "F:\conda\envs\torch\Lib\site-packages\torch\utils\_triton.py", line 248, in triton_backend
+    target = driver.active.get_current_target()
+             ^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\driver.py", line 52, in active
+    self._active = self.default
+                   ^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\driver.py", line 46, in default
+    self._default = _create_driver()
+                    ~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\driver.py", line 34, in _create_driver
+    return active_drivers[0]()
+           ~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\backends\nvidia\driver.py", line 362, in __init__
+    self.utils = CudaUtils()  # TODO: make static
+                 ~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\backends\nvidia\driver.py", line 121, in __init__
+    mod = compile_module_from_file(
+        src_path=os.path.join(dirname, "driver.c"),
+    ...<3 lines>...
+        libraries=libraries,
+    )
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 305, in compile_module_from_file
+    return _compile_so_from_file(src_path, name, library_dirs, include_dirs, libraries, ccflags, load_module=True)
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 273, in _compile_so_from_file
+    return _compile_so(src=src, src_path=src_path, name=name, library_dirs=library_dirs, include_dirs=include_dirs,
+                       libraries=libraries, ccflags=ccflags, language=language, load_module=load_module)
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 257, in _compile_so
+    so = _build(name, src_path, tmpdir, library_dirs or [], include_dirs or [], libraries or [], ccflags or [],
+                language=language)
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 182, in _build
+    raise e
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 179, in _build
+    subprocess.check_call(cc_cmd)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "F:\conda\envs\torch\Lib\subprocess.py", line 419, in check_call
+    raise CalledProcessError(retcode, cmd)
+torch._inductor.exc.InductorError: CalledProcessError: Command '['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpzqlf8e86\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpzqlf8e86', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']' returned non-zero exit status 1.
+
+Set TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especially if you're reporting a bug to PyTorch). For even more developer context, set TORCH_LOGS="+dynamo"
+
+
+======================================================================
+ERROR: test_cuda_numerical_equivalence_float32 (test_compile.TestCompileNumericalEquivalence.test_cuda_numerical_equivalence_float32)
+GPU (CUDA) 单精度下 Inductor 融合编译输出绝对误差 < 1e-5 (浮点重排容差) 且符号精确一致.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_compile.py", line 298, in test_cuda_numerical_equivalence_float32
+    log_compiled, sign_compiled = compiled_fn(r)
+                                  ~~~~~~~~~~~^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_dynamo\eval_frame.py", line 1278, in compile_wrapper
+    raise e.remove_dynamo_frames() from None  # see TORCHDYNAMO_VERBOSE=1
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\compile_fx.py", line 1192, in _compile_fx_inner
+    raise InductorError(e, currentframe()).with_traceback(
+        e.__traceback__
+    ) from None
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\compile_fx.py", line 1169, in _compile_fx_inner
+    mb_compiled_graph = fx_codegen_and_compile(
+        gm,
+    ...<3 lines>...
+        **graph_kwargs,
+    )
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\compile_fx.py", line 2001, in fx_codegen_and_compile
+    return scheme.codegen_and_compile(gm, example_inputs, inputs_to_check, graph_kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\compile_fx.py", line 1749, in codegen_and_compile
+    compiled_module = graph.compile_to_module()
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\graph.py", line 3060, in compile_to_module
+    return self._compile_to_module()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\graph.py", line 3066, in _compile_to_module
+    self.codegen_with_cpp_wrapper() if self.cpp_wrapper else self.codegen()
+                                                             ~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\graph.py", line 3002, in codegen
+    self.scheduler.codegen()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\scheduler.py", line 10015, in codegen
+    self._codegen_partitions()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\scheduler.py", line 10167, in _codegen_partitions
+    self._codegen(partition)
+    ~~~~~~~~~~~~~^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\scheduler.py", line 10363, in _codegen
+    self.get_backend(device).codegen_node(node)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\cuda_combined_scheduling.py", line 205, in codegen_node
+    return self._triton_scheduling.codegen_node(node)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\simd.py", line 3070, in codegen_node
+    return self._codegen_nodes(nodes, coalesce_analysis)  # type: ignore[arg-type]
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\simd.py", line 3041, in _codegen_nodes
+    return self.codegen_node_schedule(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        SIMDKernelFeatures(node_schedule, numel, rnumel, coalesce_analysis)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\simd.py", line 3167, in codegen_node_schedule
+    src_code = kernel.codegen_kernel()
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\triton.py", line 7327, in codegen_kernel
+    **self.inductor_meta_common(),
+      ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\triton.py", line 6968, in inductor_meta_common
+    "backend_hash": torch.utils._triton.triton_hash_with_backend(),
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\utils\_triton.py", line 278, in triton_hash_with_backend
+    backend = triton_backend()
+  File "F:\conda\envs\torch\Lib\site-packages\torch\utils\_triton.py", line 248, in triton_backend
+    target = driver.active.get_current_target()
+             ^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\driver.py", line 52, in active
+    self._active = self.default
+                   ^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\driver.py", line 46, in default
+    self._default = _create_driver()
+                    ~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\driver.py", line 34, in _create_driver
+    return active_drivers[0]()
+           ~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\backends\nvidia\driver.py", line 362, in __init__
+    self.utils = CudaUtils()  # TODO: make static
+                 ~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\backends\nvidia\driver.py", line 121, in __init__
+    mod = compile_module_from_file(
+        src_path=os.path.join(dirname, "driver.c"),
+    ...<3 lines>...
+        libraries=libraries,
+    )
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 305, in compile_module_from_file
+    return _compile_so_from_file(src_path, name, library_dirs, include_dirs, libraries, ccflags, load_module=True)
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 273, in _compile_so_from_file
+    return _compile_so(src=src, src_path=src_path, name=name, library_dirs=library_dirs, include_dirs=include_dirs,
+                       libraries=libraries, ccflags=ccflags, language=language, load_module=load_module)
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 257, in _compile_so
+    so = _build(name, src_path, tmpdir, library_dirs or [], include_dirs or [], libraries or [], ccflags or [],
+                language=language)
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 182, in _build
+    raise e
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 179, in _build
+    subprocess.check_call(cc_cmd)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "F:\conda\envs\torch\Lib\subprocess.py", line 419, in check_call
+    raise CalledProcessError(retcode, cmd)
+torch._inductor.exc.InductorError: CalledProcessError: Command '['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmp36am6t0c\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmp36am6t0c', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']' returned non-zero exit status 1.
+
+Set TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especially if you're reporting a bug to PyTorch). For even more developer context, set TORCH_LOGS="+dynamo"
+
+
+======================================================================
+ERROR: test_cuda_mcmc_sampler_with_inductor_forward (test_compile.TestCompileMCMCSampler.test_cuda_mcmc_sampler_with_inductor_forward)
+GPU (CUDA) 环境下使用 Inductor 编译前向的 MCMC 采样正常.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_compile.py", line 474, in test_cuda_mcmc_sampler_with_inductor_forward
+    sampler = MCMCSampler(
+        model=model,
+    ...<4 lines>...
+        forward_log_psi_fn=compiled_forward,
+    )
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\mcmc.py", line 108, in __init__
+    self.recompute_log_psi()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\mcmc.py", line 188, in recompute_log_psi
+    log_abs_psi, _ = self.forward_log_psi_fn(self.walkers)
+                     ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_dynamo\eval_frame.py", line 1278, in compile_wrapper
+    raise e.remove_dynamo_frames() from None  # see TORCHDYNAMO_VERBOSE=1
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\compile_fx.py", line 1192, in _compile_fx_inner
+    raise InductorError(e, currentframe()).with_traceback(
+        e.__traceback__
+    ) from None
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\compile_fx.py", line 1169, in _compile_fx_inner
+    mb_compiled_graph = fx_codegen_and_compile(
+        gm,
+    ...<3 lines>...
+        **graph_kwargs,
+    )
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\compile_fx.py", line 2001, in fx_codegen_and_compile
+    return scheme.codegen_and_compile(gm, example_inputs, inputs_to_check, graph_kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\compile_fx.py", line 1749, in codegen_and_compile
+    compiled_module = graph.compile_to_module()
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\graph.py", line 3060, in compile_to_module
+    return self._compile_to_module()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\graph.py", line 3066, in _compile_to_module
+    self.codegen_with_cpp_wrapper() if self.cpp_wrapper else self.codegen()
+                                                             ~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\graph.py", line 3002, in codegen
+    self.scheduler.codegen()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\scheduler.py", line 10015, in codegen
+    self._codegen_partitions()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\scheduler.py", line 10167, in _codegen_partitions
+    self._codegen(partition)
+    ~~~~~~~~~~~~~^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\scheduler.py", line 10363, in _codegen
+    self.get_backend(device).codegen_node(node)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\cuda_combined_scheduling.py", line 205, in codegen_node
+    return self._triton_scheduling.codegen_node(node)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\simd.py", line 3070, in codegen_node
+    return self._codegen_nodes(nodes, coalesce_analysis)  # type: ignore[arg-type]
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\simd.py", line 3041, in _codegen_nodes
+    return self.codegen_node_schedule(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        SIMDKernelFeatures(node_schedule, numel, rnumel, coalesce_analysis)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\simd.py", line 3167, in codegen_node_schedule
+    src_code = kernel.codegen_kernel()
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\triton.py", line 7327, in codegen_kernel
+    **self.inductor_meta_common(),
+      ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\triton.py", line 6968, in inductor_meta_common
+    "backend_hash": torch.utils._triton.triton_hash_with_backend(),
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\utils\_triton.py", line 278, in triton_hash_with_backend
+    backend = triton_backend()
+  File "F:\conda\envs\torch\Lib\site-packages\torch\utils\_triton.py", line 248, in triton_backend
+    target = driver.active.get_current_target()
+             ^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\driver.py", line 52, in active
+    self._active = self.default
+                   ^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\driver.py", line 46, in default
+    self._default = _create_driver()
+                    ~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\driver.py", line 34, in _create_driver
+    return active_drivers[0]()
+           ~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\backends\nvidia\driver.py", line 362, in __init__
+    self.utils = CudaUtils()  # TODO: make static
+                 ~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\backends\nvidia\driver.py", line 121, in __init__
+    mod = compile_module_from_file(
+        src_path=os.path.join(dirname, "driver.c"),
+    ...<3 lines>...
+        libraries=libraries,
+    )
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 305, in compile_module_from_file
+    return _compile_so_from_file(src_path, name, library_dirs, include_dirs, libraries, ccflags, load_module=True)
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 273, in _compile_so_from_file
+    return _compile_so(src=src, src_path=src_path, name=name, library_dirs=library_dirs, include_dirs=include_dirs,
+                       libraries=libraries, ccflags=ccflags, language=language, load_module=load_module)
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 257, in _compile_so
+    so = _build(name, src_path, tmpdir, library_dirs or [], include_dirs or [], libraries or [], ccflags or [],
+                language=language)
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 182, in _build
+    raise e
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 179, in _build
+    subprocess.check_call(cc_cmd)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "F:\conda\envs\torch\Lib\subprocess.py", line 419, in check_call
+    raise CalledProcessError(retcode, cmd)
+torch._inductor.exc.InductorError: CalledProcessError: Command '['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmph7fgulee\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmph7fgulee', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']' returned non-zero exit status 1.
+
+Set TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especially if you're reporting a bug to PyTorch). For even more developer context, set TORCH_LOGS="+dynamo"
+
+
+======================================================================
+ERROR: test_train_vmc_compile_flag_cuda (test_compile.TestCompileVMCIntegration.test_train_vmc_compile_flag_cuda)
+GPU (CUDA) 环境下启用 compile=True 顺利完成端到端 VMC 训练并记录历史最优能量.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\test_compile.py", line 543, in test_train_vmc_compile_flag_cuda
+    result = train_vmc(
+        system=system,
+    ...<7 lines>...
+        verbose=False,
+    )
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\train_vmc.py", line 240, in train_vmc
+    sampler = MCMCSampler(
+        model=model,
+    ...<8 lines>...
+        forward_log_psi_fn=sampler_forward_fn,
+    )
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\mcmc.py", line 108, in __init__
+    self.recompute_log_psi()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\mcmc.py", line 188, in recompute_log_psi
+    log_abs_psi, _ = self.forward_log_psi_fn(self.walkers)
+                     ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_dynamo\eval_frame.py", line 1278, in compile_wrapper
+    raise e.remove_dynamo_frames() from None  # see TORCHDYNAMO_VERBOSE=1
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\compile_fx.py", line 1192, in _compile_fx_inner
+    raise InductorError(e, currentframe()).with_traceback(
+        e.__traceback__
+    ) from None
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\compile_fx.py", line 1169, in _compile_fx_inner
+    mb_compiled_graph = fx_codegen_and_compile(
+        gm,
+    ...<3 lines>...
+        **graph_kwargs,
+    )
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\compile_fx.py", line 2001, in fx_codegen_and_compile
+    return scheme.codegen_and_compile(gm, example_inputs, inputs_to_check, graph_kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\compile_fx.py", line 1749, in codegen_and_compile
+    compiled_module = graph.compile_to_module()
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\graph.py", line 3060, in compile_to_module
+    return self._compile_to_module()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\graph.py", line 3066, in _compile_to_module
+    self.codegen_with_cpp_wrapper() if self.cpp_wrapper else self.codegen()
+                                                             ~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\graph.py", line 3002, in codegen
+    self.scheduler.codegen()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\scheduler.py", line 10015, in codegen
+    self._codegen_partitions()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\scheduler.py", line 10167, in _codegen_partitions
+    self._codegen(partition)
+    ~~~~~~~~~~~~~^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\scheduler.py", line 10363, in _codegen
+    self.get_backend(device).codegen_node(node)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\cuda_combined_scheduling.py", line 205, in codegen_node
+    return self._triton_scheduling.codegen_node(node)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\simd.py", line 3070, in codegen_node
+    return self._codegen_nodes(nodes, coalesce_analysis)  # type: ignore[arg-type]
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\simd.py", line 3041, in _codegen_nodes
+    return self.codegen_node_schedule(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        SIMDKernelFeatures(node_schedule, numel, rnumel, coalesce_analysis)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\simd.py", line 3167, in codegen_node_schedule
+    src_code = kernel.codegen_kernel()
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\triton.py", line 7327, in codegen_kernel
+    **self.inductor_meta_common(),
+      ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\_inductor\codegen\triton.py", line 6968, in inductor_meta_common
+    "backend_hash": torch.utils._triton.triton_hash_with_backend(),
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\torch\utils\_triton.py", line 278, in triton_hash_with_backend
+    backend = triton_backend()
+  File "F:\conda\envs\torch\Lib\site-packages\torch\utils\_triton.py", line 248, in triton_backend
+    target = driver.active.get_current_target()
+             ^^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\driver.py", line 52, in active
+    self._active = self.default
+                   ^^^^^^^^^^^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\driver.py", line 46, in default
+    self._default = _create_driver()
+                    ~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\driver.py", line 34, in _create_driver
+    return active_drivers[0]()
+           ~~~~~~~~~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\backends\nvidia\driver.py", line 362, in __init__
+    self.utils = CudaUtils()  # TODO: make static
+                 ~~~~~~~~~^^
+  File "F:\conda\envs\torch\Lib\site-packages\triton\backends\nvidia\driver.py", line 121, in __init__
+    mod = compile_module_from_file(
+        src_path=os.path.join(dirname, "driver.c"),
+    ...<3 lines>...
+        libraries=libraries,
+    )
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 305, in compile_module_from_file
+    return _compile_so_from_file(src_path, name, library_dirs, include_dirs, libraries, ccflags, load_module=True)
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 273, in _compile_so_from_file
+    return _compile_so(src=src, src_path=src_path, name=name, library_dirs=library_dirs, include_dirs=include_dirs,
+                       libraries=libraries, ccflags=ccflags, language=language, load_module=load_module)
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 257, in _compile_so
+    so = _build(name, src_path, tmpdir, library_dirs or [], include_dirs or [], libraries or [], ccflags or [],
+                language=language)
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 182, in _build
+    raise e
+  File "F:\conda\envs\torch\Lib\site-packages\triton\runtime\build.py", line 179, in _build
+    subprocess.check_call(cc_cmd)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "F:\conda\envs\torch\Lib\subprocess.py", line 419, in check_call
+    raise CalledProcessError(retcode, cmd)
+torch._inductor.exc.InductorError: CalledProcessError: Command '['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmphr7kela3\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmphr7kela3', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']' returned non-zero exit status 1.
+
+Set TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especially if you're reporting a bug to PyTorch). For even more developer context, set TORCH_LOGS="+dynamo"
+
+
+----------------------------------------------------------------------
+Ran 4 tests in 23.205s
+
+FAILED (errors=4)
+
+Failed to compile. cc_cmd: ['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmph7fgulee\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmph7fgulee', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']
+Failed to compile. cc_cmd: ['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpizkefy3s\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpizkefy3s', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']
+Failed to compile. cc_cmd: ['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpb5mia30l\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpb5mia30l', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']
+Failed to compile. cc_cmd: ['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpcwktn9lv\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmpcwktn9lv', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']
+Failed to compile. cc_cmd: ['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmptjb9swzc\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmptjb9swzc', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']
+Failed to compile. cc_cmd: ['F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\runtime\\tcc\\tcc.exe', '\\\\?\\F:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\driver.c', '-O3', '-std=c11', '-shared', '-Wno-psabi', '-o', '\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmphr7kela3\\cuda_utils.cp313-win_amd64.pyd', '-fPIC', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-IF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\include', '-I\\\\?\\C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\tmphr7kela3', '-IF:\\conda\\envs\\torch\\Include', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib', '-LF:\\conda\\envs\\torch\\Lib\\site-packages\\triton\\backends\\nvidia\\lib\\x64', '-LF:\\conda\\envs\\torch\\libs', '-lcuda', '-lpython313']

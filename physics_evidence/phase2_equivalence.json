@@ -1,0 +1,171 @@
+{
+  "records": [
+    {
+      "architecture": "classic",
+      "n_up": 1,
+      "n_down": 0,
+      "passed": true,
+      "max_absolute_differences": {
+        "log": 0.0,
+        "sign": 0.0,
+        "coordinate_gradient": 2.6645352591003757e-15,
+        "energy": 7.105427357601002e-15,
+        "parameter_gradient": 4.263256414560601e-14
+      }
+    },
+    {
+      "architecture": "classic",
+      "n_up": 1,
+      "n_down": 1,
+      "passed": true,
+      "max_absolute_differences": {
+        "log": 0.0,
+        "sign": 0.0,
+        "coordinate_gradient": 8.881784197001252e-16,
+        "energy": 1.0658141036401503e-14,
+        "parameter_gradient": 2.4158453015843406e-13
+      }
+    },
+    {
+      "architecture": "classic",
+      "n_up": 2,
+      "n_down": 2,
+      "passed": true,
+      "max_absolute_differences": {
+        "log": 7.460698725481052e-14,
+        "sign": 0.0,
+        "coordinate_gradient": 2.9487523534044158e-12,
+        "energy": 5.9117155615240335e-12,
+        "parameter_gradient": 5.184119800105691e-11
+      }
+    },
+    {
+      "architecture": "composable",
+      "n_up": 1,
+      "n_down": 0,
+      "passed": true,
+      "max_absolute_differences": {
+        "log": 0.0,
+        "sign": 0.0,
+        "coordinate_gradient": 0.0,
+        "energy": 0.0,
+        "parameter_gradient": 0.0
+      }
+    },
+    {
+      "architecture": "composable",
+      "n_up": 1,
+      "n_down": 1,
+      "passed": true,
+      "max_absolute_differences": {
+        "log": 0.0,
+        "sign": 0.0,
+        "coordinate_gradient": 2.220446049250313e-15,
+        "energy": 1.4210854715202004e-14,
+        "parameter_gradient": 3.836930773104541e-13
+      }
+    },
+    {
+      "architecture": "composable",
+      "n_up": 2,
+      "n_down": 2,
+      "passed": true,
+      "max_absolute_differences": {
+        "log": 0.0,
+        "sign": 0.0,
+        "coordinate_gradient": 3.1086244689504383e-15,
+        "energy": 1.7763568394002505e-14,
+        "parameter_gradient": 8.375522497772181e-12
+      }
+    },
+    {
+      "architecture": "psiformer",
+      "n_up": 1,
+      "n_down": 0,
+      "passed": true,
+      "max_absolute_differences": {
+        "log": 0.0,
+        "sign": 0.0,
+        "coordinate_gradient": 0.0,
+        "energy": 0.0,
+        "parameter_gradient": 0.0
+      }
+    },
+    {
+      "architecture": "psiformer",
+      "n_up": 1,
+      "n_down": 1,
+      "passed": true,
+      "max_absolute_differences": {
+        "log": 0.0,
+        "sign": 0.0,
+        "coordinate_gradient": 0.0,
+        "energy": 0.0,
+        "parameter_gradient": 0.0
+      }
+    },
+    {
+      "architecture": "psiformer",
+      "n_up": 2,
+      "n_down": 2,
+      "passed": true,
+      "max_absolute_differences": {
+        "log": 0.0,
+        "sign": 0.0,
+        "coordinate_gradient": 4.440892098500626e-15,
+        "energy": 1.7763568394002505e-14,
+        "parameter_gradient": 4.1309178300252825e-12
+      }
+    }
+  ],
+  "torch": "2.14.0+cpu",
+  "device": "cpu",
+  "dtype": "float64",
+  "baseline_sha256": {
+    "composable_model.py": "6dac461c12ef7f38f0881e0b8ff16ae6d4c02f9ca7897e04f0997ebac5b12dc7",
+    "determinants.py": "a36ed91c19c7e15e69da2f7d75d927cfa33edc93df709f3b74622618dd44c183",
+    "envelope.py": "4173f6b4088e2c30732fd13c54e2683a005f66dd22657acdb86d73e666449083",
+    "evaluation.py": "a72df770c191d532746115cf2e14c584f41455edb52a199c60784e29f1b7ef9b",
+    "features.py": "553b8ccdfc965ab159d970d2a0763383e4109f9bd3505aeb6aeeb08668b3acf2",
+    "geometry.py": "7f95ebb56dd429d4f06c4f73c274e310b5f20b3ee092c6623c1d53d0121c490f",
+    "hamiltonian.py": "57fa7b9ab6f17aafc6b136f498e5c65d2106ef047929a855b0ae586d545c0be1",
+    "jastrow.py": "cc49a0c3d27f479898db7c53e8848a4c1fa16f373491f6a7d0d40aead449d8dc",
+    "kinetic_modern.py": "7744762cf1c96bd738e0e629f831916b959f037ae133f6636082db56ab732bb6",
+    "layers.py": "71c137f86ebacab355737e798fa53969107f1ed9d3b9fbd6d5deaf8ec03c6dd1",
+    "layers_modern.py": "4669d485a9d7a231ba4a2fceb7e84e08cfcd472c0928fa9b2a162f1a487d4574",
+    "loss.py": "8b9db7253832502eaa3f8a59d26f8d227722e3b081cebb66c0751763664cb8a4",
+    "mcmc.py": "a69525ad766e8c24bd887438f0eec15dc1ba587122a214708369d7811b871464",
+    "model.py": "7726d92ee16daff424e0d21fb99fac89f2dccbe91ae68fc81275407fd38d6d87",
+    "physical_config.py": "c6ca77b4889fb96fe6ed42c2d21996c0abdb68736cf07af973078e2fe3fc19c6",
+    "physics_validation.py": "d5249eebb5cd55c3b7aed13b05dd5072fc624f9953d05ada3301ffc5f8a62fce",
+    "psiformer_attention.py": "d63bededdb71a9ed08e28cf07e91ae68aaaaebd750cac671b175706425ff9c64",
+    "spin.py": "3b855893d789f7479ac2ab9d731825b2a55f0290d3afe3b6c9cf8ee9dcaa3ce2",
+    "train_vmc.py": "7cd842899eca1e5df9c2246bf030221af78eb4932b9f254f1dd5690668e9fc34",
+    "vmc_driver.py": "dad61f2e95c0e354ebf8f04a89d6ed568e5da5efed111da0cded2f2d6ab635b8",
+    "vmc_statistics.py": "0d5cc0414f1c159a4e2f3e5524b6549972a795a4e79777ac2b658b4157ec2058",
+    "__init__.py": "e6639b3a657dd1c7ae085c62f557f30988c96a7581daab1cf570a2c8f53f8358"
+  },
+  "current_sha256": {
+    "determinants.py": "0d8ff438b1f91c4f5b86fc63326cad9b50a6c9693986d576f9c4b84f54d68bdc",
+    "envelope.py": "7bf149a119be9a274a8af42a6c7756fa60ea971dea95cc0d45841a25f05e13eb",
+    "evaluation.py": "8b5d7b7a5bd673a3eccb4414af0325235442b5ed8adb2cb61b5d77e9ec9871c4",
+    "features.py": "49281b9c138a39f02997212f365c867e115d9be97104a7a72a7f78392d7aac38",
+    "geometry.py": "681387a6b48fa4595d23474e027afb519787c0fcab972adc46ad9a775caeab41",
+    "hamiltonian.py": "ef54fd9f9eb8a13c7fe76149f8a7382d1611e8554e75d7665bb554b79b35a5f1",
+    "jastrow.py": "bcb9d0a99ff83ce80fe77b95b0d0a5d25fde68641d80fee435dcdbfe43bee123",
+    "kinetic_modern.py": "44fbd1c25885f9c28b8ad4e52b26c0569df158d7128b18af7ba0d1a9a3d2a882",
+    "layers.py": "2f51723a2bd8cf9067d4078b39eb598c09c9f28393e2f5367b93f4589257f0c1",
+    "loss.py": "ed98fa59a21483aee6f3bf3c19888ad01049523b597f95a9ba50a3bca25d7325",
+    "mcmc.py": "bdef04b3ede40e93871713ba7ec5a28180ba40e54b69d596ea9b747bc06824f1",
+    "model.py": "8975ae7d1c246beb0a4eb64d6701c74c5ebbab6f3a95b19edc29710a98cb66c8",
+    "physical_config.py": "a3801ff2b5e6bdde9163a932c0f219bfa9aeae01e4baf162f89363367914257b",
+    "physics_validation.py": "be040e24583794f44f24b1e462e96427a532d406853d51ee753fab7139397497",
+    "psiformer_attention.py": "502c65e4cf951bbc30763f801f95e29cdb4fe3f169d9b8faccc72ebe634a345f",
+    "spin.py": "e83087dafbb178315f3782b6f78c0a4313174cebf8fdb1f8dbbe3fb350eb0806",
+    "systems.py": "47719a491aeb148674cc9124df98a78e66928f63c4b382131cbc983bad370382",
+    "train_vmc.py": "6aa93ae9d3056d6c5a9771aec515ffeff46f1dd5f27926b0d45389f33af82139",
+    "vmc_driver.py": "783e846b205a3db3a7a292eb1ced473d2b80d74b18b64650a718691087a5d599",
+    "vmc_statistics.py": "796463a322acc8aeadb291bb26f1886a1e85d8472b4c8e77adf70ebe3a6061f8",
+    "__init__.py": "81570250c895a204aeef37e81325bc8e0bcfeba013057d33a4381af84732e9fc"
+  }
+}

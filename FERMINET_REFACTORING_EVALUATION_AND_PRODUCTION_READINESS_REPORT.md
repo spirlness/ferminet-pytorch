@@ -1,3 +1,6 @@
+> **历史报告：不再适用于当前版本（2026-10-22）**
+> 本文保留历史记录，其中 Level 5、全部尖峰严格满足、短训练证明化学精度及泛化加速比等结论已被后续独立反例否定或缺乏足够证据，不应继续引用为当前认证。当前 0.3.0 实现见[架构与迁移说明](ARCHITECTURE_REDUNDANCY_REVIEW_AND_REFACTORING_PROPOSAL.md)，最新验收见[第二轮报告](REFACTOR_PHASE2_REPORT.md)，历史物理修复与实验见[物理正确性报告](PHYSICS_CORRECTNESS_REPORT.md)。
+
 # FermiNet 重构效果全维度评估与生产就绪度报告 (Gen2)
 ## FermiNet PyTorch Architecture Modernization Evaluation and Production Readiness Assessment Report
 

@@ -1,0 +1,17 @@
+{"arm": "A", "updates": 10, "parameters_walkers_history_rng_exact": true, "old_seconds": 3.5266856999951415, "new_seconds": 4.215283199999249}
+{"arm": "B", "updates": 10, "parameters_walkers_history_rng_exact": true, "old_seconds": 3.856159099988872, "new_seconds": 5.216136300005019}
+{"arm": "C", "updates": 10, "parameters_walkers_history_rng_exact": true, "old_seconds": 3.4020689000026323, "new_seconds": 3.376065800024662}
+{"arm": "D", "updates": 10, "parameters_walkers_history_rng_exact": true, "old_seconds": 3.7211200000019744, "new_seconds": 3.7900350999843795}
+{"evaluation": 0, "old": true, "seconds": 18.27397859998746, "all_observations_exact": true}
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    exec(open('campaign_runs/factorial_io_baseline_20261025/benchmark.py',encoding='utf-8').read())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 54, in <module>
+  File "F:\conda\envs\torch\Lib\site-packages\torch\testing\_comparison.py", line 1689, in assert_close
+    raise error_metas[0].to_error(msg)
+AssertionError: Tensor-likes are not equal!
+
+Mismatched elements: 1041 / 8192 (12.7%)
+Greatest absolute difference: 1.7763568394002505e-15 at index (0, 239)
+Greatest relative difference: 3.9606905936856784e-16 at index (8, 20)

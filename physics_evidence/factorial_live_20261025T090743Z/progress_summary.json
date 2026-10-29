@@ -1,0 +1,84 @@
+{
+  "snapshot": {
+    "snapshot_utc": "2026-10-25T09:07:43.708868+00:00",
+    "status": "KernelWorkerStatus.RUNNING",
+    "failure_message": "",
+    "event_count": 1625,
+    "stream_error": null
+  },
+  "active": [
+    {
+      "event": "training_step",
+      "timestamp_utc": "2026-10-25T09:07:42.926959+00:00",
+      "case_id": "ferminet_seed33_A",
+      "epoch": 3343,
+      "energy_mean": -1.1719976663589478,
+      "seconds_per_update": 0.2107353419996798,
+      "gpu": "0",
+      "timestamp_hk": "2026-10-25T17:07:42.926959+08:00"
+    },
+    {
+      "event": "training_step",
+      "timestamp_utc": "2026-10-25T09:07:40.439087+00:00",
+      "case_id": "ferminet_seed33_C",
+      "epoch": 2809,
+      "energy_mean": -1.1736338138580322,
+      "seconds_per_update": 0.23582284199983405,
+      "gpu": "1",
+      "timestamp_hk": "2026-10-25T17:07:40.439087+08:00"
+    }
+  ],
+  "completed": [
+    {
+      "event": "case_completed",
+      "timestamp_utc": "2026-10-25T08:49:07.820047+00:00",
+      "case_id": "ferminet_seed22_C",
+      "epochs": 10000
+    },
+    {
+      "event": "case_completed",
+      "timestamp_utc": "2026-10-25T08:49:57.562909+00:00",
+      "case_id": "ferminet_seed11_D",
+      "epochs": 10000
+    }
+  ],
+  "errors": [],
+  "last_heartbeat": {
+    "event": "heartbeat",
+    "timestamp_utc": "2026-10-25T09:07:34.876028+00:00",
+    "completed": 2,
+    "workers": [
+      {
+        "worker": 0,
+        "pid": 46,
+        "exit_code": null,
+        "seconds_since_output": 2.0,
+        "reader_error": null
+      },
+      {
+        "worker": 1,
+        "pid": 48,
+        "exit_code": null,
+        "seconds_since_output": 4.6,
+        "reader_error": null
+      }
+    ],
+    "gpus": [
+      {
+        "index": 0,
+        "name": "Tesla T4",
+        "utilization_percent": 33,
+        "memory_used_mib": 177,
+        "memory_total_mib": 15360
+      },
+      {
+        "index": 1,
+        "name": "Tesla T4",
+        "utilization_percent": 32,
+        "memory_used_mib": 179,
+        "memory_total_mib": 15360
+      }
+    ]
+  },
+  "scope": "Training batch means; frozen evaluation statistics are not emitted by case_completed."
+}

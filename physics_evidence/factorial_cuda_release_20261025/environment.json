@@ -1,0 +1,23 @@
+{
+  "source_commit": "ae0bc0dc542b932004b7aa75a0766c10af3610c3",
+  "compiler_available": true,
+  "strict_runner_compiler": "bundled TCC selected via child CC",
+  "source_hashes_match_current_files": {
+    "ferminet_pytorch/envelope.py": true,
+    "ferminet_pytorch/evaluation.py": true,
+    "ferminet_pytorch/evaluation_observations.py": true,
+    "ferminet_pytorch/loss.py": true,
+    "ferminet_pytorch/model.py": true,
+    "ferminet_pytorch/physical_config.py": true,
+    "ferminet_pytorch/train_vmc.py": true,
+    "ferminet_pytorch/vmc_driver.py": true,
+    "scripts/factorial_campaign.py": true,
+    "scripts/factorial_pipeline.py": true,
+    "scripts/factorial_report.py": true,
+    "tests/test_factorial.py": true
+  },
+  "torch": "2.14.0",
+  "cuda": "13.0",
+  "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+  "scope": "Strict suite includes CPU and real CUDA cases; local untracked pre-existing diagnosis tests are included in the 296 count."
+}

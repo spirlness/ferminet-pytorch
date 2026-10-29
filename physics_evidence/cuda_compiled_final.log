@@ -1,0 +1,48 @@
+test_cuda_graph_breaks_zero (test_compile.TestDynamoGraphBreaks.test_cuda_graph_breaks_zero)
+GPU (CUDA) 环境下 forward_log_psi 图断裂数严格为 0. ... ok
+test_cuda_numerical_equivalence_float64 (test_compile.TestCompileNumericalEquivalence.test_cuda_numerical_equivalence_float64)
+GPU (CUDA) 双精度下 Inductor 编译与 Eager 模式绝对误差严格 < 1e-6 且符号完全一致. ... ok
+test_cuda_numerical_equivalence_float32 (test_compile.TestCompileNumericalEquivalence.test_cuda_numerical_equivalence_float32)
+GPU (CUDA) 单精度下 Inductor 融合编译输出绝对误差 < 1e-5 (浮点重排容差) 且符号精确一致. ... W1022 13:12:11.793000 10104 site-packages\torch\_inductor\utils.py:1806] [0/1] Not enough SMs to use max_autotune_gemm mode
+remark: cnu222rzr6unrrowa5m7nrb2rcjjgm5cix62zfqkpqpan67bt2nn.py:18:0: 66 instructions in function
+remark: c6q2ymsuh4e7socwflnwtc2yjjdl6z2x4gcv2qab6zzj5gk7rnx6.py:18:0: 16 instructions in function
+remark: cktrlk3h33lhmcdp6q7w7bmt7gp35k5yxo3csmzbqwv2so2kjp76.py:18:0: 60 instructions in function
+remark: cslkujek5fswmmzhuazppjdzbnie7bwcjcanlfi7dmnyaitpxf3m.py:18:0: 83 instructions in function
+remark: cslkujek5fswmmzhuazppjdzbnie7bwcjcanlfi7dmnyaitpxf3m.py:18:0: 35 instructions in function
+remark: cqwn5b7okunjynekzpb3s742ytv6aw4xsjrvjdtrczsqpdmyfj5p.py:18:0: 85 instructions in function
+remark: cqwn5b7okunjynekzpb3s742ytv6aw4xsjrvjdtrczsqpdmyfj5p.py:18:0: 74 instructions in function
+remark: c3muy3nhsizroc2fv6ccdhn5nsd3gurdg7dtewgif3vb5rle3rbe.py:18:0: 65 instructions in function
+remark: c3muy3nhsizroc2fv6ccdhn5nsd3gurdg7dtewgif3vb5rle3rbe.py:18:0: 38 instructions in function
+remark: cj7gnk6kt6xcvhcc4xyqdlto3nymdmzxmrjiikaeqkmt2h7wte3e.py:18:0: 168 instructions in function
+remark: cy2o6sgj3dw65nupuzqfkn6n4gkhzqs3a5x235w4oi3z4ufrfg6n.py:18:0: 28 instructions in function
+remark: c7pmucbsqebgetqzglivd4zl7sts4f6xak5q4jc6ucmajog5t7yw.py:18:0: 28 instructions in function
+remark: c3psoovoydvrsnf642c5eyr6l32fxdzjk6gtj66jhm3vqjv2jtpq.py:18:0: 23 instructions in function
+remark: cfcrngolidgszyvckkq2hqbve2kzp6taaijqvpn65bvdlgtb4dvc.py:18:0: 43 instructions in function
+remark: cab7far4rnwgbmozifdgygohjw24hffvcd6wxn3fbn545ewcxo6v.py:18:0: 18 instructions in function
+remark: cdtdpy4mbr5y7afk6q3mxspcl5tmsg3crgail25jhxi2j76hf7o6.py:18:0: 48 instructions in function
+remark: cdtdpy4mbr5y7afk6q3mxspcl5tmsg3crgail25jhxi2j76hf7o6.py:18:0: 44 instructions in function
+remark: cvkg25j7gurozbhvwepaqmmain6fz4skktkoohluemzdghauibup.py:18:0: 85 instructions in function
+remark: cvkg25j7gurozbhvwepaqmmain6fz4skktkoohluemzdghauibup.py:18:0: 52 instructions in function
+remark: cnay6mmbe4ht55wkgfksswiotvthmtdj4i7tpllehhtert4luw4d.py:18:0: 41 instructions in function
+remark: cnay6mmbe4ht55wkgfksswiotvthmtdj4i7tpllehhtert4luw4d.py:18:0: 36 instructions in function
+remark: cypa7uex73gmwcaa4qnupmew7fhddxga643ogve2c4nmq2w2yl7b.py:18:0: 50 instructions in function
+remark: c2e4proyl4ibnsjwarbntfq4brfabttuuz74wzyn3wxfrpgelloz.py:18:0: 144 instructions in function
+remark: cfo4s4jye5bnqa63obcf6l2gqlqx7lhaiq2l4qwok6xmzea5q2hn.py:18:0: 80 instructions in function
+ok
+test_cuda_mcmc_sampler_with_inductor_forward (test_compile.TestCompileMCMCSampler.test_cuda_mcmc_sampler_with_inductor_forward)
+GPU (CUDA) 环境下使用 Inductor 编译前向的 MCMC 采样正常. ... remark: chk4jramr5pvnltkj6ofjadrzm2mpb7rqilrjbcfsucpbivfk63u.py:18:0: 109 instructions in function
+remark: cb7iz2jtao2n7pvohaspp54544upnsyrytjhawsqubthp65x5tar.py:18:0: 25 instructions in function
+remark: c5we4z56mr7266eqwdhahey3plnhlcva33llt3gmsewny3usmzz6.py:18:0: 51 instructions in function
+remark: cl5fnrtpparnjsm3biz5wgu7iy4qydj4hfzpps5r7ugmf3tqbeie.py:18:0: 47 instructions in function
+remark: cvua5miq3vkr7mzngcxhsqvlosbkmpbwl7s7i5ngvvbdz5i3lzme.py:18:0: 68 instructions in function
+remark: cvua5miq3vkr7mzngcxhsqvlosbkmpbwl7s7i5ngvvbdz5i3lzme.py:18:0: 56 instructions in function
+remark: cxp4j7nljjloawkibjuq7pdulhdar37cfg6homommcn565cacta3.py:18:0: 248 instructions in function
+remark: c4gartpirnjmqjx4246phyfqfn4ravdlvrdqtsknxbvxmkrzbw4y.py:18:0: 74 instructions in function
+ok
+test_train_vmc_compile_flag_cuda (test_compile.TestCompileVMCIntegration.test_train_vmc_compile_flag_cuda)
+GPU (CUDA) 环境下启用 compile=True 顺利完成端到端 VMC 训练并记录历史最优能量. ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 84.784s
+
+OK

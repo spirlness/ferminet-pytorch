@@ -1,82 +1,24 @@
 [project]
 name = "ferminet-pytorch"
-version = "0.1.0"
-description = "A clean PyTorch implementation of FermiNet for ab-initio quantum chemistry"
+version = "0.3.0"
+description = "Neural wavefunctions and variational Monte Carlo in PyTorch"
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = [
-    "torch>=2.0.0",
-    "numpy>=1.21",
-]
+dependencies = ["torch>=2.0.0", "numpy>=1.21"]
+
+[project.scripts]
+ferminet-train = "ferminet_pytorch.train_vmc:main"
+ferminet-validate = "ferminet_pytorch.physics_validation:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-dev-mode-dirs = ["."]
-only-include = [
-    "__init__.py",
-    "features.py",
-    "geometry.py",
-    "layers.py",
-    "layers_modern.py",
-    "envelope.py",
-    "envelope_modern.py",
-    "jastrow.py",
-    "spin.py",
-    "model.py",
-    "composable_model.py",
-    "hamiltonian.py",
-    "kinetic_modern.py",
-    "mcmc.py",
-    "loss.py",
-    "psiformer_attention.py",
-    "legacy_adapters.py",
-    "vmc_driver.py",
-    "train_vmc.py",
-    "example_h2.py",
-    "benchmark_compile.py",
-    "benchmark_h2_long_convergence.py",
-    "benchmark_comprehensive_m3.py",
-    "benchmark_m4_vmc_convergence.py",
-    "diagnose_graph_breaks.py",
-    "summarize_results.py",
-]
-
-[tool.hatch.build.targets.wheel.sources]
-"" = "ferminet_pytorch"
+packages = ["ferminet_pytorch"]
 
 [tool.hatch.build.targets.sdist]
-only-include = [
-    "pyproject.toml",
-    "README.md",
-    "BEGINNER_GUIDE.md",
-    "__init__.py",
-    "features.py",
-    "geometry.py",
-    "layers.py",
-    "layers_modern.py",
-    "envelope.py",
-    "envelope_modern.py",
-    "jastrow.py",
-    "spin.py",
-    "model.py",
-    "composable_model.py",
-    "hamiltonian.py",
-    "kinetic_modern.py",
-    "mcmc.py",
-    "loss.py",
-    "psiformer_attention.py",
-    "legacy_adapters.py",
-    "vmc_driver.py",
-    "train_vmc.py",
-    "example_h2.py",
-    "benchmark_compile.py",
-    "benchmark_h2_long_convergence.py",
-    "benchmark_comprehensive_m3.py",
-    "benchmark_m4_vmc_convergence.py",
-    "diagnose_graph_breaks.py",
-    "ferminet_pytorch",
-    "summarize_results.py",
+include = [
+    "/ferminet_pytorch", "/tests", "/scripts", "/examples", "/configs", "/kaggle",
+    "/pyproject.toml", "/uv.lock", "/*.md",
 ]

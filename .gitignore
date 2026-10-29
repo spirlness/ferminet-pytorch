@@ -75,3 +75,10 @@ logs/
 
 # Multi-agent teamwork artifacts
 .agents/
+
+# Remote experiment output and local credentials/submission staging
+.env.*
+.kaggle/
+.kaggle_deploy/
+campaign_runs/
+kaggle.json

@@ -1,0 +1,183 @@
+{
+  "seed": 11,
+  "arm": "C",
+  "case_id": "ferminet_seed11_C",
+  "status": "completed",
+  "epochs": 20,
+  "cumulative_parent_plus_updates": 50020,
+  "parent_checkpoint_sha256": "52c2fd0c364924ffbcecf66a071b3ecf539ec4c3748fe10fa21c384cbbe63cd3",
+  "model_identity": {
+    "n_up": 1,
+    "n_down": 1,
+    "num_determinants": 8,
+    "num_layers": 3,
+    "hidden_dim_one": 64,
+    "hidden_dim_two": 16,
+    "interaction_type": "ferminet",
+    "eps": 1e-24,
+    "envelope_type": "soft_exponential",
+    "envelope_scale": 2.0,
+    "smooth_cuspless": true,
+    "spin_mode": "singlet",
+    "jastrow_class": "KatoCuspJastrow"
+  },
+  "precision_before": {
+    "passed": true,
+    "points": 32,
+    "max_log_difference": 4.734099059433561e-07,
+    "energy_rms_difference_ha": 3.373429684577748e-07,
+    "max_energy_difference_ha": 8.003599480943535e-07,
+    "scope": "Fixed sampled points only; no universal error bound"
+  },
+  "precision_after": {
+    "passed": true,
+    "points": 32,
+    "max_log_difference": 8.192511158355842e-07,
+    "energy_rms_difference_ha": 5.539616721388785e-07,
+    "max_energy_difference_ha": 1.49728150233841e-06,
+    "scope": "Fixed sampled points only; no universal error bound"
+  },
+  "checkpoint_sha256": "fc48e5458bb3349896ddd7c1f9f6a5f3c5f4d04f398565b2ff24983c86e3fa92",
+  "zero_evaluation": "zero_seed11_soft_exponential/result.json",
+  "evaluation": {
+    "total_samples": 32768,
+    "num_valid": 32768,
+    "num_invalid": 0,
+    "energy_mean": -0.6713884368778503,
+    "energy_var": 0.5048552966222876,
+    "energy_std": 0.7105316999418728,
+    "energy_sem": 0.0046569117271457435,
+    "energy_sem_naive": 0.003925170181850808,
+    "energy_sem_ess": 0.0046569117271457435,
+    "energy_sem_block": 0.004375642028820849,
+    "energy_ci95": [
+      -0.680515983863056,
+      -0.6622608898926446
+    ],
+    "interval_method": "approximate_normal_95_percent",
+    "rho_1": 0.10805822472480091,
+    "rho_1_batch": 0.2014217301462562,
+    "tau_int": 1.4075992595600906,
+    "ess_fraction": 0.7104294728831589,
+    "effective_sample_size": 23279.352967435352,
+    "split_rhat": 1.0062409505244947,
+    "reblocking": [
+      {
+        "block_length": 1,
+        "num_blocks": 64,
+        "sem": 0.0035157548730762943
+      },
+      {
+        "block_length": 2,
+        "num_blocks": 32,
+        "sem": 0.003832863815843641
+      },
+      {
+        "block_length": 4,
+        "num_blocks": 16,
+        "sem": 0.004375642028820849
+      }
+    ],
+    "blocking_plateau": false,
+    "diagnostics_status": "insufficient_evidence",
+    "diagnostics_reasons": [
+      "fewer_than_128_time_records",
+      "no_reblocking_plateau"
+    ],
+    "decorrelation_steps": 20,
+    "eval_time_sec": 51.565410455000006,
+    "time_records": 64,
+    "requested_time_records": 64,
+    "energy_batch_size": 128,
+    "burn_in_seconds": 7.383612493999976,
+    "production_seconds": 44.18179992500001,
+    "seed": 900112,
+    "stopping_reason": "completed",
+    "mcmc_acceptance": 0.2578125,
+    "mcmc_step_size": 1.2292012131175996,
+    "spin_projection": "singlet",
+    "trajectory_path": "/kaggle/working/ferminet_results/ferminet_seed11_C/evaluation/energy.pt",
+    "observations_manifest": "/kaggle/working/ferminet_results/ferminet_seed11_C/evaluation/observations/manifest.json",
+    "reference_label": "H2 BO singlet, R=1.4 bohr",
+    "reference_source": "https://doi.org/10.1103/PhysRevA.82.032509",
+    "chemical_accuracy_met": false,
+    "chemical_accuracy_status": "insufficient_evidence",
+    "exact_energy": -1.17447571422,
+    "abs_error_ha": 0.5030872773421496,
+    "abs_error_mha": 503.08727734214966,
+    "abs_error_kcal": 315.6920327810644,
+    "hf_energy": -1.13362957,
+    "correlation_retrieved_pct": -1131.6640577688072,
+    "tail_summary": {
+      "total_samples": 32768,
+      "energy_mean": -0.6713884368778503,
+      "regions_overlap": true,
+      "regions": {
+        "far_nearest_nucleus_gt_3": {
+          "count": 26920,
+          "extreme_count": 13005,
+          "top_count": 3,
+          "variance_share": 0.8690506258848573,
+          "signed_error_contribution_mha": 516.9435903479794
+        },
+        "near_nucleus_lt_0.05": {
+          "count": 13,
+          "extreme_count": 10,
+          "top_count": 0,
+          "variance_share": 0.000765242137345783,
+          "signed_error_contribution_mha": -0.06624007830316532
+        },
+        "near_electron_lt_0.1": {
+          "count": 1,
+          "extreme_count": 0,
+          "top_count": 0,
+          "variance_share": 1.545271087144058e-05,
+          "signed_error_contribution_mha": -7.65782255951689e-05
+        }
+      },
+      "extreme_threshold_abs_error_ha": 0.5,
+      "extreme_count": 13110,
+      "top_count": 3,
+      "top_variance_share": 0.0019498212406705451,
+      "limits": "Spatial flags overlap; variance attribution does not establish a causal mechanism."
+    },
+    "extreme_precision_audit": {
+      "passed": true,
+      "points": 32,
+      "max_log_difference": 9.93337085475332e-07,
+      "energy_rms_difference_ha": 1.1492935114103748e-06,
+      "max_energy_difference_ha": 2.9688437854780148e-06,
+      "scope": "Fixed sampled points only; no universal error bound"
+    },
+    "total_with_observations_seconds": 51.89555548299995
+  },
+  "training_seconds": 4.7087418129999605,
+  "init_seconds": 24.92071513100001,
+  "rethermalization_seconds": 7.877245175000041,
+  "step_seconds": [
+    0.35716134599999805,
+    0.24571477199998526,
+    0.25275339199998825,
+    0.24931770999995706,
+    0.22496377399994572,
+    0.22904594799996403,
+    0.22505513499999097,
+    0.22874365100000205,
+    0.2270192350000002,
+    0.22377324600000748,
+    0.22373050099997727,
+    0.22257623299998386,
+    0.22726813799999945,
+    0.2234160400000178,
+    0.22230796600001668,
+    0.22588714699998036,
+    0.2290482010000119,
+    0.22259919099997205,
+    0.22217459400002326,
+    0.2235597069999926
+  ],
+  "device": {
+    "visible_devices": "1",
+    "name": "Tesla T4"
+  }
+}

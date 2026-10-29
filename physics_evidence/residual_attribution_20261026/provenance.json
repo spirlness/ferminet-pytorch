@@ -1,0 +1,8 @@
+{
+  "source_download": "/mnt/c/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/campaign_runs/factorial_final_9b001c5",
+  "diagnostic_data_archive": "/mnt/c/Users/Administrator/.gemini/antigravity/scratch/ferminet_pytorch/campaign_runs/residual_attribution_20261026",
+  "analysis_source": "residual_attribution_compute_source.py",
+  "reporting_source": "reporting_tool_source.py",
+  "no_sampling_or_parameter_updates": true,
+  "note": "20261026 is the protocol label; analysis executed 2026-10-25 Hong Kong time."
+}

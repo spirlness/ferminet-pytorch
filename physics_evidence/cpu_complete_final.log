@@ -1,0 +1,50 @@
+C:\Users\Administrator\.gemini\antigravity\scratch\ferminet_pytorch\.venv\Lib\site-packages\torch\jit\_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+----------------------------------------------------------------------
+Ran 270 tests in 125.255s
+
+OK (skipped=27)
+[Test 1.3 PASS] FermiNet 8-电子泡利节点全流程反向传播平稳，耗时: 13.798 ms
+[Test 1.2 PASS] size=10 奇异矩阵 (det=0) 反向传播平稳执行，耗时: 2.845 ms，梯度全有限 (无阶乘爆炸/无 OOM)
+
+[Test 1.1 PASS] size=8 奇异矩阵 (det=0) 反向传播平稳执行，耗时: 1.513 ms，梯度全有限
+[Test 3.3 PASS] 精确零方差极限边界平稳执行: loss=0.0, grad=0.0
+[Test 3.2 PASS] hard 截断模式下退化方差梯度非零有限: grad=-2.994235e-07
+[Test 3.1 PASS] 尺度 sigma=1.0e-03: grad=+4.666234e-04, 理论一致性相对误差: 5.16e-03
+[Test 3.1 PASS] 尺度 sigma=1.0e-05: grad=+4.686225e-06, 理论一致性相对误差: 0.00e+00
+[Test 3.1 PASS] 尺度 sigma=1.0e-07: grad=+2.623110e-08, 理论一致性相对误差: 0.00e+00
+[Test 2.3 PASS] 自适应 vs 冻结对比鲜明: 初始 10.0 -> 自适应调整至 7.7880 -> 冻结保持 7.7880
+[Test 2.2 PASS] 极端高接受率 (100.0%) 挑战下，step_size 严格冻结: 0.0001 == 0.0001
+
+[Test 2.1 PASS] 极端低接受率 (0.0%) 挑战下，step_size 严格冻结: 20.0 == 20.0
+
+[Decorrelation Test] decorrelation_steps=1:  rho_1 = 0.6315, ESS = 224/1920
+[Decorrelation Test] decorrelation_steps=10: rho_1 = 0.2132, ESS = 970/1920
+
+[Empirical Check] Proposed fix for FermiInteractionLayer successfully preserves opposite-spin correlation!
+
+[Empirical Check] n_up=1, n_down=1:
+Modern mean_h2_up max: 0.0
+Original mean_h2_up max: 1.0
+Original mean_h2_up for electron 1 (down seeing up): 1.0
+>>> CONFIRMED BUG in Prototype 2: n_up=1 erroneously zeroes opposite-spin mean_h2_up!
+
+[Empirical Check] Kinetic Energy Laplacian:
+Analytical: 12.0000
+Reverse:    12.0000
+Forward JVP:12.0000
+Hutchinson (500 probes): 12.0000
+
+[Empirical Check] Kinetic Energy Mode Comparison (N=6, dim_total=18):
+Reverse Mode:     Time = 5.72 ms, Forward Calls = 1
+Forward JVP Mode: Time = 9.30 ms, Forward Calls = 19
+>>> CONFIRMED: Forward JVP in Prototype 4 is SLOWER than Reverse because of 3N additional forward calls!
+
+[Empirical Check] NuclearEnvelope parameter mismatch: Original uses 'decay_rates_raw' (softplus), Modern uses 'log_alpha' (exp)
+
+[Empirical Check] NuclearEnvelopeModern 'decay' tensor dimensions:
+decay.shape: torch.Size([4, 6, 4, 4, 2]) (ndim=5)
+Total elements: 768
+>>> CONFIRMED: NuclearEnvelopeModern STILL constructs a 5D tensor! Einsum claim is not implemented.
+
+[Empirical Check] Psiformer Permutation Equivariance Max Diff: 2.38e-07

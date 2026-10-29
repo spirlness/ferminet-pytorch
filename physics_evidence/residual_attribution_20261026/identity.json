@@ -1,0 +1,7 @@
+{
+  "source_commit": "9b001c5bbd4c143058248bbc0c6e3585412ae27c",
+  "archive_manifest_sha256": "945b3b778640b102722e59d564dbec795435d35f395e0ca1572895451773a7a8",
+  "protocol": "16-bitmask-regions-v1",
+  "block_records": 128,
+  "bootstrap_repetitions": 20000
+}
