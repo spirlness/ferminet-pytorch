@@ -1,0 +1,155 @@
+{
+  "plan": {
+    "schema_version": 1,
+    "experiment": "envelope_replication",
+    "seeds": [
+      101,
+      202,
+      303,
+      404,
+      505,
+      606
+    ],
+    "arms": {
+      "A": {
+        "envelope_type": "gaussian",
+        "clip_method": "tanh"
+      },
+      "C": {
+        "envelope_type": "soft_exponential",
+        "clip_method": "tanh"
+      }
+    },
+    "model": {
+      "num_determinants": 8,
+      "hidden_dim_one": 64,
+      "hidden_dim_two": 16,
+      "num_layers": 3
+    },
+    "envelope_scale": 2.0,
+    "training": {
+      "num_epochs": 10000,
+      "num_walkers": 512,
+      "mcmc_steps_per_epoch": 10,
+      "burn_in_steps": 1000,
+      "lr": 0.0001,
+      "jastrow_lr": 1e-05,
+      "grad_clip": 1.0,
+      "clip_factor": 5.0,
+      "two_stage_jastrow": false,
+      "restore_best": false,
+      "lr_schedule": "warmup_inverse",
+      "lr_warmup_epochs": 500,
+      "lr_decay_epochs": 10000,
+      "lr_min_ratio": 0.1
+    },
+    "evaluation": {
+      "num_walkers": 512,
+      "num_steps": 2048,
+      "burn_in_steps": 1000,
+      "decorrelation_steps": 20,
+      "energy_batch_size": 128
+    },
+    "zero_evaluation_records": 512,
+    "records_per_shard": 128,
+    "training_dtype": "float32",
+    "sampling_execution": "eager",
+    "schedule_seed": 20261026,
+    "evaluation_seed_base": 20000000,
+    "zero_evaluation_seed_base": 21000000,
+    "practical_improvement_mha": 0.2,
+    "cpu_threads_per_worker": 1,
+    "checkpoint_seconds": 300,
+    "log_seconds": 10,
+    "heartbeat_seconds": 15,
+    "max_wall_seconds": 32400,
+    "max_projected_seconds": 28800,
+    "timing_safety_factor": 1.25,
+    "smoke": false,
+    "parent": {
+      "initial_epochs": 20000,
+      "final_epochs": 50000,
+      "jastrow_stage1_epochs": 1000,
+      "initial_lr": 0.001,
+      "initial_jastrow_lr": 0.0001,
+      "burn_in_steps": 500
+    },
+    "batches": [
+      [
+        101,
+        202
+      ],
+      [
+        303,
+        404
+      ],
+      [
+        505,
+        606
+      ]
+    ],
+    "historical_source_commit": "9b001c5bbd4c143058248bbc0c6e3585412ae27c",
+    "primary": {
+      "contrast": "C-A",
+      "critical_value": 2.570581835636305,
+      "df": 5,
+      "alpha": 0.05
+    }
+  },
+  "seed": 101,
+  "commit": "1659b8ef33ade46dabe30a457f27bf915714c9da",
+  "source_sha256": {
+    "ferminet_pytorch/__init__.py": "9a0d186353b97eeaee466235df35f76ece221c4f20aef4d6a6c50c88c003eea5",
+    "ferminet_pytorch/determinants.py": "b5d72de477cef0fd1ffa096334ab6951fb79ba6dbf3060ecb42520da40d459fe",
+    "ferminet_pytorch/envelope.py": "ac494a5d2e3b9dca89019478ab1008a6c939371349ee657c03f6009b7b42cdbe",
+    "ferminet_pytorch/evaluation.py": "f9369db1640ef14f981f0eee5dc581ba52d24636ccda0b281dc2792b206d66de",
+    "ferminet_pytorch/evaluation_observations.py": "534345eb821390a0e40ffb060e872aad95b79c6257932fcc815c2165704d8830",
+    "ferminet_pytorch/features.py": "b8b98fb6d4e71c2b8b3ca3be078cd51d5a17e95e62a44184f7c53c6e46d21715",
+    "ferminet_pytorch/geometry.py": "9dce4f889768f2b0297901968f70396722c45710e807268b990474f2cae6b710",
+    "ferminet_pytorch/hamiltonian.py": "f1a993cee6f6fa9f4b477225d0b49892b37f82b1872db67a2c1259a9fe2be0b9",
+    "ferminet_pytorch/jastrow.py": "7e7058c5d817254def29f80917f1915fd14c9fbec4e65dc1178a0a6e81164596",
+    "ferminet_pytorch/kinetic_modern.py": "ac4742af4ef9ba24fba52842ce739acd45a8ae84c4c0fd8adb1315c6d3304ace",
+    "ferminet_pytorch/layers.py": "e89a030ac44d60a52a72c6fc2e1262a9555af18772e65293aae0ebb2f0681946",
+    "ferminet_pytorch/loss.py": "0e5c23e5eb876f5a79653a925956aacb7f204b38230c5f07dd0e6fbaf466eb06",
+    "ferminet_pytorch/mcmc.py": "cd95c67d9ee3e75c3b97593f086c8cbfe1e5b37bd94fd99bae02d17e5f18a3ff",
+    "ferminet_pytorch/model.py": "a43cff329ab2e92a6f826ccf9df8e4c96e2bde7c29addbde656b9893705c7ff5",
+    "ferminet_pytorch/physical_config.py": "151063c3a7e507eae280f9af320afba41771dbae81129cbdba4db621d3298224",
+    "ferminet_pytorch/physics_validation.py": "506a7de8bac770906f9d6d5a01309c8c757fad439c43e2b113cbe70972b56cb8",
+    "ferminet_pytorch/psiformer_attention.py": "8ebdcd40ea79dafd294b0656396614fd9e803f7e9b413fdcf556dabeb5b18bbc",
+    "ferminet_pytorch/spin.py": "9a85f21db0ad1ba3aec41cc77f96130635ad94b042db96290934485416298c69",
+    "ferminet_pytorch/systems.py": "b6494d4a28ac8888d7d606c5ff0f69e2eb9c4585d6276a49f9a3225cbcd960f6",
+    "ferminet_pytorch/train_vmc.py": "dad801d57bf95e263396929438f7466f80f365731ec6ab937c659825514a9840",
+    "ferminet_pytorch/vmc_driver.py": "08a544cb51176fa467dd86ff3cf941a0a5a3a23565c537cec3cf485183d926b2",
+    "ferminet_pytorch/vmc_statistics.py": "f3d4469eded5e4ef118f46af33678055e330f3d76cf9ce920b2ec17c99f1bd9b",
+    "scripts/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scripts/attribute_residual_energy.py": "5c49edae6e3b3761b3c856122735919589c611039ff154b48b7a39f979293a18",
+    "scripts/benchmark_compile.py": "e217771117ef6dbba8208d6619cf08b796503438481c04bd97f6511a34da19e2",
+    "scripts/benchmark_comprehensive_m3.py": "e40e7c236c5d80256b6cc8109c3bc70b7c743f30f3080b34734f390586a910bb",
+    "scripts/benchmark_continuation.py": "b76ce0b390e394055dca0d27b0dca8167673c1cb4a244f3dc8fa90a045353dc3",
+    "scripts/benchmark_h2_long_convergence.py": "5e22b6403a5980be723ea56a714a2749b410f8664dab5c83681825c185f0d298",
+    "scripts/benchmark_m4_vmc_convergence.py": "09a712ffe1ce3fa5eca858b70e0de3158ab2f1135b0d51dbd1dfbfe11092ee56",
+    "scripts/campaign_logging.py": "48577fa12b9b09ebf5f42a891a49329c774c3d4b8e9fbdcf84652f804cfec6b4",
+    "scripts/diagnose_graph_breaks.py": "57cf9b3240d3e76817c0726bfeaa9bf5480c83b2da305935b8fd81e30a8f5fc7",
+    "scripts/envelope_replication.py": "ad618a7830f5cbd5e54fe43894aecc763b7595f407aea7778e45cc38a0a5bf0e",
+    "scripts/envelope_replication_evidence.py": "08881d1335d2bc30df5b5fb842e225c70fc76dcefc378a6959b49f2274ec0347",
+    "scripts/envelope_replication_pipeline.py": "cb1667d4594bee5ec012f3c8f6c7e568d58523a243b88edef7d4091b7fe8f44a",
+    "scripts/factorial_campaign.py": "bc233ed42621fece8ab0a4c14bcd49bf6e03ac22c2e54bbb1d1ce84e63315057",
+    "scripts/factorial_pipeline.py": "46baf47cfa7983b723af3c91836e68499943e0151a4a249903bd012e48be1a10",
+    "scripts/factorial_report.py": "480eda04fb076d22b891b43875b3fd797d8d715d3a4686bb9a20f39cfd6d7f5b",
+    "scripts/kaggle_campaign.py": "fd1b80212050723261c97403018cd1d2aff9aa83d9d3f7da9a6cbcb3ab3d4989",
+    "scripts/kaggle_pipeline.py": "22bacb0f1ab0d7bbaf7bbe06917f74641a700f13c16f62f179e9dfc58f53aa2b",
+    "scripts/prepare_kaggle.py": "5e8299ae9e5d2462ddd58ffb71d11cafe6ded6bc3065f9c0c399a3c540f3bb34",
+    "scripts/run_cuda_tests.py": "a3b6a9a57749dfb01f2302a1ee53df67c297a45eca4d0eb8c8d4277dc325bf2a",
+    "scripts/sampling_performance.py": "e20fa3db76e911bfe445ada06887aa48df4ef2c382b7cbeef7b3912bf2ebe3bb",
+    "scripts/summarize_results.py": "e64976c36d389c3778aa1ce5c6a823527e10cab5ddcf7bcff804163751edd6c2",
+    "scripts/verify_kaggle_smoke.py": "1f624ea20e48a215056d8cdd793fd585883fc51e681df6bd3f440c5d8d362aa9",
+    "scripts/verify_phase2_refactor.py": "f6401c018cfa75aff4c46d6005df474209baba27acaa3c00fb5b21cb6f18135e",
+    "configs/envelope_replication.json": "70717268b0eb3bbfb27363544a8f7a30ad05abfc6222fb36472e372e7b26a1c6",
+    "configs/factorial_smoke.json": "74a38c832124a9e45bd5ec9e091ccfc171309c205120de5c79344dd5e276b103",
+    "configs/factorial_t4x2.json": "56022f5a36deda7ef29f43c09ac7c6f2c84d68bf30b54cad0870ca9e0b9299bf",
+    "configs/kaggle_continue_smoke.json": "fb7758b0127626f8524ab5b063af506b8b5902c60fce14415bb0e0a3c95dd16a",
+    "configs/kaggle_continue_t4x2.json": "d9e380d0b117635ec515b512a88851a89efbb9ccee752628ed4734d8be87377c",
+    "configs/kaggle_smoke.json": "ffdda16f35dbbd3ecd7807c09c2e2910b8c3c8cfe27a1b1c3bf2bb0a436adfbc",
+    "configs/kaggle_t4x2.json": "47ef4da1b6ff93c350a184e17086e1ef1bf340694d089428b03a26c28fa8f567"
+  }
+}

@@ -1,0 +1,25 @@
+test_frozen_energy_chunking_preserves_chain_axis_and_model (tests.test_campaign_runtime.TestCampaignCUDA.test_frozen_energy_chunking_preserves_chain_axis_and_model) ... ok
+test_resume_preserves_updates_rng_stages_and_cache (tests.test_campaign_runtime.TestCampaignCUDA.test_resume_preserves_updates_rng_stages_and_cache) ... ok
+test_resume_rejects_changed_training_schedule (tests.test_campaign_runtime.TestCampaignCUDA.test_resume_rejects_changed_training_schedule) ... ok
+test_batched_production_matches_step_loop_rng_cache_and_counters (tests.test_continuation.TestContinuationCUDA.test_batched_production_matches_step_loop_rng_cache_and_counters) ... ok
+test_execution_selection_preserves_rng_and_model_without_amortized_gain (tests.test_continuation.TestContinuationCUDA.test_execution_selection_preserves_rng_and_model_without_amortized_gain) ... ok
+test_extension_preserves_parent_adam_rng_and_exact_tail_resume (tests.test_continuation.TestContinuationCUDA.test_extension_preserves_parent_adam_rng_and_exact_tail_resume) ... ok
+test_extension_rejects_tampering_or_scientific_configuration_changes (tests.test_continuation.TestContinuationCUDA.test_extension_rejects_tampering_or_scientific_configuration_changes) ... ok
+test_full_update_probe_restores_history_parameters_walkers_and_rng (tests.test_continuation.TestContinuationCUDA.test_full_update_probe_restores_history_parameters_walkers_and_rng) ... ok
+test_finite_fast_path_preserves_partial_invalid_clipping_and_gradients (tests.test_factorial.TestFactorialCUDA.test_finite_fast_path_preserves_partial_invalid_clipping_and_gradients) ... ok
+test_four_forks_reset_state_and_resume_exactly (tests.test_factorial.TestFactorialCUDA.test_four_forks_reset_state_and_resume_exactly) ... ok
+test_mean_hard_formula_shift_constant_and_graph_isolation (tests.test_factorial.TestFactorialCUDA.test_mean_hard_formula_shift_constant_and_graph_isolation) ... ok
+test_observation_shards_reconstruct_energy_and_coordinates (tests.test_factorial.TestFactorialCUDA.test_observation_shards_reconstruct_energy_and_coordinates) ... ok
+test_soft_envelope_complete_wavefunction_physics (tests.test_factorial.TestFactorialCUDA.test_soft_envelope_complete_wavefunction_physics) ... ok
+test_soft_envelope_coordinate_derivatives_and_asymptote (tests.test_factorial.TestFactorialCUDA.test_soft_envelope_coordinate_derivatives_and_asymptote) ... ok
+test_wavefunction_observations_reuse_the_coordinate_forward (tests.test_factorial.TestFactorialCUDA.test_wavefunction_observations_reuse_the_coordinate_forward) ... /usr/local/lib/python3.13/dist-packages/torch/jit/_script.py:1488: DeprecationWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+ok
+test_ac_fork_and_independent_amplitude_derivatives (tests.test_envelope_replication.TestReplicationCUDA.test_ac_fork_and_independent_amplitude_derivatives) ... ok
+test_initial_frozen_stage_resume (tests.test_envelope_replication.TestReplicationCUDA.test_initial_frozen_stage_resume) ... ok
+test_parent_stage_extension_and_exact_resume (tests.test_envelope_replication.TestReplicationCUDA.test_parent_stage_extension_and_exact_resume) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 36.714s
+
+OK

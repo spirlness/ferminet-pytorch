@@ -1,0 +1,134 @@
+{
+  "total_samples": 1048576,
+  "num_valid": 1048576,
+  "num_invalid": 0,
+  "energy_mean": -1.1744626850363635,
+  "energy_var": 0.0005224312196486792,
+  "energy_std": 0.022856754355084608,
+  "energy_sem": 3.1194663048769115e-05,
+  "energy_sem_naive": 2.2321049174887312e-05,
+  "energy_sem_ess": 2.4770754667955773e-05,
+  "energy_sem_block": 3.1194663048769115e-05,
+  "energy_ci95": [
+    -1.174523826575939,
+    -1.174401543496788
+  ],
+  "interval_method": "approximate_normal_95_percent",
+  "rho_1": 0.08315620290690277,
+  "rho_1_batch": 0.08755809068118087,
+  "tau_int": 1.2315421138600597,
+  "ess_fraction": 0.8119900965998391,
+  "effective_sample_size": 851433.3275322729,
+  "split_rhat": 1.0000858885380521,
+  "reblocking": [
+    {
+      "block_length": 1,
+      "num_blocks": 2048,
+      "sem": 2.225077803946608e-05
+    },
+    {
+      "block_length": 2,
+      "num_blocks": 1024,
+      "sem": 2.3292997592364896e-05
+    },
+    {
+      "block_length": 4,
+      "num_blocks": 512,
+      "sem": 2.4551720903607164e-05
+    },
+    {
+      "block_length": 8,
+      "num_blocks": 256,
+      "sem": 2.556466961214488e-05
+    },
+    {
+      "block_length": 16,
+      "num_blocks": 128,
+      "sem": 2.5867800657454583e-05
+    },
+    {
+      "block_length": 32,
+      "num_blocks": 64,
+      "sem": 2.8778244476837308e-05
+    },
+    {
+      "block_length": 64,
+      "num_blocks": 32,
+      "sem": 3.1194663048769115e-05
+    },
+    {
+      "block_length": 128,
+      "num_blocks": 16,
+      "sem": 2.3246095243532483e-05
+    }
+  ],
+  "blocking_plateau": true,
+  "diagnostics_status": "passed",
+  "diagnostics_reasons": [],
+  "decorrelation_steps": 20,
+  "eval_time_sec": 1330.0179025830003,
+  "time_records": 2048,
+  "requested_time_records": 2048,
+  "energy_batch_size": 128,
+  "burn_in_seconds": 7.039639675000217,
+  "production_seconds": 1322.9782646159983,
+  "seed": 20001012,
+  "stopping_reason": "completed",
+  "mcmc_acceptance": 0.25390625,
+  "mcmc_step_size": 0.9014130315579745,
+  "spin_projection": "singlet",
+  "trajectory_path": "/kaggle/working/ferminet_results/ferminet_seed101_C/evaluation/energy.pt",
+  "observations_manifest": "/kaggle/working/ferminet_results/ferminet_seed101_C/evaluation/observations/manifest.json",
+  "reference_label": "H2 BO singlet, R=1.4 bohr",
+  "reference_source": "https://doi.org/10.1103/PhysRevA.82.032509",
+  "chemical_accuracy_met": true,
+  "chemical_accuracy_status": "met",
+  "exact_energy": -1.17447571422,
+  "abs_error_ha": 1.3029183636437125e-05,
+  "abs_error_mha": 0.013029183636437125,
+  "abs_error_kcal": 0.008175936170350067,
+  "hf_energy": -1.13362957,
+  "correlation_retrieved_pct": 99.96810180278887,
+  "tail_summary": {
+    "total_samples": 1048576,
+    "energy_mean": -1.1744626850363635,
+    "regions_overlap": true,
+    "regions": {
+      "far_nearest_nucleus_gt_3": {
+        "count": 48277,
+        "extreme_count": 94,
+        "top_count": 77,
+        "variance_share": 0.22370859990302977,
+        "signed_error_contribution_mha": -0.052302071961472296
+      },
+      "near_nucleus_lt_0.05": {
+        "count": 487,
+        "extreme_count": 37,
+        "top_count": 14,
+        "variance_share": 0.08484347618633903,
+        "signed_error_contribution_mha": -0.11392064528885633
+      },
+      "near_electron_lt_0.1": {
+        "count": 81,
+        "extreme_count": 0,
+        "top_count": 0,
+        "variance_share": 0.003169124234066906,
+        "signed_error_contribution_mha": 0.008341326032402402
+      }
+    },
+    "extreme_threshold_abs_error_ha": 0.5,
+    "extreme_count": 167,
+    "top_count": 104,
+    "top_variance_share": 0.11042619493108934,
+    "limits": "Spatial flags overlap; variance attribution does not establish a causal mechanism."
+  },
+  "extreme_precision_audit": {
+    "passed": true,
+    "points": 32,
+    "max_log_difference": 1.3111033059232113e-06,
+    "energy_rms_difference_ha": 1.1773213607374499e-06,
+    "max_energy_difference_ha": 3.496945002012808e-06,
+    "scope": "Fixed sampled points only; no universal error bound"
+  },
+  "total_with_observations_seconds": 1330.9742947220002
+}

@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "complete": true,
+  "seed": 21001010,
+  "time_records": 512,
+  "num_walkers": 512,
+  "axes": "time,walker[,electron,xyz]",
+  "shards": [
+    {
+      "file": "observations_0000.pt",
+      "start_record": 0,
+      "records": 128,
+      "sha256": "d98bdbe9606a6aaa17f52093ee1152227d16319df55a07351d72b02022b69f06"
+    },
+    {
+      "file": "observations_0001.pt",
+      "start_record": 128,
+      "records": 128,
+      "sha256": "fb18bfc59c126d672f1094973b628bc4db71a904ab4770d089d9a1a3e472455c"
+    },
+    {
+      "file": "observations_0002.pt",
+      "start_record": 256,
+      "records": 128,
+      "sha256": "77850d1f66226c9a689b4701b59dfe9068446ef3d3943ec6a47662a9a79db209"
+    },
+    {
+      "file": "observations_0003.pt",
+      "start_record": 384,
+      "records": 128,
+      "sha256": "b5376b40d48c7573129c63c31a66b3649cadea82bf9941b3122c8406b461197d"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "energies_Ha": [
+    -1.19,
+    -1.176,
+    -1.175,
+    -1.174,
+    -1.173,
+    -1.172,
+    -1.15
+  ],
+  "constant_shift_Ha": 100,
+  "centered_clipped_original": [
+    -0.010447523478855913,
+    -0.0021317695167739625,
+    -0.0011484838813997644,
+    -0.0001508953633804211,
+    0.0008466931546387002,
+    0.0018299787900131204,
+    0.011202000295758019
+  ],
+  "centered_clipped_shifted": [
+    -0.017140985153076826,
+    -0.0031423802409875634,
+    -0.0021423826300832616,
+    -0.0011423829713947953,
+    -0.00014238331269211812,
+    0.0008576142982121837,
+    0.022852900009937116
+  ],
+  "max_difference_Ha": 0.011650899714179097,
+  "interpretation": "Changing the arbitrary constant energy origin changes the clipped covariance coefficients. This floor was inactive in every recorded step of all six campaigns, so it does not explain the observed run."
+}
