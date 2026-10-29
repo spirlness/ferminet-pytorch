@@ -4,9 +4,9 @@
 
 ## 本地位置
 
-- 压缩归档：[kaggle_t4x2_long_v2_20261022.zip](../../campaign_runs/archives/kaggle_t4x2_long_v2_20261022.zip)，**89,819,081 字节**（约 89.8 MB）。
-- 归档 SHA-256：[校验文件](../../campaign_runs/archives/kaggle_t4x2_long_v2_20261022.zip.sha256)。
-- 已解压目录：`campaign_runs/kaggle_artifacts_v2/`，使用说明见[归档 README](../../campaign_runs/kaggle_artifacts_v2/README.md)。
+- 压缩归档：`campaign_runs/archives/kaggle_t4x2_long_v2_20261022.zip`，**89,819,081 字节**（约 89.8 MB）。
+- 归档 SHA-256：`campaign_runs/archives/kaggle_t4x2_long_v2_20261022.zip.sha256`。
+- 已解压目录：`campaign_runs/kaggle_artifacts_v2/`；使用说明位于该目录的 `README.md`。
 
 压缩包 SHA-256：
 
